@@ -1,6 +1,7 @@
 
 # ----------------------------- Imported Libraries -----------------------------
 import discord
+from discord.ext import commands
 from dotenv import load_dotenv
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
@@ -11,6 +12,11 @@ bot: discord.Client
 log: Logger
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ERROR_CHANNEL_ID: int = int(str(getenv('ERROR_CHANNEL_ID')))
+
+# ============================= BOT SETUP =============================
+intents = discord.Intents.all()
+intents.messages = True
+bot = commands.Bot(command_prefix=str(getenv('COMMAND_PREFIX')), intents=intents)
 
 
 # ============================= ON_MEMBER_JOIN (Welcome) =============================
