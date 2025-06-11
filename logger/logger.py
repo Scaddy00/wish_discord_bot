@@ -122,3 +122,9 @@ class Logger():
         
         # Write changes in log file
         write_file(self.log_path, log_file)
+
+    # >>==============<< Error Message >>==============<<
+    def error_message(self, command: str, message: str) -> str:
+        return f'{command} -> {message}'
+
+    
