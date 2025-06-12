@@ -17,6 +17,7 @@ class Logger():
         log_file: dict = {
             'events': {
                 'welcome': [],
+                'remove': [],
                 'twitch': [],
                 'youtube': [],
                 'instagram': [],
@@ -52,6 +53,21 @@ class Logger():
     
     # >>==============<< New Event Record >>==============<< 
     async def event(self, log_message: str, record_type: str) -> None:
+        """Add event to the log
+
+        Parameters:
+            log_message (str): The message of the event
+            record_type (str): The record type of the event. 
+            Can be:
+            - welcome
+            - remove
+            - twitch
+            - youtube
+            - instagram
+            - tiktok
+            - chat-clear
+            - role-assign-auto
+        """
         # Load log file
         log_file: dict = read_file(self.log_path)
         # Load formatted datetime now
@@ -67,14 +83,14 @@ class Logger():
         write_file(self.log_path, log_file)
         
     # >>==============<< New Command Record >>==============<< 
-    async def command(self, log_message: str, record_type: str) -> None:
+    async def command(self, log_message: str, record_type: str, command: str) -> None:
         # Load log file
         log_file: dict = read_file(self.log_path)
         # Load formatted datetime now
         now = format_datetime_now()
         
         # Create json record
-        record: dict = {'timestamp': now, 'message': log_message}
+        record: dict = {'timestamp': now, 'command': command, 'message': log_message}
         
         # Add record
         log_file['commands'][record_type].append(record)
