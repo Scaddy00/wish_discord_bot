@@ -28,7 +28,8 @@ class Logger():
             'commands': {
                 'test': [],
                 'social': [],
-                'admin': []
+                'admin': [],
+                'role': []
             },
             'messages': {},
             'errors': []
@@ -74,7 +75,8 @@ class Logger():
         now = format_datetime_now()
         
         # Create json record
-        record: dict = {'timestamp': now, 'message': log_message}
+        record: dict = {'timestamp': now, 
+                        'message': log_message}
         
         # Add record
         log_file['events'][record_type].append(record)
@@ -90,7 +92,9 @@ class Logger():
         now = format_datetime_now()
         
         # Create json record
-        record: dict = {'timestamp': now, 'command': command, 'message': log_message}
+        record: dict = {'timestamp': now, 
+                        'command': command, 
+                        'message': log_message}
         
         # Add record
         log_file['commands'][record_type].append(record)
@@ -106,7 +110,8 @@ class Logger():
         now = format_datetime_now()
         
         # Create json record
-        record: dict = {'timestamp': now, 'message': log_message}
+        record: dict = {'timestamp': now, 
+                        'message': log_message}
         
         # Check if the corresponding channel_id key exists
         if channel_id in log_file['messages']:
@@ -134,7 +139,7 @@ class Logger():
                         'message': log_message}
         
         # Add record
-        log_file['errors'][record_type].append(record)
+        log_file['errors'].append(record)
         
         # Write changes in log file
         write_file(self.log_path, log_file)
