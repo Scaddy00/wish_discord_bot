@@ -1,24 +1,35 @@
 
 # ----------------------------- Imported Libraries -----------------------------
-import discord
+import discord, asyncio
 from discord.ext import commands
 from dotenv import load_dotenv
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger.logger import Logger
+from utility import config
+from events.roles import add_role_event, remove_role_event
+# ----------------------------- Commands -----------------------------
+from commands.cmd_roles import CmdRoles
+from commands.cmd_debug import CmdDebug
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Blank Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-bot: discord.Client
+bot: commands.Bot
 log: Logger
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 BOT_COMMUNICATION_CHANNEL_ID: int = int(str(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
 ADMIN_CHANNEL_ID: int = int(str(getenv('ADMIN_CHANNEL_ID')))
 
+# ============================= BOT SETUP HOOK =============================
+class WishBot(commands.Bot):
+    async def setup_hook(self):
+        await self.add_cog(CmdRoles(self, log))
+        await self.add_cog(CmdDebug(self))
+        await self.tree.sync(guild=discord.Object(id=int(getenv('GUILD_ID'))))
+
 # ============================= BOT SETUP =============================
 intents = discord.Intents.all()
 intents.messages = True
-bot = commands.Bot(command_prefix=str(getenv('COMMAND_PREFIX')), intents=intents)
-
+bot = WishBot(command_prefix=str(getenv('COMMAND_PREFIX')), intents=intents)
 
 # ============================= ON_MEMBER_JOIN (Welcome) =============================
 @bot.event
@@ -59,16 +70,43 @@ async def on_raw_member_remove(payload: discord.RawMemberRemoveEvent) -> None:
         await log.error(error_message, 'EVENT - MEMBER REMOVE')
         await communication_channel.send(log.error_message(command = 'EVENT - MEMBER REMOVE', message = error_message))
 
-# ============================= MAIN =============================
+# ============================= ON_RAW_REACTION_ADD (Add Role) =============================
+@bot.event
+async def on_raw_reaction_add(payload: discord.RawReactionActionEvent) -> None:
+    guild: discord.Guild = bot.get_guild(payload.guild_id)
+    message_id: str = payload.message_id
+    emoji: discord.PartialEmoji = payload.emoji
+    member_id: str = payload.member.id
+    
+    await add_role_event(log, guild, message_id, emoji, member_id)
+    
+# ============================= ON_RAW_REACTION_REMOVE (Remove Role) =============================
+@bot.event
+async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent) -> None:
+    guild: discord.Guild = bot.get_guild(payload.guild_id)
+    message_id: str = payload.message_id
+    emoji: discord.PartialEmoji = payload.emoji
+    member_id: int = payload.user_id
+    
+    await remove_role_event(log, guild, message_id, emoji, member_id)
+
+# ============================= MAIN AND START =============================
+# >>==============<< MAIN >>==============<< 
 def main():
     # Load .env file
     load_dotenv()
     
     global log
     log = Logger(name = 'Discord_bot')
+
+    # Start the config file check
+    config.start()
     
     # Start the bot
     bot.run(str(getenv('DISCORD_TOKEN')))
+    
+    # Clears the internal state of the bot
+    bot.clear()
 
 if __name__ == '__main__':
     main()
