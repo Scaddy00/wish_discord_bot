@@ -3,6 +3,10 @@
 from datetime import datetime
 from os import getenv
 from discord import Embed
+import discord
+from os import path
+# ----------------------------- Custom Libraries -----------------------------
+from utility.file_io import read_file
 
 # ============================= Datetime format =============================
 def format_datetime_now() -> str:
@@ -10,7 +14,7 @@ def format_datetime_now() -> str:
     return datetime.now().strftime(str_format)
 
 # ============================= Embed creator =============================
-def create_embed(title: str, description: str, color: int, url: str | None = None, fields: list = [], footer: dict = {}, thumbnail: str = '', image: str = '') -> Embed:
+def create_embed(title: str, description: str, color: discord.Colour, url: str | None = None, fields: list = [], footer: dict = {}, thumbnail: str = '', image: str = '') -> Embed:
     """Function for creating Discord Embeds
 
     Args:
@@ -52,3 +56,18 @@ def create_embed(title: str, description: str, color: int, url: str | None = Non
         embed.set_image(url=image)
 
     return embed
+
+# ============================= Embed data load =============================
+def load_embed_text(guild: discord.Guild, item: str) -> dict:
+    # Load communication channel
+    communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+    
+    # Load embed text file
+    embed_text_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('EMBED_TEXT_FILE_NAME')))
+    text: dict = read_file(embed_text_path)
+    
+    if item in text:
+        return text[item]
+    else:
+        communication_channel.send(f'L\'elemento "{item}" non è presente nel file embed_text.json.')
+        return {}

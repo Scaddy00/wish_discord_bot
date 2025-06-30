@@ -6,11 +6,10 @@ from dotenv import load_dotenv
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger.logger import Logger
-from utility import config
+from utility import config, printing
 from events.roles import add_role_event, remove_role_event
 # ----------------------------- Commands -----------------------------
 from commands.cmd_roles import CmdRoles
-from commands.cmd_debug import CmdDebug
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Blank Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 bot: commands.Bot
@@ -23,7 +22,6 @@ ADMIN_CHANNEL_ID: int = int(str(getenv('ADMIN_CHANNEL_ID')))
 class WishBot(commands.Bot):
     async def setup_hook(self):
         await self.add_cog(CmdRoles(self, log))
-        await self.add_cog(CmdDebug(self))
         await self.tree.sync(guild=discord.Object(id=int(getenv('GUILD_ID'))))
 
 # ============================= BOT SETUP =============================
@@ -41,9 +39,17 @@ async def on_member_join(member: discord.Member) -> None:
     
     try:
         welcome_channel: discord.TextChannel = guild.system_channel
-        # TODO Update the message with the Embed
-        message: str = f'Benvenuto {member.mention}!'
-        await welcome_channel.send(message)
+        rule_channel: discord.TextChannel = guild.get_channel(int(getenv('RULE_CHANNEL_ID')))
+        # Load embed message content
+        message_content: dict = printing.load_embed_text(guild, 'welcome')
+        
+        message: discord.Embed = printing.create_embed(title=message_content['title'], # Load title
+                                                       description=message_content['description'].format(user=member.mention, rule=rule_channel.mention), # Load description adding the mentions required
+                                                       color=discord.Colour.from_str(message_content['color']), # Load the color from str
+                                                       image=message_content['image_url'], # Load image url
+                                                       thumbnail=message_content['thumbnail_url']) # Load thumbnail url
+        
+        await welcome_channel.send(embed=message)
         # INFO LOG
         await log.event(f'Nuovo utente aggiunto, {member.name} ({member.id})', 'welcome')
     except Exception as e:
