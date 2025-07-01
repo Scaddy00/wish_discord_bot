@@ -12,9 +12,9 @@ from utility.config import update_data
 
 class CmdRoles(commands.GroupCog, name="role"):
     def __init__(self, bot: discord.Client, log: Logger):
+        super().__init__()
         self.bot = bot
         self.log = log
-        super().__init__()
     
     @app_commands.command(name="new", description="Crea un nuovo messaggio")
     async def new(self, interaction: discord.Interaction) -> None:
