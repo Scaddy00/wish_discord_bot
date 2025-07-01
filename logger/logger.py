@@ -29,7 +29,8 @@ class Logger():
                 'test': [],
                 'social': [],
                 'admin': [],
-                'role': []
+                'role': [],
+                'rule': []
             },
             'messages': {},
             'errors': []

@@ -10,6 +10,7 @@ from utility import config, printing
 from events.roles import add_role_event, remove_role_event
 # ----------------------------- Commands -----------------------------
 from commands.cmd_roles import CmdRoles
+from commands.cmd_utility import CmdUtility
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Blank Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 bot: commands.Bot
@@ -22,7 +23,13 @@ ADMIN_CHANNEL_ID: int = int(str(getenv('ADMIN_CHANNEL_ID')))
 class WishBot(commands.Bot):
     async def setup_hook(self):
         await self.add_cog(CmdRoles(self, log))
-        await self.tree.sync(guild=discord.Object(id=int(getenv('GUILD_ID'))))
+        await self.add_cog(CmdUtility(self, log))
+        
+        if getenv("DEBUG_MODE") == "1":
+            synced = await self.tree.sync(guild=discord.Object(id=int(getenv('GUILD_ID'))))
+        else:
+            synced = await self.tree.sync()
+        print(f"Synced {len(synced)} commands.")
 
 # ============================= BOT SETUP =============================
 intents = discord.Intents.all()
