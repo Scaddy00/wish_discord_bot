@@ -6,7 +6,7 @@ from discord import app_commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger.logger import Logger
-from utility.printing import create_embed, load_embed_text
+from utility.printing import create_embed_from_dict, load_embed_text
 
 class CmdRules(commands.GroupCog, name="rule"):
     def __init__(self, bot: discord.Client, log: Logger):
@@ -33,14 +33,12 @@ class CmdRules(commands.GroupCog, name="rule"):
         
         try:
             # Load embed message content
-            message_content: dict = load_embed_text(guild, 'rule')
+            message_content: list = await load_embed_text(guild, 'rule')
             # Create the embed message
-            message: discord.Embed = create_embed(title=message_content['title'],
-                                                  description=message_content['description'],
-                                                  color=discord.Colour.from_str(message_content['color']))
+            message: list[discord.Embed] = [create_embed_from_dict(content) for content in message_content]
             
             # Send the message in rule channel
-            await rule_channel.send(embed=message)
+            await rule_channel.send(embeds=message)
             
             # INFO Log that the reaction were added
             await self.log.command('Messaggio inviato con successo', 'rule', 'NEW')

@@ -13,8 +13,34 @@ def format_datetime_now() -> str:
     str_format: str = str(getenv('DATETIME_FORMAT'))
     return datetime.now().strftime(str_format)
 
+# ============================= Embed data load =============================
+async def load_embed_text(guild: discord.Guild, item: str) -> list[dict]:
+    # Load communication channel
+    communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+    
+    # Load embed text file
+    embed_text_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('EMBED_TEXT_FILE_NAME')))
+    text: dict = read_file(embed_text_path)
+    
+    if item not in text:
+        await communication_channel.send(f'L\'elemento "{item}" non è presente nel file embed_text.json.')
+        return []
+
+    data: list | dict = text[item]
+    
+    # Return the content if is already a list
+    if isinstance(data, list):
+        return data
+    elif isinstance(data, dict): # Make the content a list and return it
+        return [data]
+
+# ============================= Embed data load (SINGLE) =============================
+async def load_single_embed_text(guild: discord.Guild, item: str) -> dict:
+    embeds = await load_embed_text(guild, item)
+    return embeds[0] if embeds else {}
+
 # ============================= Embed creator =============================
-def create_embed(title: str, description: str, color: discord.Colour, url: str | None = None, fields: list = [], footer: dict = {}, thumbnail: str = '', image: str = '') -> Embed:
+def create_embed(title: str, description: str, color: str, url: str | None = None, fields: list = [], footer: dict = {}, thumbnail: str = '', image: str = '') -> Embed:
     """Function for creating Discord Embeds
 
     Args:
@@ -33,11 +59,9 @@ def create_embed(title: str, description: str, color: discord.Colour, url: str |
     
     # Create the embed with the standard information
     embed: Embed = Embed(title=title,
-                         type='rich',
                          description=description,
-                         color=color,
-                         url=url,
-                         )
+                         color=discord.Colour.from_str(color),
+                         url=url)
     # Add fields to the embed
     if len(fields) > 0:
         for field in fields:
@@ -57,17 +81,35 @@ def create_embed(title: str, description: str, color: discord.Colour, url: str |
 
     return embed
 
-# ============================= Embed data load =============================
-def load_embed_text(guild: discord.Guild, item: str) -> dict:
-    # Load communication channel
-    communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
-    
-    # Load embed text file
-    embed_text_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('EMBED_TEXT_FILE_NAME')))
-    text: dict = read_file(embed_text_path)
-    
-    if item in text:
-        return text[item]
-    else:
-        communication_channel.send(f'L\'elemento "{item}" non è presente nel file embed_text.json.')
-        return {}
+# ============================= Embed creator (DICT) =============================
+def create_embed_from_dict(data: dict) -> Embed:
+    # Create the embed with the standard information
+    embed: Embed = Embed(
+        title=data.get('title', ''),
+        description=data.get('description', ''),
+        color=discord.Colour.from_str(data.get('color', '0x000000')),
+        url=data.get('url', '')
+    )
+    # Add fields to the embed
+    if 'fields' in data and data['fields']:
+        for field in data['fields']:
+            embed.add_field(
+                name=field.get('name', ''),
+                value=field.get('value', ''),
+                inline=field.get('inline', True)
+            )
+    # Add footer to the embed
+    if 'footer' in data:
+        footer = data['footer']
+        embed.set_footer(
+            text=footer.get('text', ''),
+            icon_url=footer.get('icon_url', '')
+        )
+    # Add thumbnail to the embed
+    if data.get('thumbnail'):
+        embed.set_thumbnail(url=data['thumbnail'])
+    # Add image to the embed
+    if data.get('image'):
+        embed.set_image(url=data['image'])
+
+    return embed

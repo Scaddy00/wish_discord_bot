@@ -32,11 +32,11 @@ async def on_member_join(member: discord.Member) -> None:
         welcome_channel: discord.TextChannel = guild.system_channel
         rule_channel: discord.TextChannel = guild.get_channel(int(getenv('RULE_CHANNEL_ID')))
         # Load embed message content
-        message_content: dict = printing.load_embed_text(guild, 'welcome')
+        message_content: dict = await printing.load_single_embed_text(guild, 'welcome')
         
         message: discord.Embed = printing.create_embed(title=message_content['title'], # Load title
                                                        description=message_content['description'].format(user=member.mention, rule=rule_channel.mention), # Load description adding the mentions required
-                                                       color=discord.Colour.from_str(message_content['color']), # Load the color from str
+                                                       color=message_content['color'], # Load the color from str
                                                        image=message_content['image_url'], # Load image url
                                                        thumbnail=message_content['thumbnail_url']) # Load thumbnail url
         
