@@ -10,9 +10,9 @@ from utility.printing import create_embed, load_embed_text
 
 class CmdRules(commands.GroupCog, name="rule"):
     def __init__(self, bot: discord.Client, log: Logger):
+        super().__init__()
         self.bot = bot
         self.log = log
-        super().__init__()
     
     @app_commands.command(name="new", description="Crea un nuovo messaggio")
     async def new(self, interaction: discord.Interaction) -> None:
@@ -40,10 +40,10 @@ class CmdRules(commands.GroupCog, name="rule"):
                                                   color=discord.Colour.from_str(message_content['color']))
             
             # Send the message in rule channel
-            rule_channel.send(embed=message)
+            await rule_channel.send(embed=message)
             
             # INFO Log that the reaction were added
-            await self.log.command('Messaggio inviato con successo', 'role', 'NEW')
+            await self.log.command('Messaggio inviato con successo', 'rule', 'NEW')
                         
         except TimeoutError:
             await channel.send('Tempo scaduto. Lavorazione interrotta!')
