@@ -7,6 +7,7 @@ from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger.logger import Logger
 from utility.printing import create_embed_from_dict, load_embed_text
+from utility.config import add_data_channel_id
 
 class CmdRules(commands.GroupCog, name="rule"):
     def __init__(self, bot: discord.Client, log: Logger):
@@ -15,13 +16,11 @@ class CmdRules(commands.GroupCog, name="rule"):
         self.log = log
     
     @app_commands.command(name="new", description="Crea un nuovo messaggio")
-    async def new(self, interaction: discord.Interaction) -> None:
+    async def new(self, interaction: discord.Interaction, address_channel: discord.TextChannel) -> None:
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
         communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
-        # Load rule channel
-        rule_channel = guild.get_channel(int(getenv('RULE_CHANNEL_ID')))
         # Get the channel where the interaction started
         channel = interaction.channel
         
@@ -38,7 +37,10 @@ class CmdRules(commands.GroupCog, name="rule"):
             message: list[discord.Embed] = [create_embed_from_dict(content) for content in message_content]
             
             # Send the message in rule channel
-            await rule_channel.send(embeds=message)
+            await address_channel.send(embeds=message)
+            
+            # Save the address channel id to the config.json file
+            await add_data_channel_id('rule', str(address_channel.id))
             
             # INFO Log that the reaction were added
             await self.log.command('Messaggio inviato con successo', 'rule', 'NEW')
