@@ -6,6 +6,7 @@ from os import getenv
 # ----------------------------- Commands -----------------------------
 from commands.cmd_roles import CmdRoles
 from commands.cmd_rules import CmdRules
+from commands.cmd_info import CmdInfo
 # ----------------------------- Events -----------------------------
 from events.member_events import MemberEvents
 from events.reaction_events import ReactionEvents
@@ -20,8 +21,11 @@ class WishBot(commands.Bot):
         config.start()
 
     async def setup_hook(self):
+        # COMMANDS
         await self.add_cog(CmdRoles(self, self.log))
         await self.add_cog(CmdRules(self, self.log))
+        await self.add_cog(CmdInfo(self, self.log))
+        # EVENTS
         await self.add_cog(MemberEvents(self, self.log))
         await self.add_cog(ReactionEvents(self, self.log))
         

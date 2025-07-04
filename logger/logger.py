@@ -30,7 +30,8 @@ class Logger():
                 'social': [],
                 'admin': [],
                 'role': [],
-                'rule': []
+                'rule': [], 
+                'info': []
             },
             'messages': {},
             'errors': []
