@@ -6,6 +6,9 @@ from os import getenv
 # ----------------------------- Commands -----------------------------
 from commands.cmd_roles import CmdRoles
 from commands.cmd_rules import CmdRules
+# ----------------------------- Events -----------------------------
+from events.member_events import MemberEvents
+from events.reaction_events import ReactionEvents
 
 # ============================= BOT SETUP HOOK =============================
 class WishBot(commands.Bot):
@@ -19,6 +22,8 @@ class WishBot(commands.Bot):
     async def setup_hook(self):
         await self.add_cog(CmdRoles(self, self.log))
         await self.add_cog(CmdRules(self, self.log))
+        await self.add_cog(MemberEvents(self, self.log))
+        await self.add_cog(ReactionEvents(self, self.log))
         
         if getenv("DEBUG_MODE") == "1":
             dev_guild = discord.Object(id=int(getenv('GUILD_ID')))
