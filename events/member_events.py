@@ -26,11 +26,13 @@ class MemberEvents(commands.Cog):
             # Load embed message content
             message_content: dict = await printing.load_single_embed_text(guild, 'welcome')
             
-            message: discord.Embed = printing.create_embed(title=message_content['title'], # Load title
-                                                        description=message_content['description'].format(user=member.mention, rule=rule_channel.mention), # Load description adding the mentions required
-                                                        color=message_content['color'], # Load the color from str
-                                                        image=message_content['image_url'], # Load image url
-                                                        thumbnail=message_content['thumbnail_url']) # Load thumbnail url
+            message: discord.Embed = printing.create_embed(
+                title=message_content['title'], # Load title
+                description=message_content['description'].format(user=member.mention, rule=rule_channel.mention), # Load description adding the mentions required
+                color=message_content['color'], # Load the color from str
+                image=message_content['image'], # Load image url
+                thumbnail=member.avatar.url if member.avatar != None else message_content['thumbnail']
+            )
             
             await welcome_channel.send(embed=message)
             # INFO LOG

@@ -1,10 +1,10 @@
 {
     "welcome": {
-        "title": "✨WELCOME✨",
-        "description": "Finalmente un altro uovo di Dreamer si e schiuso! \nDiamo il Benvenuto a {user} nel Garden of Dreams!\n\nBenvenuto in un luogo dove tutti coloro che sognano sono i benvenuti!\nPer favore, leggi {rule} il regolamento per bene, metti un ✅ \nAccederai a tutto il giardino! \n\nFallo. Altrimenti non potrai divertirti!",
+        "title": "✩WELCOME✩",
+        "description": "**Un nuovo Uovo di Dreamer si e schiuso!**\nDiamo il benvenuto a {user} nel Garden of Dreams!\n\nPrima di iniziare l'esplorazione nel giardino, `leggi le `{rule}` e metti un ✅ per accettare il regolamento!`\n**Dopo di che avrai accesso a tutte le aree a te dedicate!**",
         "color": "0xb1c4f4",
-        "image": "https://media.discordapp.net/attachments/1098225073950834821/1388989414264279120/NewCanvas3as.png?ex=6862fcb2&is=6861ab32&hm=e7a00e4b4eb76523b12844993ce8e038a89feae9e15d9f841e38a726a13fd377&=&format=webp&quality=lossless&width=1093&height=374",
-        "thumbnail": "https://media.discordapp.net/attachments/1098225073950834821/1388986205806526474/Alert_Follower_fullHD.gif?ex=6862f9b5&is=6861a835&hm=ee8e9e9b83647193c16ee5af1881e0b527cef56f7bc6f3ebbc3c940067e3e330&=&width=823&height=823"
+        "image": "https://media.discordapp.net/attachments/1098225073950834821/1390434670122111028/WELCOME_2.png?ex=68683eb2&is=6866ed32&hm=e4252a1ecc19ffcaf2e071a3fc7547de9353ff40dca5840db33dcc971572fe05&=&format=webp&quality=lossless&width=940&height=313",
+        "thumbnail": "https://cdn.discordapp.com/attachments/1098225073950834821/1389695695535214652/2025-06-30.png?ex=6868da39&is=686788b9&hm=92cef6470f0ab7ce5fbc7c6f55f3101b4eecb70fcc238ee440b8f5b4c39e9e99&"
     },
     "rule": [
         {
