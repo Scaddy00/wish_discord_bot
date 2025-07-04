@@ -6,6 +6,7 @@ from os import getenv, path
 from utility.file_io import read_file, write_file
 from logger.logger import Logger
 
+# ============================= Start =============================
 def start() -> None:
     config_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('CONFIG_FILE_NAME')))
     
@@ -18,11 +19,13 @@ def start() -> None:
                 'stream_started': ''
                 },
             'roles': {},
-            'rules': {}
+            'rules': {},
+            'channels': {}
         }
         
         write_file(config_path, config)
 
+# ============================= Load Data =============================
 async def load_data(log: Logger, guild: discord.Guild, event: str, first_sec: str, second_sec: str = '', third_sec: str = '') -> tuple[str, dict, None]:
     # Load communication channel
     communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
@@ -55,6 +58,7 @@ async def load_data(log: Logger, guild: discord.Guild, event: str, first_sec: st
             else:
                 return config[first_sec][second_sec][third_sec]
     
+# ============================= Update Data =============================
 async def update_data(log: Logger, guild: discord.Guild, new_data: str | dict, section: list) -> None:
     # Load communication channel
     communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
@@ -77,3 +81,23 @@ async def update_data(log: Logger, guild: discord.Guild, new_data: str | dict, s
         error_message: str = f'Errore durante l\'update dei dati nel file config.json.\n{e}'
         await log.error(error_message, 'CONFIG - UPDATE DATA')
         await communication_channel.send(log.error_message(command='CONFIG - UPDATE DATA', message=error_message))
+
+# ============================= Load Channels ID =============================
+async def load_channel_id(channel_name: str) -> str:
+    # Load config file
+    config_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('CONFIG_FILE_NAME')))
+    config: dict = read_file(config_path)
+    
+    return config['channels'].get(channel_name, '')
+
+# ============================= Add Data Channels ID =============================
+async def add_data_channel_id(channel_name: str, channel_id: str) -> None:
+    # Load config file
+    config_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('CONFIG_FILE_NAME')))
+    config: dict = read_file(config_path)
+    
+    # Update data
+    config['channels'][channel_name] = channel_id
+
+    # Save config.json data
+    write_file(config_path, config)
