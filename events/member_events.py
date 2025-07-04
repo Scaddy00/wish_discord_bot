@@ -6,6 +6,7 @@ from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from utility import printing
 from logger.logger import Logger
+from functions.roles import add_role, remove_role
 
 class MemberEvents(commands.Cog):
     def __init__(self, bot: commands.Bot, log: Logger):
@@ -60,3 +61,16 @@ class MemberEvents(commands.Cog):
             error_message: str = f'Errore durante l\'invio del messaggio di ByeBye. \nUtente: {user.name} ({user.id})\n{e}'
             await self.bot.log.error(error_message, 'EVENT - MEMBER REMOVE')
             await communication_channel.send(self.bot.log.error_message(command = 'EVENT - MEMBER REMOVE', message = error_message))
+    
+    # ============================= ON_MEMBER_UPDATE (Server Booster) =============================
+    @commands.Cog.listener()
+    async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
+        # Load bot communication channel
+        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        
+        if before.premium_since is None and after.premium_since is not None: # Check if Member boosted the server
+            # Add the role
+            await add_role(self.log, after.guild, int(getenv('ROLE_ID_SERVER_BOOSTER')), after.id)
+        elif before.premium_since is not None and after.premium_since is None: # Check if Member not boosted the server
+            # Remove the role
+            await remove_role(self.log, after.guild, int(getenv('ROLE_ID_SERVER_BOOSTER')), after.id)

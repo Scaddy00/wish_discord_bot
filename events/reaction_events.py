@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
-from events.roles import add_role_event, remove_role_event
+from functions.roles import add_role_event, remove_role_event
 from logger.logger import Logger
 
 class ReactionEvents(commands.Cog):
