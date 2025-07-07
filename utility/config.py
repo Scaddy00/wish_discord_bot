@@ -6,9 +6,17 @@ from os import getenv, path
 from utility.file_io import read_file, write_file
 from logger.logger import Logger
 
+# ============================= Load Config File =============================
+def config_file_path() -> str:
+    return path.join(str(getenv('MAIN_PATH')), str(getenv('CONFIG_FILE_NAME')))
+
+# ============================= Load Config File =============================
+def config_file() -> dict:
+    return read_file(config_file_path())
+
 # ============================= Start =============================
 def start() -> None:
-    config_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('CONFIG_FILE_NAME')))
+    config_path: str = config_file_path()
     
     if path.exists(config_path):
         return
@@ -20,7 +28,8 @@ def start() -> None:
                 },
             'roles': {},
             'rules': {},
-            'channels': {}
+            'channels': {},
+            'exception': {}
         }
         
         write_file(config_path, config)
@@ -31,8 +40,7 @@ async def load_data(log: Logger, guild: discord.Guild, event: str, first_sec: st
     communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
     
     # Load config file
-    config_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('CONFIG_FILE_NAME')))
-    config: dict = read_file(config_path)
+    config: dict = config_file()
 
     if first_sec not in config: # Check if the first section is part of the json file. If is not part of the file, log an error and return None
         error_message: str = f'Errore durante il caricamento dei seguenti dati dal file config.json\n[{first_sec}][{second_sec}][{third_sec}]\nIl campo \'{first_sec}\' non è stato trovato all\'interno della prima ricerca nel json.'
@@ -64,8 +72,7 @@ async def update_data(log: Logger, guild: discord.Guild, new_data: str | dict, s
     communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
     
     # Load config file
-    config_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('CONFIG_FILE_NAME')))
-    config: dict = read_file(config_path)
+    config: dict = config_file()
     
     try:
         if len(section) == 1:
@@ -74,7 +81,7 @@ async def update_data(log: Logger, guild: discord.Guild, new_data: str | dict, s
             config[section[0]][section[1]] = new_data
         
         # Save updated config file
-        write_file(config_path, config)
+        write_file(config_file_path(), config)
         
     except Exception as e:
         # EXCEPTION
@@ -85,19 +92,35 @@ async def update_data(log: Logger, guild: discord.Guild, new_data: str | dict, s
 # ============================= Load Channels ID =============================
 async def load_channel_id(channel_name: str) -> str:
     # Load config file
-    config_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('CONFIG_FILE_NAME')))
-    config: dict = read_file(config_path)
+    config: dict = config_file()
     
     return config['channels'].get(channel_name, '')
 
 # ============================= Add Data Channels ID =============================
 async def add_data_channel_id(channel_name: str, channel_id: str) -> None:
     # Load config file
-    config_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('CONFIG_FILE_NAME')))
-    config: dict = read_file(config_path)
+    config: dict = config_file()
     
     # Update data
     config['channels'][channel_name] = channel_id
 
     # Save config.json data
-    write_file(config_path, config)
+    write_file(config_file_path(), config)
+
+# ============================= Load Channels ID =============================
+async def load_exception(tag: str) -> list[int]:
+    # Load config file
+    config: dict = config_file()
+    
+    return config['exception'].get(tag, [])
+
+# ============================= Add Channels ID =============================
+async def add_exception(tag: str, data: list[int]) -> None:
+    # Load config file
+    config: dict = config_file()
+    
+    # Update data
+    config['exception'][tag] = data
+
+    # Save config.json data
+    write_file(config_file_path(), config)

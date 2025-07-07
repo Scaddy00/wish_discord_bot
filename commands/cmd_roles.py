@@ -7,8 +7,8 @@ from os import getenv
 from asyncio import TimeoutError
 # ----------------------------- Custom Libraries -----------------------------
 from logger.logger import Logger
-from utility.config import update_data
-
+from utility.config import update_data, load_exception, add_exception
+from functions.roles import add_role, remove_role
 
 class CmdRoles(commands.GroupCog, name="role"):
     def __init__(self, bot: discord.Client, log: Logger):
@@ -16,6 +16,7 @@ class CmdRoles(commands.GroupCog, name="role"):
         self.bot = bot
         self.log = log
     
+    # ============================= NEW =============================
     @app_commands.command(name="new", description="Crea un nuovo messaggio")
     async def new(self, interaction: discord.Interaction) -> None:
         # Set the default var
@@ -121,6 +122,110 @@ class CmdRoles(commands.GroupCog, name="role"):
             await self.log.error(error_message, 'COMMAND - ROLE - NEW')
             await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message))
         
-            
-            
+    # ============================= ASSIGN =============================
+    @app_commands.command(name="assign", description="Assegna un ruolo ad un utente")
+    async def assign(self, interaction: discord.Interaction, role: discord.Role, user: discord.Member) -> None:
+        # Load communication channel
+        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
         
+        try:
+            if role not in user.roles:
+                await add_role(self.log, interaction.guild, role.id, user.id)
+                # Respond that the role was assigned correctly
+                await interaction.response.send_message(f'Ruolo {role.mention} assegnato correttamente a {user.mention}!')
+                # INFO Log that the role was assigned correctly
+                await self.log.command(f'Ruolo {role.name} ({role.id}) assegnato correttamente a {user.name} ({user.id})', 'role', 'assign')
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante la l\'assegnazione del ruolo.\n{e}'
+            await self.log.error(error_message, 'COMMAND - ROLE - ASSIGN')
+            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - ASSIGN', message=error_message))
+
+    # ============================= ASSIGN ALL =============================
+    @app_commands.command(name="assign-all", description="Assegna un ruolo a tutti gli utenti")
+    async def assign_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
+        # Load communication channel
+        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        
+        # Get the member list
+        members: list[discord.Member] = interaction.guild.members
+        # Get the exception role list
+        except_roles: list = await load_exception('cmd-role')
+        
+        counter: int = 0
+        try:
+            for member in members:
+                # Check if member has an exception role
+                for except_role in except_roles:
+                    if except_role in member.roles:
+                        return
+                
+                if role not in member.roles:
+                    await add_role(self.log, interaction.guild, role.id, member.id)
+                    # INFO Log that the role was assigned correctly
+                    await self.log.command(f'Ruolo {role.name} ({role.id}) assegnato correttamente a {member.name} ({member.id})', 'role', 'assign-all')
+                    counter += 1
+            
+            # Respond that how many roles were assigned
+            await interaction.response.send_message(f'Ruolo {role.mention} assegnato a {counter} utenti!')
+            # INFO Log that the role was assigned correctly to all the members
+            await self.log.command(f'Ruolo {role.name} ({role.id}) assegnato correttamente a {counter} utenti.', 'role', 'assign-all')
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante la l\'assegnazione del ruolo.\n{e}'
+            await self.log.error(error_message, 'COMMAND - ROLE - ASSIGN-ALL')
+            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - ASSIGN-ALL', message=error_message))
+
+    # ============================= REMOVE =============================
+    @app_commands.command(name="remove", description="Rimuove un ruolo ad un utente")
+    async def remove(self, interaction: discord.Interaction, role: discord.Role, user: discord.Member) -> None:
+        # Load communication channel
+        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        
+        try:
+            if role in user.roles:
+                await remove_role(self.log, interaction.guild, role.id, user.id)
+                # Respond that the role was removed correctly
+                await interaction.response.send_message(f'Ruolo {role.mention} rimosso correttamente da {user.mention}!')
+                # INFO Log that the role was removed correctly
+                await self.log.command(f'Ruolo {role.name} ({role.id}) rimosso correttamente da {user.name} ({user.id})', 'role', 'remove')
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante la la rimozione del ruolo.\n{e}'
+            await self.log.error(error_message, 'COMMAND - ROLE - REMOVE')
+            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - REMOVE', message=error_message))
+
+    # ============================= REMOVE ALL =============================
+    @app_commands.command(name="remove-all", description="Rimuove un ruolo da tutti gli utenti")
+    async def remove_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
+        # Load communication channel
+        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        
+        # Get the member list
+        members: list[discord.Member] = interaction.guild.members
+        # Get the exception role list
+        except_roles: list = await load_exception('cmd-role')
+        
+        counter: int = 0
+        try:
+            for member in members:
+                # Check if member has an exception role
+                for except_role in except_roles:
+                    if except_role in member.roles:
+                        return
+                
+                if role in member.roles:
+                    await remove_role(self.log, interaction.guild, role.id, member.id)
+                    # INFO Log that the role was removed correctly
+                    await self.log.command(f'Ruolo {role.name} ({role.id}) rimosso correttamente da {member.name} ({member.id})', 'role', 'remove-all')
+                    counter += 1
+            
+            # Respond that how many roles were removed
+            await interaction.response.send_message(f'Ruolo {role.mention} rimosso da {counter} utenti!')
+            # INFO Log that the role was removed correctly from all the members
+            await self.log.command(f'Ruolo {role.name} ({role.id}) rimosso correttamente da {counter} utenti.', 'role', 'remove-all')
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante la la rimozione del ruolo.\n{e}'
+            await self.log.error(error_message, 'COMMAND - ROLE - REMOVE-ALL')
+            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - REMOVE-ALL', message=error_message))

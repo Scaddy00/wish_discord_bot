@@ -36,6 +36,10 @@ class WishBot(commands.Bot):
             self.tree.copy_global_to(guild=dev_guild)
             synced = await self.tree.sync(guild=dev_guild)
             print(f"[DEBUG] Comandi sincronizzati con la dev guild: {len(synced)}")
+            
+            tree = self.tree._get_all_commands()
+            commands_names: list = [command.name for command in tree]
+            print(f"[DEBUG] Nomi dei comandi: {commands_names}")
         else:
             synced = await self.tree.sync()
             print(f"[PROD] Comandi globali sincronizzati: {len(synced)}")
