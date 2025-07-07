@@ -8,6 +8,7 @@ from commands.cmd_roles import CmdRoles
 from commands.cmd_rules import CmdRules
 from commands.cmd_info import CmdInfo
 # ----------------------------- Events -----------------------------
+from events.on_ready import OnReady
 from events.member_events import MemberEvents
 from events.reaction_events import ReactionEvents
 
@@ -26,6 +27,7 @@ class WishBot(commands.Bot):
         await self.add_cog(CmdRules(self, self.log))
         await self.add_cog(CmdInfo(self, self.log))
         # EVENTS
+        await self.add_cog(OnReady(self, self.log))
         await self.add_cog(MemberEvents(self, self.log))
         await self.add_cog(ReactionEvents(self, self.log))
         
