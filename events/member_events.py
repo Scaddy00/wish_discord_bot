@@ -37,12 +37,12 @@ class MemberEvents(commands.Cog):
             
             await welcome_channel.send(embed=message)
             # INFO LOG
-            await self.bot.log.event(f'Nuovo utente aggiunto, {member.name} ({member.id})', 'welcome')
+            await self.log.event(f'Nuovo utente aggiunto, {member.name} ({member.id})', 'welcome')
         except Exception as e:
             # EXCEPTION
             error_message: str = f'Errore durante l\'invio del messaggio di benvenuto. \nUtente: {member.name} ({member.id}) \n{e}'
-            await self.bot.log.error(error_message, 'EVENT - MEMBER WELCOME')
-            await communication_channel.send(self.bot.log.error_message(command = 'EVENT - WELCOME', message = error_message))
+            await self.log.error(error_message, 'EVENT - MEMBER WELCOME')
+            await communication_channel.send(self.log.error_message(command = 'EVENT - WELCOME', message = error_message))
     
     # ============================= ON_MEMBER_REMOVE (ByeBye) =============================
     @commands.Cog.listener()
@@ -55,12 +55,12 @@ class MemberEvents(commands.Cog):
         try:
             await communication_channel.send(f'COMUNICAZIONE -> L\'utente {user.mention} ha lasciato il server')
             # INFO LOG
-            await self.bot.log.event(f'Utente uscito dal server, {user.name} ({user.id})', 'remove')
+            await self.log.event(f'Utente uscito dal server, {user.name} ({user.id})', 'remove')
         except Exception as e:
             # EXCEPTION
             error_message: str = f'Errore durante l\'invio del messaggio di ByeBye. \nUtente: {user.name} ({user.id})\n{e}'
-            await self.bot.log.error(error_message, 'EVENT - MEMBER REMOVE')
-            await communication_channel.send(self.bot.log.error_message(command = 'EVENT - MEMBER REMOVE', message = error_message))
+            await self.log.error(error_message, 'EVENT - MEMBER REMOVE')
+            await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER REMOVE', message = error_message))
     
     # ============================= ON_MEMBER_UPDATE (Server Booster) =============================
     @commands.Cog.listener()
