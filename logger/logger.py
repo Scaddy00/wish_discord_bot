@@ -1,7 +1,7 @@
+
 # ----------------------------- Standard libraries -----------------------------
 import logging
 from os import getenv, path, mkdir
-from datetime import datetime
 # ----------------------------- Custom libraries -----------------------------
 from utility.file_io import write_file, read_file
 from utility.printing import format_datetime_now
@@ -31,7 +31,8 @@ class Logger():
                 'admin': [],
                 'role': [],
                 'rule': [], 
-                'info': []
+                'info': [],
+                'verification': []
             },
             'messages': {},
             'errors': []

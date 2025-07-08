@@ -15,9 +15,6 @@ class CmdConfig(commands.GroupCog, name="config"):
         self.bot = bot
         self.log = log
     
-    def check(message: discord.Message, interaction: discord.Interaction):
-        return message.author == interaction.user and message.channel == interaction.channel
-    
     @app_commands.command(name="add-exception", description="Aggiunge una lista di ruoli alle eccezioni")
     async def add_exception(self, interaction: discord.Interaction, tag: str) -> None:
         # Get the guild from interaction
@@ -26,6 +23,9 @@ class CmdConfig(commands.GroupCog, name="config"):
         communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
         # Get the channel
         channel = interaction.channel
+
+        def check(m):
+            return m.author == interaction.user and m.channel == interaction.channel
 
         # INFO Log the start of the creation of the exception
         await self.log.command('Creazione di una nuova eccezione', 'config', 'EXCEPTION')
@@ -38,7 +38,7 @@ class CmdConfig(commands.GroupCog, name="config"):
             
             while True:
                 # Get the response from the user, with a timeout of 3 minutes (180 s)
-                response = await self.bot.wait_for('message', check=self.check, timeout=180.0)
+                response = await self.bot.wait_for('message', check=check, timeout=180.0)
                 
                 if response.content.lower() == 'stop':
                     break
