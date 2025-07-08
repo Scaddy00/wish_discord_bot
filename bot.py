@@ -7,6 +7,8 @@ from os import getenv
 from commands.cmd_roles import CmdRoles
 from commands.cmd_rules import CmdRules
 from commands.cmd_info import CmdInfo
+from commands.cmd_config import CmdConfig
+from commands.cmd_utility import CmdUtility
 # ----------------------------- Events -----------------------------
 from events.on_ready import OnReady
 from events.member_events import MemberEvents
@@ -26,6 +28,8 @@ class WishBot(commands.Bot):
         await self.add_cog(CmdRoles(self, self.log))
         await self.add_cog(CmdRules(self, self.log))
         await self.add_cog(CmdInfo(self, self.log))
+        await self.add_cog(CmdConfig(self, self.log))
+        await self.add_cog(CmdUtility(self, self.log))
         # EVENTS
         await self.add_cog(OnReady(self, self.log))
         await self.add_cog(MemberEvents(self, self.log))
@@ -33,6 +37,7 @@ class WishBot(commands.Bot):
         
         if getenv("DEBUG_MODE") == "1":
             dev_guild = discord.Object(id=int(getenv('GUILD_ID')))
+            self.tree.clear_commands(guild=dev_guild)
             self.tree.copy_global_to(guild=dev_guild)
             synced = await self.tree.sync(guild=dev_guild)
             print(f"[DEBUG] Comandi sincronizzati con la dev guild: {len(synced)}")
@@ -41,5 +46,6 @@ class WishBot(commands.Bot):
             commands_names: list = [command.name for command in tree]
             print(f"[DEBUG] Nomi dei comandi: {commands_names}")
         else:
+            self.tree.clear_commands()
             synced = await self.tree.sync()
             print(f"[PROD] Comandi globali sincronizzati: {len(synced)}")
