@@ -44,13 +44,13 @@ async def load_data(log: Logger, guild: discord.Guild, event: str, first_sec: st
 
     if first_sec not in config: # Check if the first section is part of the json file. If is not part of the file, log an error and return None
         error_message: str = f'Errore durante il caricamento dei seguenti dati dal file config.json\n[{first_sec}][{second_sec}][{third_sec}]\nIl campo \'{first_sec}\' non è stato trovato all\'interno della prima ricerca nel json.'
-        log.error(error_message, f'{event} - CONFIG - LOAD DATA')
+        await log.error(error_message, f'{event} - CONFIG - LOAD DATA')
         await communication_channel.send(log.error_message(f'{event} - CONFIG - LOAD DATA', error_message))
         return
     else:
         if second_sec not in config[first_sec]: # Check if the second section is part of the json file. If is not part of the file, log an error and return None
             error_message: str = f'Errore durante il caricamento dei seguenti dati dal file config.json\n[{first_sec}][{second_sec}][{third_sec}]\nIl campo \'{second_sec}\' non è stato trovato all\'interno della seconda ricerca nel json.'
-            log.error(error_message, f'{event} - CONFIG - LOAD DATA')
+            await log.error(error_message, f'{event} - CONFIG - LOAD DATA')
             await communication_channel.send(log.error_message(f'{event} - CONFIG - LOAD DATA', error_message))
             return 
         elif second_sec == '': # Check if the second section is the default value. If is true, return the entire first section of the file json
@@ -58,7 +58,7 @@ async def load_data(log: Logger, guild: discord.Guild, event: str, first_sec: st
         else:
             if third_sec not in config[first_sec][second_sec]:
                 error_message: str = f'Errore durante il caricamento dei seguenti dati dal file config.json\n[{first_sec}][{second_sec}][{third_sec}]\nIl campo \'{third_sec}\' non è stato trovato all\'interno della terza ricerca nel json.'
-                log.error(error_message, f'{event} - CONFIG - LOAD DATA')
+                await log.error(error_message, f'{event} - CONFIG - LOAD DATA')
                 await communication_channel.send(log.error_message(f'{event} - CONFIG - LOAD DATA', error_message))
                 return None
             elif third_sec == '':
@@ -89,15 +89,17 @@ async def update_data(log: Logger, guild: discord.Guild, new_data: str | dict, s
         await log.error(error_message, 'CONFIG - UPDATE DATA')
         await communication_channel.send(log.error_message(command='CONFIG - UPDATE DATA', message=error_message))
 
-# ============================= Load Channels ID =============================
-async def load_channel_id(channel_name: str) -> str:
+
+# ============================= Channels ID =============================
+# >>==============<< Load >>==============<<
+def load_channel_id(channel_name: str) -> str:
     # Load config file
     config: dict = config_file()
     
     return config['channels'].get(channel_name, '')
 
-# ============================= Add Data Channels ID =============================
-async def add_data_channel_id(channel_name: str, channel_id: str) -> None:
+# >>==============<< Add >>==============<<
+def add_data_channel_id(channel_name: str, channel_id: str) -> None:
     # Load config file
     config: dict = config_file()
     
@@ -107,20 +109,46 @@ async def add_data_channel_id(channel_name: str, channel_id: str) -> None:
     # Save config.json data
     write_file(config_file_path(), config)
 
-# ============================= Load Channels ID =============================
-async def load_exception(tag: str) -> list[int]:
+# ============================= Exception =============================
+# >>==============<< Load >>==============<<
+def load_exception(tag: str) -> list[int]:
     # Load config file
     config: dict = config_file()
     
     return config['exception'].get(tag, [])
 
-# ============================= Add Channels ID =============================
-async def add_exception(tag: str, data: list[int]) -> None:
+# >>==============<< Add >>==============<<
+def add_exception(tag: str, data: list[int]) -> None:
     # Load config file
     config: dict = config_file()
     
     # Update data
     config['exception'][tag] = data
+
+    # Save config.json data
+    write_file(config_file_path(), config)
+
+# ============================= Rules =============================
+# >>==============<< Load >>==============<<
+def load_rules(tag: str = '') -> tuple[dict, str]:
+    # Load config file
+    config: dict = config_file()
+    
+    if tag == '':
+        return config['rules']
+    else:
+        return config['rules'].get(tag, '')
+
+# >>==============<< Add >>==============<<
+def add_rules(data: dict | str, tag: str = '') -> None:
+    # Load config file
+    config: dict = config_file()
+    
+    # Update data
+    if tag == '':
+        config['rules'][tag] = data
+    else:
+        config['rules'] = data
 
     # Save config.json data
     write_file(config_file_path(), config)

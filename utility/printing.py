@@ -85,10 +85,10 @@ def create_embed(title: str, description: str, color: str, url: str | None = Non
 def create_embed_from_dict(data: dict) -> Embed:
     # Create the embed with the standard information
     embed: Embed = Embed(
-        title=data.get('title', ''),
-        description=data.get('description', ''),
+        title=data.get('title', None),
+        description=data.get('description', None),
         color=discord.Colour.from_str(data.get('color', '0x000000')),
-        url=data.get('url', '')
+        url=data.get('url', None)
     )
     # Add fields to the embed
     if 'fields' in data and data['fields']:
@@ -102,14 +102,14 @@ def create_embed_from_dict(data: dict) -> Embed:
     if 'footer' in data:
         footer = data['footer']
         embed.set_footer(
-            text=footer.get('text', ''),
-            icon_url=footer.get('icon_url', '')
+            text=footer.get('text', None),
+            icon_url=footer.get('icon_url', None)
         )
     # Add thumbnail to the embed
     if data.get('thumbnail'):
-        embed.set_thumbnail(url=data['thumbnail'])
+        embed.set_thumbnail(url=data.get('thumbnail', None))
     # Add image to the embed
     if data.get('image'):
-        embed.set_image(url=data['image'])
+        embed.set_image(url=data.get('image', None))
 
     return embed

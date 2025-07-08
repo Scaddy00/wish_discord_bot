@@ -53,5 +53,9 @@
         "color": "0xb1c4f4",
         "image": "https://media.discordapp.net/attachments/1098225073950834821/1390442184121127044/dreamer_speciasle.png?ex=686845b1&is=6866f431&hm=af6ea53d4822104d97b5596f424497e2a953c067d3926d125cf0d6e604e5ef95&=&format=webp&quality=lossless&width=827&height=276",
         "thumbnail": "https://cdn.discordapp.com/attachments/1098225073950834821/1389695693613961298/2025-06-19.1.PNG?ex=6868da38&is=686788b8&hm=4ab04ebc5597e348c0452ef482e07c1543a7617a47b19b45fa68330920284ef8&"
+    },
+    "verification": {
+        "title": "Clicca sulla reazione se accetti il regolamento.",
+        "color": "0xb1c4f4"
     }
 }

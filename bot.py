@@ -9,6 +9,7 @@ from commands.cmd_rules import CmdRules
 from commands.cmd_info import CmdInfo
 from commands.cmd_config import CmdConfig
 from commands.cmd_utility import CmdUtility
+from commands.cmd_verification import CmdVerification
 # ----------------------------- Events -----------------------------
 from events.on_ready import OnReady
 from events.member_events import MemberEvents
@@ -20,20 +21,27 @@ class WishBot(commands.Bot):
         super().__init__(*args, **kwargs)
         from logger.logger import Logger
         from utility import config
+        from verification import VerificationManager
+        
         self.log = Logger(name='Discord_bot')
+        self.verification = VerificationManager(self, self.log)
         config.start()
 
     async def setup_hook(self):
         # COMMANDS
         await self.add_cog(CmdRoles(self, self.log))
-        await self.add_cog(CmdRules(self, self.log))
+        await self.add_cog(CmdRules(self, self.log, self.verification))
         await self.add_cog(CmdInfo(self, self.log))
         await self.add_cog(CmdConfig(self, self.log))
         await self.add_cog(CmdUtility(self, self.log))
+        await self.add_cog(CmdVerification(self, self.log, self.verification))
         # EVENTS
         await self.add_cog(OnReady(self, self.log))
         await self.add_cog(MemberEvents(self, self.log))
-        await self.add_cog(ReactionEvents(self, self.log))
+        await self.add_cog(ReactionEvents(self, self.log, self.verification))
+        
+        
+        await self.verification.restore_pending_tasks()
         
         if getenv("DEBUG_MODE") == "1":
             dev_guild = discord.Object(id=int(getenv('GUILD_ID')))
