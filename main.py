@@ -7,6 +7,9 @@ from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from bot import WishBot
 
+# Load .env file
+load_dotenv()
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Blank Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 bot: commands.Bot
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,8 +24,6 @@ bot = WishBot(command_prefix=str(getenv('COMMAND_PREFIX')), intents=intents)
 # ============================= MAIN AND START =============================
 # >>==============<< MAIN >>==============<< 
 def main():
-    # Load .env file
-    load_dotenv()
     # Start the bot
     bot.run(str(getenv('DISCORD_TOKEN')))
 
