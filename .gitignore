@@ -4,3 +4,4 @@
 /logs
 *.pyc
 config.json
+verification/data.json

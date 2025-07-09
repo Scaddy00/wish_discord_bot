@@ -44,9 +44,9 @@ class CmdVerification(commands.GroupCog, name="verification"):
             )
             
             data: dict = {
-                'timeout': str(view.timeout),
-                'temp_role_id': str(view.temp_role.id),
-                'verified_role_id': str(view.verified_role.id)
+                'timeout': view.timeout,
+                'temp_role_id': view.temp_role.id,
+                'verified_role_id': view.verified_role.id
             }
             
             # Update data in verification config
