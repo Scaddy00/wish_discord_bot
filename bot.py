@@ -38,11 +38,9 @@ class WishBot(commands.Bot):
         await self.add_cog(CmdUtility(self, self.log))
         await self.add_cog(CmdVerification(self, self.log, self.verification))
         # EVENTS
-        await self.add_cog(OnReady(self, self.log))
+        await self.add_cog(OnReady(self, self.log, self.verification))
         await self.add_cog(MemberEvents(self, self.log))
         await self.add_cog(ReactionEvents(self, self.log, self.verification))
-        # Restore verification pending tasks
-        await self.verification.restore_pending_tasks()
         
         if getenv("DEBUG_MODE") == "1":
             dev_guild = discord.Object(id=int(getenv('GUILD_ID')))

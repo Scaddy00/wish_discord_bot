@@ -116,7 +116,7 @@ class VerificationManager:
             remaining: int = self.timeout - elapsed
             
             if remaining <= 0:
-                await self.verify_user(user_id)
+                await self.verify_user(int(user_id))
             else:
-                asyncio.create_task(delayed_verify(user_id, remaining))
+                asyncio.create_task(delayed_verify(int(user_id), remaining))
     
