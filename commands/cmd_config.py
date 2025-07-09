@@ -6,7 +6,7 @@ from discord import app_commands
 from os import getenv
 import re
 # ----------------------------- Custom Libraries -----------------------------
-from logger.logger import Logger
+from logger import Logger
 from utility.config import add_exception
 
 class CmdConfig(commands.GroupCog, name="config"):

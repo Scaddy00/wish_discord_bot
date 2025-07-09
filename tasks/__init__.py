@@ -2,7 +2,7 @@
 # ----------------------------- Imported Libraries -----------------------------
 from discord.ext import commands
 # ----------------------------- Custom Libraries -----------------------------
-from logger.logger import Logger
+from logger import Logger
 # ----------------------------- Tasks -----------------------------
 from .booster import setup_task as setup_booster_task
 

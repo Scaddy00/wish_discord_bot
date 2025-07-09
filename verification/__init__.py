@@ -7,7 +7,7 @@ from os import path
 import discord
 # ----------------------------- Custom libraries -----------------------------
 from utility.file_io import read_file, write_file
-from logger.logger import Logger
+from logger import Logger
 
 class VerificationManager:
     def __init__(self, bot, log: Logger):

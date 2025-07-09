@@ -5,7 +5,7 @@ from discord.ext import commands
 from discord import app_commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
-from logger.logger import Logger
+from logger import Logger
 
 class CmdUtility(commands.GroupCog, name="utility"):
     def __init__(self, bot: discord.Client, log: Logger):

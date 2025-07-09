@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
-from logger.logger import Logger
+from logger import Logger
 from tasks import setup_all_tasks
 from verification import VerificationManager
 

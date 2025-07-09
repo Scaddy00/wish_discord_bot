@@ -4,7 +4,7 @@ import discord
 from os import getenv, path
 # ----------------------------- Custom Libraries -----------------------------
 from utility.file_io import read_file, write_file
-from logger.logger import Logger
+from logger import Logger
 
 # ============================= Load Config File =============================
 def config_file_path() -> str:
