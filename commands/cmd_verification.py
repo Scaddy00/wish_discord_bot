@@ -53,7 +53,7 @@ class CmdVerification(commands.GroupCog, name="verification"):
             self.verification.update_config(data)
             
             # Respond with success
-            await interaction.channel.send('Dati salvati con successo!')
+            await interaction.followup.send('Dati salvati con successo!')
             
             # INFO Log that the operation is completed
             await self.log.command(f'Configurazione aggiornata con i seguenti dati: \n - timeout: {data["timeout"]} \n - temp_role_id: {data["temp_role_id"]} ({view.temp_role.name}) \n - verified_role_id: {data["verified_role_id"]} ({view.verified_role.name})', 'verification', 'setup')
