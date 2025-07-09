@@ -41,6 +41,29 @@ async def load_data(log: Logger, guild: discord.Guild, event: str, first_sec: st
     
     # Load config file
     config: dict = config_file()
+    
+    if first_sec not in config:
+        return
+    else:
+        if second_sec not in config[first_sec]:
+            return
+        elif second_sec == '':
+            return config[first_sec]
+        else:
+            if third_sec not in config[first_sec][second_sec]:
+                return
+            elif third_sec == '':
+                return config[first_sec][second_sec]
+            else:
+                return config[first_sec][second_sec][third_sec]
+                
+
+async def old_load_data(log: Logger, guild: discord.Guild, event: str, first_sec: str, second_sec: str = '', third_sec: str = '') -> tuple[str, dict, None]:
+    # Load communication channel
+    communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+    
+    # Load config file
+    config: dict = config_file()
 
     if first_sec not in config: # Check if the first section is part of the json file. If is not part of the file, log an error and return None
         error_message: str = f'Errore durante il caricamento dei seguenti dati dal file config.json\n[{first_sec}][{second_sec}][{third_sec}]\nIl campo \'{first_sec}\' non è stato trovato all\'interno della prima ricerca nel json.'
@@ -146,9 +169,9 @@ def add_rules(data: dict | str, tag: str = '') -> None:
     
     # Update data
     if tag == '':
-        config['rules'][tag] = data
-    else:
         config['rules'] = data
+    else:
+        config['rules'][tag] = data
 
     # Save config.json data
     write_file(config_file_path(), config)

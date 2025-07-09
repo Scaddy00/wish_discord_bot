@@ -41,8 +41,7 @@ class WishBot(commands.Bot):
         await self.add_cog(OnReady(self, self.log))
         await self.add_cog(MemberEvents(self, self.log))
         await self.add_cog(ReactionEvents(self, self.log, self.verification))
-        
-        
+        # Restore verification pending tasks
         await self.verification.restore_pending_tasks()
         
         if getenv("DEBUG_MODE") == "1":
