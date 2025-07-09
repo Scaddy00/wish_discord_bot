@@ -5,7 +5,7 @@ from discord.ext import commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from utility import printing
-from logger.logger import Logger
+from logger import Logger
 from functions.roles import add_role, remove_role
 
 class MemberEvents(commands.Cog):

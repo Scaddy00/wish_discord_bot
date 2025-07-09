@@ -5,7 +5,7 @@ from discord.ext import commands
 from discord import app_commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
-from logger.logger import Logger
+from logger import Logger
 from verification import VerificationManager
 from views.verification_setup_view import SetupView
 

@@ -5,7 +5,7 @@ from discord.ext import commands
 from discord import app_commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
-from logger.logger import Logger
+from logger import Logger
 from utility.printing import create_embed_from_dict, load_embed_text, load_single_embed_text
 from utility.config import load_rules, add_rules
 from verification import VerificationManager

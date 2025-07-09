@@ -3,7 +3,7 @@
 import discord
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
-from logger.logger import Logger
+from logger import Logger
 from utility import config
 
 # ============================= ADD_ROLE =============================

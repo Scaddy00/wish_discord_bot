@@ -6,7 +6,7 @@ from discord import app_commands
 from os import getenv
 from asyncio import TimeoutError
 # ----------------------------- Custom Libraries -----------------------------
-from logger.logger import Logger
+from logger import Logger
 from utility.config import update_data, load_exception, add_exception
 from functions.roles import add_role, remove_role
 

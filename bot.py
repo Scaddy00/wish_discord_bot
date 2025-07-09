@@ -20,7 +20,7 @@ from events.reaction_events import ReactionEvents
 class WishBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from logger.logger import Logger
+        from logger import Logger
         from utility import config
         from verification import VerificationManager
         

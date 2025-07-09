@@ -7,7 +7,7 @@ from os import getenv
 from datetime import datetime, timedelta, timezone
 import asyncio
 # ----------------------------- Custom Libraries -----------------------------
-from logger.logger import Logger
+from logger import Logger
 
 class CmdAdmin(commands.GroupCog, name="admin"):
     def __init__(self, bot: discord.Client, log: Logger):
