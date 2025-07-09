@@ -4,10 +4,10 @@ import discord
 from discord.ext import commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
-from functions.roles import add_role_event, remove_role_event, add_role
+from utils.roles import add_role_event, remove_role_event, add_role
 from logger import Logger
-from verification import VerificationManager
-from utility.config import load_rules
+from cogs.verification import VerificationManager
+from utils.config import load_rules
 
 class ReactionEvents(commands.Cog):
     def __init__(self, bot: commands.Bot, log: Logger, verification: VerificationManager):

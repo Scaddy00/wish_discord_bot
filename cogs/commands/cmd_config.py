@@ -7,7 +7,7 @@ from os import getenv
 import re
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from utility.config import add_exception
+from utils.config import add_exception
 
 class CmdConfig(commands.GroupCog, name="config"):
     def __init__(self, bot: discord.Client, log: Logger):

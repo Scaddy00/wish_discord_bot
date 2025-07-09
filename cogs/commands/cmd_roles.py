@@ -7,8 +7,8 @@ from os import getenv
 from asyncio import TimeoutError
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from utility.config import update_data, load_exception, add_exception
-from functions.roles import add_role, remove_role
+from utils.config import update_data, load_exception, add_exception
+from utils.roles import add_role, remove_role
 
 class CmdRoles(commands.GroupCog, name="role"):
     def __init__(self, bot: discord.Client, log: Logger):

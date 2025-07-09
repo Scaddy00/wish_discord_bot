@@ -6,7 +6,7 @@ from discord import app_commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from utility.printing import create_embed_from_dict, load_single_embed_text
+from utils.printing import create_embed_from_dict, load_single_embed_text
 
 class CmdInfo(commands.GroupCog, name="info"):
     def __init__(self, bot: discord.Client, log: Logger):

@@ -6,7 +6,7 @@ from discord import Embed
 import discord
 from os import path
 # ----------------------------- Custom Libraries -----------------------------
-from utility.file_io import read_file
+from .file_io import read_file
 
 # ============================= Datetime format =============================
 def format_datetime_now() -> str:

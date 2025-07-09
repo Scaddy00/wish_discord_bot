@@ -4,7 +4,7 @@ import discord
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from utility import config
+from .config import load_data
 
 # ============================= ADD_ROLE =============================
 async def add_role(log: Logger, guild: discord.Guild, role_id: int, member_id: int) -> None:
@@ -62,7 +62,7 @@ async def remove_role(log: Logger, guild: discord.Guild, role_id: int, member_id
 async def add_role_event(log: Logger, guild: discord.Guild, message_id: int, emoji: discord.PartialEmoji, member_id: str) -> None:
     
     # Load role id
-    role_id = await config.load_data(log, guild, 'EVENT - ROLE ASSIGN AUTO', 'roles', str(message_id), emoji.__str__().replace(' ', ''))
+    role_id = await load_data(log, guild, 'EVENT - ROLE ASSIGN AUTO', 'roles', str(message_id), emoji.__str__().replace(' ', ''))
     
     # Check if the role id is None
     if role_id == None:
@@ -74,7 +74,7 @@ async def add_role_event(log: Logger, guild: discord.Guild, message_id: int, emo
 # ============================= REMOVE_ROLE_EVENT =============================
 async def remove_role_event(log: Logger, guild: discord.Guild, message_id: int, emoji: discord.PartialEmoji, member_id: int) -> None:
     # Load role id
-    role_id = await config.load_data(log, guild, 'EVENT - ROLE ASSIGN AUTO', 'roles', str(message_id), emoji.__str__().replace(' ', ''))
+    role_id = await load_data(log, guild, 'EVENT - ROLE ASSIGN AUTO', 'roles', str(message_id), emoji.__str__().replace(' ', ''))
     
     # Check if the role id is None
     if role_id == None:

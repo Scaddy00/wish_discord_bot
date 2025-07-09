@@ -1,12 +1,11 @@
 
 # ----------------------------- Standard libraries -----------------------------
-import json
 import asyncio
 from datetime import datetime, timedelta, timezone
-from os import path
+from os import path, getenv
 import discord
 # ----------------------------- Custom libraries -----------------------------
-from utility.file_io import read_file, write_file
+from utils.file_io import read_file, write_file
 from logger import Logger
 
 class VerificationManager:
@@ -17,7 +16,7 @@ class VerificationManager:
         self.temp_role_id = 0
         self.verified_role_id = 0
         self.waiting_users = {}
-        self.file_path = path.join(path.dirname(__file__), 'data.json')
+        self.file_path = path.join(getenv('MAIN_PATH'), getenv('DATA_PATH'), getenv('VERIFICATION_DATA_FILE_NAME'))
         self.setup()
     
     # ============================= Load Data =============================

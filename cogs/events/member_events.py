@@ -4,9 +4,9 @@ import discord
 from discord.ext import commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
-from utility import printing
+from utils import printing
 from logger import Logger
-from functions.roles import add_role, remove_role
+from utils.roles import add_role, remove_role
 
 class MemberEvents(commands.Cog):
     def __init__(self, bot: commands.Bot, log: Logger):
