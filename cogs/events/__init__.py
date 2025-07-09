@@ -3,11 +3,11 @@
 from discord.ext import commands
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from verification import VerificationManager
+from cogs.verification import VerificationManager
 # ----------------------------- Events -----------------------------
-from events.on_ready import OnReady
-from events.member_events import MemberEvents
-from events.reaction_events import ReactionEvents
+from .on_ready import OnReady
+from .member_events import MemberEvents
+from .reaction_events import ReactionEvents
 
 # ============================= Add Events =============================
 async def add_events(bot: commands.Bot, log: Logger, verification: VerificationManager) -> None:

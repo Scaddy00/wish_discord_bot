@@ -4,16 +4,16 @@ import discord
 from discord.ext import commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
-from commands import add_commands
-from events import add_events
+from cogs.commands import add_commands
+from cogs.events import add_events
 
 # ============================= BOT SETUP HOOK =============================
 class WishBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         from logger import Logger
-        from utility import config
-        from verification import VerificationManager
+        from utils import config
+        from cogs.verification import VerificationManager
         
         self.log = Logger(name='Discord_bot')
         self.verification = VerificationManager(self, self.log)

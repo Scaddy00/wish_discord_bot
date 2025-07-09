@@ -1,5 +1,4 @@
 import discord
-from discord import app_commands
 from discord.ui import View, Select
 from discord.ui import RoleSelect
 

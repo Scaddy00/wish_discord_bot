@@ -7,7 +7,7 @@ from discord.ext import commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from functions.roles import add_role, remove_role
+from utils.roles import add_role, remove_role
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Blank Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 _bot: commands.Bot

@@ -6,8 +6,8 @@ from discord import app_commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from verification import VerificationManager
-from views.verification_setup_view import SetupView
+from cogs.verification import VerificationManager
+from cogs.verification.verification_setup_view import SetupView
 
 class CmdVerification(commands.GroupCog, name="verification"):
     def __init__(self, bot: discord.Client, log: Logger, verification: VerificationManager):

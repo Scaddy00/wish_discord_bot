@@ -3,8 +3,8 @@
 import logging
 from os import getenv, path, mkdir
 # ----------------------------- Custom libraries -----------------------------
-from utility.file_io import write_file, read_file
-from utility.printing import format_datetime_now
+from utils.file_io import write_file, read_file
+from utils.printing import format_datetime_now
 
 # ============================= Logger class =============================
 class Logger():
@@ -37,23 +37,24 @@ class Logger():
             'messages': {},
             'errors': []
         }
-        # Get path and file name from .env
-        main_path: str = str(getenv('MAIN_PATH'))
-        log_folder_path: str = str(getenv('LOG_FILE_PATH'))
-        log_file_name: str = str(getenv('LOG_FILE_NAME'))
+        # Get path and file name from .env        
+        data_folder_path: str = path.join(getenv('MAIN_PATH'), getenv('DATA_PATH'))
+        log_folder_path: str = path.join(data_folder_path, getenv('LOG_FILE_PATH'))
+        log_path: str = path.join(log_folder_path, getenv('LOG_FILE_NAME'))
         
-        complete_folder_path: str = path.join(main_path, log_folder_path)
-        complete_file_path: str = path.join(complete_folder_path, log_file_name)
+        # Check if data folder exist, else create new folder
+        if not path.exists(data_folder_path):
+            mkdir(data_folder_path)
         
-        # Check logs if folder exist, else create new folder
-        if not path.exists(complete_folder_path):
-            mkdir(complete_folder_path)
+        # Check if log folder exist, else create new folder
+        if not path.exists(log_folder_path):
+            mkdir(log_folder_path)
         
         # Check if log file exist
-        if not path.exists(complete_file_path):
-            write_file(complete_file_path, log_file)
+        if not path.exists(log_path):
+            write_file(log_path, log_file)
         
-        return complete_file_path
+        return log_path
     
     # >>==============<< New Event Record >>==============<< 
     async def event(self, log_message: str, record_type: str) -> None:

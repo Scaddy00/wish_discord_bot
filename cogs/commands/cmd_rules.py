@@ -6,9 +6,9 @@ from discord import app_commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from utility.printing import create_embed_from_dict, load_embed_text, load_single_embed_text
-from utility.config import load_rules, add_rules
-from verification import VerificationManager
+from utils.printing import create_embed_from_dict, load_embed_text, load_single_embed_text
+from utils.config import load_rules, add_rules
+from cogs.verification import VerificationManager
 
 class CmdRules(commands.GroupCog, name="rule"):
     def __init__(self, bot: discord.Client, log: Logger, verification: VerificationManager):

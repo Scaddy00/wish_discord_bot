@@ -3,15 +3,15 @@
 from discord.ext import commands
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from verification import VerificationManager
+from cogs.verification import VerificationManager
 # ----------------------------- Commands -----------------------------
-from commands.cmd_admin import CmdAdmin
-from commands.cmd_roles import CmdRoles
-from commands.cmd_rules import CmdRules
-from commands.cmd_info import CmdInfo
-from commands.cmd_config import CmdConfig
-from commands.cmd_utility import CmdUtility
-from commands.cmd_verification import CmdVerification
+from .cmd_admin import CmdAdmin
+from .cmd_roles import CmdRoles
+from .cmd_rules import CmdRules
+from .cmd_info import CmdInfo
+from .cmd_config import CmdConfig
+from .cmd_utility import CmdUtility
+from .cmd_verification import CmdVerification
 
 # ============================= Add Commands =============================
 async def add_commands(bot: commands.Bot, log: Logger, verification: VerificationManager) -> None:
