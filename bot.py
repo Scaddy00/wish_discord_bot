@@ -3,18 +3,9 @@
 import discord
 from discord.ext import commands
 from os import getenv
-# ----------------------------- Commands -----------------------------
-from commands.cmd_admin import CmdAdmin
-from commands.cmd_roles import CmdRoles
-from commands.cmd_rules import CmdRules
-from commands.cmd_info import CmdInfo
-from commands.cmd_config import CmdConfig
-from commands.cmd_utility import CmdUtility
-from commands.cmd_verification import CmdVerification
-# ----------------------------- Events -----------------------------
-from events.on_ready import OnReady
-from events.member_events import MemberEvents
-from events.reaction_events import ReactionEvents
+# ----------------------------- Custom Libraries -----------------------------
+from commands import add_commands
+from events import add_events
 
 # ============================= BOT SETUP HOOK =============================
 class WishBot(commands.Bot):
@@ -30,17 +21,9 @@ class WishBot(commands.Bot):
 
     async def setup_hook(self):
         # COMMANDS
-        await self.add_cog(CmdAdmin(self, self.log))
-        await self.add_cog(CmdRoles(self, self.log))
-        await self.add_cog(CmdRules(self, self.log, self.verification))
-        await self.add_cog(CmdInfo(self, self.log))
-        await self.add_cog(CmdConfig(self, self.log))
-        await self.add_cog(CmdUtility(self, self.log))
-        await self.add_cog(CmdVerification(self, self.log, self.verification))
+        await add_commands(self, self.log, self.verification)
         # EVENTS
-        await self.add_cog(OnReady(self, self.log, self.verification))
-        await self.add_cog(MemberEvents(self, self.log))
-        await self.add_cog(ReactionEvents(self, self.log, self.verification))
+        await add_events(self, self.log, self.verification)
         
         if getenv("DEBUG_MODE") == "1":
             dev_guild = discord.Object(id=int(getenv('GUILD_ID')))
