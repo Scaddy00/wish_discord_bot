@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from os import getenv
 # ----------------------------- Commands -----------------------------
+from commands.cmd_admin import CmdAdmin
 from commands.cmd_roles import CmdRoles
 from commands.cmd_rules import CmdRules
 from commands.cmd_info import CmdInfo
@@ -29,6 +30,7 @@ class WishBot(commands.Bot):
 
     async def setup_hook(self):
         # COMMANDS
+        await self.add_cog(CmdAdmin(self, self.log))
         await self.add_cog(CmdRoles(self, self.log))
         await self.add_cog(CmdRules(self, self.log, self.verification))
         await self.add_cog(CmdInfo(self, self.log))

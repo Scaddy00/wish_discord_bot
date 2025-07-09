@@ -26,9 +26,9 @@ class Logger():
                 'role-assign-auto': []
             },
             'commands': {
+                'admin': [],
                 'test': [],
                 'social': [],
-                'admin': [],
                 'role': [],
                 'rule': [], 
                 'info': [],
