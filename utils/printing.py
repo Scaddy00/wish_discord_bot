@@ -8,10 +8,22 @@ from os import path
 # ----------------------------- Custom Libraries -----------------------------
 from .file_io import read_file
 
-# ============================= Datetime format =============================
+italian_month: list = ["", "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
+
+# ============================= Format Datetime Now =============================
 def format_datetime_now() -> str:
     str_format: str = str(getenv('DATETIME_FORMAT'))
     return datetime.now().strftime(str_format)
+
+# ============================= Format Datetime Now Extended =============================
+def format_datetime_now_extended() -> str:
+    converted_datetime: datetime = datetime.now()
+    return converted_datetime.strftime(f"%H:%M %d {italian_month[converted_datetime.month]} %Y")
+
+# ============================= Format Datetime Extended =============================
+def format_datetime_extended(time: str) -> str:
+    converted_datetime: datetime = datetime.fromisoformat(time)
+    return converted_datetime.strftime(f"%H:%M %d {italian_month[converted_datetime.month]} %Y")
 
 # ============================= Embed data load =============================
 async def load_embed_text(guild: discord.Guild, item: str) -> list[dict]:

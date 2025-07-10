@@ -14,16 +14,18 @@ class WishBot(commands.Bot):
         from logger import Logger
         from utils import config
         from cogs.verification import VerificationManager
+        from cogs.twitch import TwitchApp
         
         self.log = Logger(name='Discord_bot')
         self.verification = VerificationManager(self, self.log)
+        self.twitch_app = TwitchApp(self, self.log)
         config.start()
 
     async def setup_hook(self):
         # COMMANDS
         await add_commands(self, self.log, self.verification)
         # EVENTS
-        await add_events(self, self.log, self.verification)
+        await add_events(self, self.log, self.verification, self.twitch_app)
         
         if getenv("DEBUG_MODE") == "1":
             dev_guild = discord.Object(id=int(getenv('GUILD_ID')))
