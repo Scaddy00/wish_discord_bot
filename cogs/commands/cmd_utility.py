@@ -8,7 +8,7 @@ from os import getenv
 from logger import Logger
 
 class CmdUtility(commands.GroupCog, name="utility"):
-    def __init__(self, bot: discord.Client, log: Logger):
+    def __init__(self, bot: commands.bot, log: Logger):
         super().__init__()
         self.bot = bot
         self.log = log

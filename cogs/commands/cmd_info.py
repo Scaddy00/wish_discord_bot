@@ -9,7 +9,7 @@ from logger import Logger
 from utils.printing import create_embed_from_dict, load_single_embed_text
 
 class CmdInfo(commands.GroupCog, name="info"):
-    def __init__(self, bot: discord.Client, log: Logger):
+    def __init__(self, bot: commands.bot, log: Logger):
         super().__init__()
         self.bot = bot
         self.log = log

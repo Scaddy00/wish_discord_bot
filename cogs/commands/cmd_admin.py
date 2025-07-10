@@ -10,7 +10,7 @@ import asyncio
 from logger import Logger
 
 class CmdAdmin(commands.GroupCog, name="admin"):
-    def __init__(self, bot: discord.Client, log: Logger):
+    def __init__(self, bot: commands.bot, log: Logger):
         super().__init__()
         self.bot = bot
         self.log = log

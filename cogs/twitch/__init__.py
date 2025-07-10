@@ -49,6 +49,18 @@ class TwitchApp():
         data['stream'] = self.stream_info
         write_file(self.file_path, data)
     
+    # ============================= Add Image =============================
+    def add_image(self, new_image: dict) -> None:
+        data: dict = self.load_data()
+        data['embeds']['images'][new_image['tag']] = new_image['url']
+        write_file(self.file_path, data)
+    
+    # ============================= Add Title =============================
+    def add_title(self, new_title: dict) -> None:
+        data: dict = self.load_data()
+        data['embeds']['titles'][new_title['tag']] = new_title['title']
+        write_file(self.file_path, data)
+
     # ============================= Set Default Stream Info =============================
     def set_default_stream_info(self):
         self.stream_info = {
@@ -113,7 +125,7 @@ class TwitchApp():
     def get_image_tag(title: str):
         # Get image_tag
         split_title: list = title.split('|')
-        return split_title[1] if len(split_title) > 1 else 'default'
+        return split_title[1].strip() if len(split_title) > 1 else 'default'
     
     # ============================= Create Embed Message =============================
     def create_embed_message(self, embed_title: str, image_url: str) -> discord.Embed:

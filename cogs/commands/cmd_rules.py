@@ -11,7 +11,7 @@ from utils.config import load_rules, add_rules
 from cogs.verification import VerificationManager
 
 class CmdRules(commands.GroupCog, name="rule"):
-    def __init__(self, bot: discord.Client, log: Logger, verification: VerificationManager):
+    def __init__(self, bot: commands.bot, log: Logger, verification: VerificationManager):
         super().__init__()
         self.bot = bot
         self.log = log
