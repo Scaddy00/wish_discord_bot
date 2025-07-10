@@ -1,9 +1,5 @@
 /.venv
 /.vscode
 .env
-/logs
 *.pyc
-config.json
-verification/data.json
-data/logs/bot_logs.json
-data/twitch_data.json
+/data
