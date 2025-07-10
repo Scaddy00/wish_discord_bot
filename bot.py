@@ -23,7 +23,7 @@ class WishBot(commands.Bot):
 
     async def setup_hook(self):
         # COMMANDS
-        await add_commands(self, self.log, self.verification)
+        await add_commands(self, self.log, self.verification, self.twitch_app)
         # EVENTS
         await add_events(self, self.log, self.verification, self.twitch_app)
         

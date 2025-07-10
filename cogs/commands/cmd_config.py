@@ -10,7 +10,7 @@ from logger import Logger
 from utils.config import add_exception
 
 class CmdConfig(commands.GroupCog, name="config"):
-    def __init__(self, bot: discord.Client, log: Logger):
+    def __init__(self, bot: commands.bot, log: Logger):
         super().__init__()
         self.bot = bot
         self.log = log

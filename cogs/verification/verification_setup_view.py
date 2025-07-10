@@ -1,6 +1,8 @@
+
+# ----------------------------- Imported Libraries -----------------------------
 import discord
-from discord.ui import View, Select
-from discord.ui import RoleSelect
+from discord.ui import View, Select, RoleSelect, Button
+from discord import SelectOption
 
 class SetupView(View):
     def __init__(self, author: discord.User):
@@ -13,10 +15,10 @@ class SetupView(View):
             placeholder="Seleziona timeout",
             custom_id="timeout_select",
             options=[
-                discord.SelectOption(label="5 minuti", value="300"),
-                discord.SelectOption(label="10 minuti", value="600"),
-                discord.SelectOption(label="15 minuti", value="900"),
-                discord.SelectOption(label="30 minuti", value="1800"),
+                SelectOption(label="5 minuti", value="300"),
+                SelectOption(label="10 minuti", value="600"),
+                SelectOption(label="15 minuti", value="900"),
+                SelectOption(label="30 minuti", value="1800"),
             ],
             row=0
         )
@@ -46,7 +48,11 @@ class SetupView(View):
         self.add_item(select_verified_role)
         
         # Add button to confirm the selection
-        button_confirm = discord.ui.Button(label="Conferma", style=discord.ButtonStyle.green, row=3)
+        button_confirm = Button(
+            label="Conferma", 
+            style=discord.ButtonStyle.green, 
+            row=3
+        )
         button_confirm.callback = self.confirm_callback
         self.add_item(button_confirm)
         

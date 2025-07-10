@@ -10,7 +10,7 @@ from cogs.verification import VerificationManager
 from cogs.verification.verification_setup_view import SetupView
 
 class CmdVerification(commands.GroupCog, name="verification"):
-    def __init__(self, bot: discord.Client, log: Logger, verification: VerificationManager):
+    def __init__(self, bot: commands.bot, log: Logger, verification: VerificationManager):
         super().__init__()
         self.bot = bot
         self.log = log

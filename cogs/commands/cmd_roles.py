@@ -11,7 +11,7 @@ from utils.config import update_data, load_exception, add_exception
 from utils.roles import add_role, remove_role
 
 class CmdRoles(commands.GroupCog, name="role"):
-    def __init__(self, bot: discord.Client, log: Logger):
+    def __init__(self, bot: commands.bot, log: Logger):
         super().__init__()
         self.bot = bot
         self.log = log
