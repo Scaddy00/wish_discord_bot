@@ -226,6 +226,10 @@ class TwitchApp():
                                 'image_tag': image_tag
                             }
                         )
+                        
+                        # INFO Log that message was sent with new stream and stream_info was updated
+                        await self.log.event('Nuovo messaggio live iniziata e dati aggiornati in stream_info', 'twitch')
+                        
                     except Exception as e:
                         # EXCEPTION
                         error_message: str = f'Errore durante la fase di invio del messaggio di inizio di una nuova live.\n{e}'
@@ -250,6 +254,10 @@ class TwitchApp():
                                 embed=self.create_embed_message(embed_title, embed_image_url),
                                 view=StreamButtonView(self.url)
                             )
+                            
+                        # INFO Log that message was updated with changed stream data and stream_info was updated
+                        await self.log.event('Messaggio live aggiornato con le nuove informazioni e dati aggiornati in stream_info', 'twitch')
+                            
                     except Exception as e:
                         # EXCEPTION
                         error_message: str = f'Errore durante la fase di aggiornamento del messaggio.\n{e}'
@@ -274,6 +282,10 @@ class TwitchApp():
                         )
                         # Set stream_info to default
                         self.set_default_stream_info()
+                        
+                        # INFO Log that message was updated with stream ended and stream_info is returned to default
+                        await self.log.event('Messaggio aggiornato con live terminata e dati riportati a default in stream_info', 'twitch')
+                        
                     except Exception as e:
                         # EXCEPTION
                         error_message: str = f'Errore durante il reset dei dati a fine live.\n{e}'

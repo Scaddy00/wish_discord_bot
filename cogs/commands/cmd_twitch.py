@@ -37,7 +37,8 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
             # Send confirmation message with selected values
             await interaction.followup.send(
                 f'#️⃣ Tag: {modal.tag}'
-                f'\n🌌 Url immagine: {modal.url}'
+                f'\n🌌 Url immagine: {modal.url}',
+                ephemeral=True
             )
             
             data: dict = {
@@ -49,7 +50,10 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
             self.twitch_app.add_image(data)
             
             # Respond with success
-            await interaction.followup.send('✅ Dati salvati con successo!')
+            await interaction.followup.send(
+                '✅ Dati salvati con successo!',
+                ephemeral=True
+            )
             
             # INFO Log that the operation is completed
             await self.log.command(f'Aggiunti un nuovo tag e una nuova immagine:\n - tag: {data["tag"]} \n - url: {data["url"]}', 'twitch', 'add-tag')
@@ -83,7 +87,8 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
             # Send confirmation message with selected values
             await interaction.followup.send(
                 f'#️⃣ Tag: {view.tag}'
-                f'\n✅ Titolo: {view.title}'
+                f'\n✅ Titolo: {view.title}',
+                ephemeral=True
             )
             
             data: dict = {
@@ -95,7 +100,10 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
             self.twitch_app.change_title(data)
             
             # Respond with success
-            await interaction.followup.send('✅ Dati salvati con successo!')
+            await interaction.followup.send(
+                '✅ Dati salvati con successo!',
+                ephemeral=True
+            )
             
             # INFO Log that the operation is completed
             await self.log.command(f'Modificato un titolo:\n - tag: {data["tag"]} \n - titolo: {data["title"]}', 'twitch', 'change-title')
@@ -123,14 +131,18 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
             
             # Send confirmation message with selected value
             await interaction.followup.send(
-                f'🟣 Nome Streamer: {modal.input_values[0]}'
+                f'🟣 Nome Streamer: {modal.input_values[0]}',
+                ephemeral=True
             )
             
             # Update data in twitch_app streamer name
             self.twitch_app.change_streamer_name(modal.input_value)
             
             # Respond with success
-            await interaction.followup.send('✅ Dati salvati con successo!')
+            await interaction.followup.send(
+                '✅ Dati salvati con successo!',
+                ephemeral=True
+            )
             
             # INFO Log that the operation is completed
             await self.log.command(f'Modificato il nome dello streamer: {modal.input_value}', 'twitch', 'change-streamer')
