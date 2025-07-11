@@ -33,7 +33,8 @@ class Logger():
                 'rule': [], 
                 'info': [],
                 'verification': [],
-                'twitch': []
+                'twitch': [],
+                'config': []
             },
             'messages': {},
             'errors': []

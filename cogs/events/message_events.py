@@ -20,6 +20,9 @@ class MessageEvents(commands.Cog):
         communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
         
         try:
+            if message.author.bot:
+                return
+            
             # Get exception list
             channel_exceptions: list[int] = load_exception('message_logger')
             
