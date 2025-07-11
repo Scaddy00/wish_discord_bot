@@ -33,8 +33,10 @@ class MessageEvents(commands.Cog):
             # Log the message
             await self.log.message(
                 log_message=message.content,
-                channel_id=message.channel.id,
-                channel_name=message.channel.name
+                channel_id=str(message.channel.id),
+                channel_name=message.channel.name,
+                user_id=str(message.author.id),
+                user_name=message.author.name
             )
             
         except Exception as e:

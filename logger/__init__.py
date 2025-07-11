@@ -113,7 +113,7 @@ class Logger():
         write_file(self.log_path, log_file)
     
     # >>==============<< New Message Record >>==============<< 
-    async def message(self, log_message: str, channel_id: str, channel_name: str) -> None:
+    async def message(self, log_message: str, channel_id: str, channel_name: str, user_id: str, user_name: str) -> None:
         # Load log file
         log_file: dict = read_file(self.log_path)
         # Load formatted datetime now
@@ -122,6 +122,8 @@ class Logger():
         # Create json record
         record: dict = {
             'timestamp': now, 
+            'User ID': user_id,
+            'User Name': user_name,
             'message': log_message
         }
         
