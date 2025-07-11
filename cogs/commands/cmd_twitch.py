@@ -26,7 +26,7 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
         communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
         
         try:
-            modal = TagModal(author=interaction.user)
+            modal = TagModal()
             await interaction.response.send_modal(modal)
             await modal.wait()
             
@@ -140,3 +140,28 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
             error_message: str = f'Errore durante la modifica del nome dello streamer.\n{e}'
             await self.log.error(error_message, 'COMMAND - TWITCH - CHANGE-STREAMER')
             await communication_channel.send(self.log.error_message(command='COMMAND - TWITCH - CHANGE-STREAMER', message=error_message))
+
+    @app_commands.command(name="reset-info", description="Reset delle info riguardante l'ultima stream")
+    async def reset_info(self, interaction: discord.Interaction) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
+        # Load communication channel
+        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))\
+        
+        try:
+            # Reset stream info
+            self.twitch_app.set_default_stream_info()
+            # Respond with success
+            await interaction.response.send_message(
+                '✅ Informazioni della stream resettate!',
+                ephemeral=True
+            )
+            
+            # INFO Log that the operation is completed
+            await self.log.command(f'Eseguito un reset dei delle info dell\'ultima stream', 'twitch', 'reset-info')
+
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante la modifica del nome dello streamer.\n{e}'
+            await self.log.error(error_message, 'COMMAND - TWITCH - RESET-INFO')
+            await communication_channel.send(self.log.error_message(command='COMMAND - TWITCH - RESET-INFO', message=error_message))
