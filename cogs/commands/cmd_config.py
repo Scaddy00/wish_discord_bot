@@ -8,6 +8,7 @@ import re
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from utils.config import add_exception
+from cogs.modals.input_modal import InputModal
 
 class CmdConfig(commands.GroupCog, name="config"):
     def __init__(self, bot: commands.bot, log: Logger):
@@ -37,6 +38,14 @@ class CmdConfig(commands.GroupCog, name="config"):
             await interaction.response.send_message('Menziona di seguito i ruoli che vuoi aggiungere alle eccezioni. \nPuoi scrivere tutti i ruoli insieme divisi da | oppure un ruolo per messaggio. \nQuando hai terminato scrivi "stop". \nHai **3 minuti** per completare l\'operazione.')
             
             while True:
+                modal: InputModal = InputModal(
+                    title='Aggiungi un eccezione',
+                    labels=[
+                        'Tag dell\'eccezione.',
+                        ''
+                    ]
+                )
+                
                 # Get the response from the user, with a timeout of 3 minutes (180 s)
                 response = await self.bot.wait_for('message', check=check, timeout=180.0)
                 

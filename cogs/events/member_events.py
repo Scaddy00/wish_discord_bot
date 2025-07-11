@@ -42,7 +42,7 @@ class MemberEvents(commands.Cog):
             # EXCEPTION
             error_message: str = f'Errore durante l\'invio del messaggio di benvenuto. \nUtente: {member.name} ({member.id}) \n{e}'
             await self.log.error(error_message, 'EVENT - MEMBER WELCOME')
-            await communication_channel.send(self.log.error_message(command = 'EVENT - WELCOME', message = error_message))
+            await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER WELCOME', message = error_message))
     
     # ============================= ON_MEMBER_REMOVE (ByeBye) =============================
     @commands.Cog.listener()
