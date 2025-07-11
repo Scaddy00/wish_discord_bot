@@ -5,6 +5,7 @@ from discord.ext import tasks
 from discord.ext import commands
 from os import getenv, path
 from twitchAPI.twitch import Twitch
+from twitchAPI.object.api import Stream
 import asyncio
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
@@ -16,20 +17,27 @@ class TwitchApp():
     def __init__(self, bot: commands.Bot, log: Logger):
         # Twitch data
         app_id = getenv('TWITCH_CLIENT_ID')
-        app_secret = getenv('TWITCH_CLIENT_ID')
+        app_secret = getenv('TWITCH_CLIENT_SECRET')
         # Variables
         self.log = log
         self.bot = bot
+        
         self.file_path: str = path.join(getenv('MAIN_PATH'), getenv('DATA_PATH'), getenv('TWITCH_FILE_NAME'))
         self.stream_info: dict = {}
         self.streamer_name: str = ''
         self.url: str = getenv('TWITCH_URL')
         self.channel_id: int = int(getenv('LIVE_CHANNEL_ID'))
-        self.color: discord.Color = discord.Colour.from_str(f'0x{getenv('TWITCH_COLOR')}')
+        self.color: discord.Color = f'0x{getenv('TWITCH_COLOR')}'
+        
         # Create Twitch app
         self.app: Twitch = Twitch(app_id, app_secret)
+        # Setup the App
         self.setup()
-        
+    
+    # ============================= Authenticate App =============================
+    async def _authenticate(self) -> None:
+        await self.app.authenticate_app([])
+    
     # ============================= Load Data =============================
     def load_data(self) -> dict:
         if path.exists(self.file_path):
@@ -69,7 +77,7 @@ class TwitchApp():
         write_file(self.file_path, data)
 
     # ============================= Set Default Stream Info =============================
-    def set_default_stream_info(self):
+    def set_default_stream_info(self) -> None:
         self.stream_info = {
             'status': 'OFF',
             'message_id': '',
@@ -123,21 +131,33 @@ class TwitchApp():
         self.save_status()
     
     # ============================= Get Embed Data =============================
-    def get_embed_data(self, image_tag: str) -> tuple[str, str, str]:
+    def get_embed_data(self, image_tag: str) -> tuple[str, str]:
         data: dict = self.load_data()
-        # Return status, image_url
-        return data['embeds']['titles'].get(self.stream_info['status'].lower(), ''), data['embeds']['images'].get(image_tag.lower(), '')
+        # Return status and image_url
+        return (
+            data['embeds']['titles'].get(self.stream_info['status'].lower(), ''), 
+            data['embeds']['images'].get(image_tag, '')
+        )
     
     # ============================= Get Image Tag =============================
-    def get_image_tag(title: str):
+    @staticmethod
+    def get_image_tag(title: str) -> str:
         # Get image_tag
-        split_title: list = title.split('|')
+        split_title: list = title.split('/')
         return split_title[1].strip() if len(split_title) > 1 else 'default'
     
     # ============================= Create Embed Message =============================
     def create_embed_message(self, embed_title: str, image_url: str) -> discord.Embed:
         # Create the description
-        description: str = '**Titolo**\n{title}\n**Gioco**\n{game}\n**Iniziata il**\n{started_at}'
+        description: str = (
+            "**Titolo**\n{title}"
+            "\n\n**Gioco**\n{game}"
+            "\n\n**Iniziata il**\n{started_at}"
+        ).format(
+            title=self.stream_info['title'], 
+            game=self.stream_info['game'], 
+            started_at=self.stream_info['started_at']
+        )
         # Add the end of stream to description if stream is ended
         if self.stream_info['status'] == 'OFF' and self.stream_info['ended_at'] != '':
             description.join('\n**Finita il**\n{ended_at}'.format(self.stream_info['ended_at']))
@@ -150,19 +170,19 @@ class TwitchApp():
             )
 
     # ============================= Check Changes =============================
-    def check_changes(self, data) -> dict:
+    def check_changes(self, data: Stream) -> dict:
         updated_data: dict = {}
-        if data['title'] != self.stream_info['title']:
-            updated_data['title'] = data['title']
-            updated_data['image_tag'] = self.get_image_tag(data['title'])
-        if data['game'] != self.stream_info['game']:
-            updated_data['game'] = data['game']
+        if data.title != self.stream_info['title']:
+            updated_data['title'] = data.title
+            updated_data['image_tag'] = self.get_image_tag(data.title)
+        if data.game_name != self.stream_info['game']:
+            updated_data['game'] = data.game_name
 
         return updated_data
 
     # ============================= Check Live Status =============================
     async def check_live_status(self) -> None:
-        async def get_stream(app: Twitch, streamer_name: str) -> dict:
+        async def get_stream(app: Twitch, streamer_name: str) -> Stream:
             async for stream in app.get_streams(user_login=[streamer_name]):
                 return stream
             return {}
@@ -175,7 +195,7 @@ class TwitchApp():
             channel = self.bot.get_channel(self.channel_id)
             
             # Get stream
-            stream: dict = await get_stream(self.app, self.streamer_name)
+            stream: Stream = await get_stream(self.app, self.streamer_name)
             if stream != {}:
                 if self.stream_info['status'] == 'OFF':
                     try:
@@ -183,10 +203,10 @@ class TwitchApp():
                         self.update_stream_info(
                             {
                                 'status': 'ON',
-                                'id': stream.get('id', ''),
-                                'title': stream.get('title', ''),
-                                'game': stream.get('game', ''),
-                                'started_at': format_datetime_extended(stream.get('started_at', ''))
+                                'id': stream.id,
+                                'title': stream.title,
+                                'game': stream.game_name,
+                                'started_at': format_datetime_extended(stream.started_at.isoformat())
                             }
                         )
                         # Get image_tag
