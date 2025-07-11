@@ -9,7 +9,7 @@ from logger import Logger
 from cogs.twitch import TwitchApp
 from cogs.twitch.add_tag_modal import SetupModal as TagModal
 from cogs.twitch.change_title_view import SetupView as TitleView
-from cogs.twitch.input_modal import InputModal
+from cogs.modals.input_modal import InputModal
 
 class CmdTwitch(commands.GroupCog, name="twitch"):
     def __init__(self, bot: commands.bot, log: Logger, twitch_app: TwitchApp):
@@ -116,14 +116,14 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
         try:
             modal: InputModal = InputModal(
                 title='Modifica stream',
-                label='Inserisci il nuovo nome dello streamer.'
+                label=['Inserisci il nuovo nome dello streamer.']
             )
             await interaction.response.send_modal(modal)
             await modal.wait()
             
             # Send confirmation message with selected value
             await interaction.followup.send(
-                f'🟣 Nome Streamer: {modal.input_value}'
+                f'🟣 Nome Streamer: {modal.input_values[0]}'
             )
             
             # Update data in twitch_app streamer name

@@ -1,9 +1,9 @@
 
 # ----------------------------- Imported Libraries -----------------------------
 import discord
-from discord.ui import Modal, View, TextInput, Select
+from discord.ui import View, Select
 from discord import SelectOption
-from .input_modal import InputModal
+from cogs.modals.input_modal import InputModal
 
 class SetupView(View):
     def __init__(self, author: discord.User):
@@ -25,11 +25,11 @@ class SetupView(View):
         self.tag = select.values[0]
         modal: InputModal = InputModal(
             title="Modifica un titolo",
-            label=f'Inserisci il titolo per "{self.tag}"'
+            label=[f'Inserisci il titolo per "{self.tag}"']
         )
         await interaction.response.send_modal(modal)
         await modal.wait()
-        self.title = modal.input_value
+        self.title = modal.input_values[0]
 
         if self.title and self.tag:
             self.selection_complete = True

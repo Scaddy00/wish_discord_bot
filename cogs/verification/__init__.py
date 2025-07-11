@@ -1,7 +1,7 @@
 
 # ----------------------------- Standard libraries -----------------------------
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from os import path, getenv
 import discord
 # ----------------------------- Custom libraries -----------------------------
