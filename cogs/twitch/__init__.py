@@ -55,10 +55,17 @@ class TwitchApp():
         data['embeds']['images'][new_image['tag']] = new_image['url']
         write_file(self.file_path, data)
     
-    # ============================= Add Title =============================
-    def add_title(self, new_title: dict) -> None:
+    # ============================= Change Title =============================
+    def change_title(self, new_title: dict) -> None:
         data: dict = self.load_data()
         data['embeds']['titles'][new_title['tag']] = new_title['title']
+        write_file(self.file_path, data)
+
+    # ============================= Change Streamer Name =============================
+    def change_streamer_name(self, new_name: str) -> None:
+        data: dict = self.load_data()
+        data['config']['streamer_name'] = new_name
+        self.streamer_name = new_name
         write_file(self.file_path, data)
 
     # ============================= Set Default Stream Info =============================

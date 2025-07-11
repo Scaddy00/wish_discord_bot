@@ -9,6 +9,7 @@ from logger import Logger
 from cogs.twitch import TwitchApp
 from cogs.twitch.add_tag_modal import SetupModal as TagModal
 from cogs.twitch.change_title_view import SetupView as TitleView
+from cogs.twitch.input_modal import InputModal
 
 class CmdTwitch(commands.GroupCog, name="twitch"):
     def __init__(self, bot: commands.bot, log: Logger, twitch_app: TwitchApp):
@@ -91,7 +92,7 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
             }
             
             # Update data in twitch_app images
-            self.twitch_app.add_title(data)
+            self.twitch_app.change_title(data)
             
             # Respond with success
             await interaction.followup.send('✅ Dati salvati con successo!')
@@ -102,5 +103,40 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
         except Exception as e:
             # EXCEPTION
             error_message: str = f'Errore durante l\'aggiunta di un nuovo tag.\n{e}'
-            await self.log.error(error_message, 'COMMAND - TWITCH - ADD-TAG')
-            await communication_channel.send(self.log.error_message(command='COMMAND - TWITCH - ADD-TAG', message=error_message))
+            await self.log.error(error_message, 'COMMAND - TWITCH - CHANGE-TITLE')
+            await communication_channel.send(self.log.error_message(command='COMMAND - TWITCH - CHANGE-TITLE', message=error_message))
+    
+    @app_commands.command(name="change-streamer", description="Cambio il nome dello streamer")
+    async def change_streamer(self, interaction: discord.Interaction) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
+        # Load communication channel
+        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        
+        try:
+            modal: InputModal = InputModal(
+                title='Modifica stream',
+                label='Inserisci il nuovo nome dello streamer.'
+            )
+            await interaction.response.send_modal(modal)
+            await modal.wait()
+            
+            # Send confirmation message with selected value
+            await interaction.followup.send(
+                f'🟣 Nome Streamer: {modal.input_value}'
+            )
+            
+            # Update data in twitch_app streamer name
+            self.twitch_app.change_streamer_name(modal.input_value)
+            
+            # Respond with success
+            await interaction.followup.send('✅ Dati salvati con successo!')
+            
+            # INFO Log that the operation is completed
+            await self.log.command(f'Modificato il nome dello streamer: {modal.input_value}', 'twitch', 'change-streamer')
+            
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante la modifica del nome dello streamer.\n{e}'
+            await self.log.error(error_message, 'COMMAND - TWITCH - CHANGE-STREAMER')
+            await communication_channel.send(self.log.error_message(command='COMMAND - TWITCH - CHANGE-STREAMER', message=error_message))
