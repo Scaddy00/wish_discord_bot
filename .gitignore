@@ -3,3 +3,4 @@
 .env
 *.pyc
 /data
+config.json

@@ -1,26 +1,9 @@
 
 # ----------------------------- Imported Libraries -----------------------------
 import discord
-from discord.ui import Modal, View, TextInput, Select, Button
+from discord.ui import Modal, View, TextInput, Select
 from discord import SelectOption
-
-class InputModal(Modal):
-    def __init__(self, selected: str):
-        super().__init__(title="Modifica un titolo")
-        self.selected = selected
-        self.text_input = TextInput(
-            label=f'Inserisci il titolo per "{selected}"',
-            placeholder="Scrivi qui...",
-            required=True
-        )
-        self.add_item(self.text_input)
-        # Response
-        self.input_value: str = None
-        
-    async def on_submit(self, interaction: discord.Interaction):
-        self.input_value = self.text_input.value
-        await interaction.response.defer()
-        
+from .input_modal import InputModal
 
 class SetupView(View):
     def __init__(self, author: discord.User):
@@ -40,7 +23,10 @@ class SetupView(View):
     )
     async def tag_callback(self, interaction: discord.Interaction, select: Select):
         self.tag = select.values[0]
-        modal: InputModal = InputModal(self.tag)
+        modal: InputModal = InputModal(
+            title="Modifica un titolo",
+            label=f'Inserisci il titolo per "{self.tag}"'
+        )
         await interaction.response.send_modal(modal)
         await modal.wait()
         self.title = modal.input_value
