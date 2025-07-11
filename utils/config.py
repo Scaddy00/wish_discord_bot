@@ -8,7 +8,7 @@ from logger import Logger
 
 # ============================= Load Config File =============================
 def config_file_path() -> str:
-    return path.join(str(getenv('MAIN_PATH')), str(getenv('CONFIG_FILE_NAME')))
+    return path.join(str(getenv('MAIN_PATH')), str(getenv('DATA_PATH')), str(getenv('CONFIG_FILE_NAME')))
 
 # ============================= Load Config File =============================
 def config_file() -> dict:
