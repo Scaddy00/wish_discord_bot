@@ -5,13 +5,14 @@ from discord.ext import commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from utils.config import load_exception
+from config_manager import ConfigManager
 
 class MessageEvents(commands.Cog):
-    def __init__(self, bot: commands.Bot, log: Logger):
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager):
         super().__init__()
         self.bot = bot
         self.log = log
+        self.config = config
     
     # ============================= ON_MESSAGE =============================
     @commands.Cog.listener()
@@ -24,7 +25,7 @@ class MessageEvents(commands.Cog):
                 return
             
             # Get exception list
-            channel_exceptions: list[int] = load_exception('message_logger')
+            channel_exceptions: list[int] = self.config.load_exception('message_logger')
             
             # Check if the channel id is in exception list
             if message.channel.id in channel_exceptions:

@@ -4,20 +4,135 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from os import getenv
-import re
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from utils.config import add_exception
-from cogs.modals.exception_view import SetupView as ExceptionView
+from config_manager import ConfigManager
+from cogs.modals.config.exception_view import SetupView as ExceptionView
+from cogs.modals.config.admin_check_view import SetupView as AdminCheckView
+from cogs.modals.config.admin_add_view import SetupView as AdminAddView
+from utils.printing import create_embed_from_dict
 
 class CmdConfig(commands.GroupCog, name="config"):
-    def __init__(self, bot: commands.bot, log: Logger):
+    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
         super().__init__()
         self.bot = bot
         self.log = log
+        self.config = config
     
-    @app_commands.command(name="add-exception", description="Aggiunge una lista di ruoli o canali alle eccezioni")
-    async def add_exception(self, interaction: discord.Interaction) -> None:
+    # ============================= Admin Management =============================
+    @app_commands.command(name="admin-check", description="Visualizza tutti i dati inseriti come config di admin")
+    async def admin_check(self, interaction: discord.Interaction) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
+        # Load communication channel
+        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        
+        try:
+            # Get config/admin tags
+            admin_data: dict = self.config.load_admin()
+            tags: list = [tag for tag in admin_data.keys()]
+            
+            view: AdminCheckView = AdminCheckView(
+                author=interaction.user,
+                tags=tags
+            )
+            await interaction.response.send_message(
+                "Seleziona il tag",
+                view=view,
+                ephemeral=True
+            )
+            await view.wait()
+            # Save selected tag
+            selected_tag: str = view.selected_tag
+            # Get the section corresponding the selected tag
+            selected_data: dict = self.config.load_admin(section=selected_tag)
+            
+            # Start the creation of the response embed
+            description: str = ''
+            if selected_tag == 'roles':
+                for tag, role_id in selected_data.items():
+                    role: discord.Role = guild.get_role(int(role_id))
+                    description += f'\n**{tag}**:   {role.mention} ({role_id})'
+            if selected_data == 'channels':
+                for tag, channel_id in selected_data.items():
+                    channel: discord.TextChannel = guild.get_channel(int(channel_id))
+                    description += f'\n**{tag}**:   {channel.mention} ({channel_id})'
+            
+            embed_data: dict = {
+                'title': f'Admin Check - {selected_tag.capitalize()}',
+                'description': description,
+                'color': self.bot.color
+            }
+            embed: discord.Embed = create_embed_from_dict(embed_data)
+            # Respond with the embed
+            await interaction.followup.send(embed=embed)
+            
+            # INFO Log that operation is completed
+            await self.log.command(f'Risposto alla richiesta con i dati del seguente tag: "{selected_tag}"', 'config', 'ADMIN-CHECK')
+            
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante la visualizzazione dei dati da config/admin.\n{e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - ADMIN-CHECK')
+            await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - ADMIN-CHECK', message=error_message))
+    
+    @app_commands.command(name="admin-add", description="Aggiunge un ruolo o un canale ai config/admin.")
+    async def admin_add(self, interaction: discord.Interaction) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
+        # Load communication channel
+        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        
+        try:
+            # Get config/admin tags
+            admin_data: dict = self.config.load_admin()
+            tags: list = [tag for tag in admin_data.keys()]
+            
+            view: AdminAddView = AdminAddView(
+                author=interaction.user,
+                tags=tags
+            )
+            await interaction.response.send_message(
+                "Seleziona il tag",
+                view=view,
+                ephemeral=True
+            )
+            await view.wait()
+            
+            config_tag: str = view.selected_tag
+            tag: str = view.new_tag
+            value: str = f'{view.values[0]}'
+            
+            # Respond with selected data
+            await interaction.followup.send(
+                "Dati inseriti:\n"
+                f"#️⃣ Sezione: {config_tag} \n"
+                f"🆚 Tag: {tag} \n"
+                f"🆔 Id: {value} \n",
+                ephemeral=True
+            )
+            
+            # Save data in config
+            self.config.add_admin(config_tag, tag, value)
+            
+            # Respond with success
+            await interaction.followup.send(
+                '✅ Dati salvati con successo!',
+                ephemeral=True
+            )
+            
+            # INFO Log that operation is completed
+            await self.log.command(f'Nuovi dati aggiungi a config/admin.', 'config', 'ADMIN-ADD')
+            
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante la visualizzazione dei dati da config/admin.\n{e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - ADMIN-ADD')
+            await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - ADMIN-ADD', message=error_message))
+    
+    # ============================= Exception Management =============================
+    @app_commands.command(name="exception-add", description="Aggiunge una lista di ruoli o canali alle eccezioni")
+    async def exception_add(self, interaction: discord.Interaction) -> None:
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
@@ -45,7 +160,7 @@ class CmdConfig(commands.GroupCog, name="config"):
             )
             
             # Update data in config exceptions
-            add_exception(tag, values)
+            self.config.add_exception(tag, values)
             
             # Respond with success
             await interaction.followup.send(
@@ -54,10 +169,10 @@ class CmdConfig(commands.GroupCog, name="config"):
             )
             
             # INFO Log that operation is completed
-            await self.log.command(f'Aggiunta una nuova eccezione: \n - tag: {tag} \n - values: {values}', 'config', 'EXCEPTION')
+            await self.log.command(f'Aggiunta una nuova eccezione: \n - tag: {tag} \n - values: {values}', 'config', 'EXCEPTION-ADD')
 
         except Exception as e:
             # EXCEPTION
             error_message: str = f'Errore durante l\'aggiunta di nuove eccezioni al file config.\n{e}'
-            await self.log.error(error_message, 'COMMAND - CONFIG - EXCEPTION')
-            await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - EXCEPTION', message=error_message))
+            await self.log.error(error_message, 'COMMAND - CONFIG - EXCEPTION-ADD')
+            await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - EXCEPTION-ADD', message=error_message))

@@ -7,14 +7,15 @@ from os import getenv
 from asyncio import TimeoutError
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from utils.config import update_data, load_exception, add_exception
+from config_manager import ConfigManager
 from utils.roles import add_role, remove_role
 
 class CmdRoles(commands.GroupCog, name="role"):
-    def __init__(self, bot: commands.bot, log: Logger):
+    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
         super().__init__()
         self.bot = bot
         self.log = log
+        self.config = config
     
     # ============================= NEW =============================
     @app_commands.command(name="new", description="Crea un nuovo messaggio")
@@ -88,7 +89,7 @@ class CmdRoles(commands.GroupCog, name="role"):
                 
                 try:
                     # Add the new config to the JSON file
-                    await update_data(self.log, interaction.guild, new_roles, ['roles', str(message.id)])
+                    await self.config.update_data(self.log, interaction.guild, new_roles, ['roles', str(message.id)])
                     
                     # INFO New config saved with success
                     await self.log.command('Dati salvati con successo nel file config.json', 'role', 'new')
@@ -150,7 +151,7 @@ class CmdRoles(commands.GroupCog, name="role"):
         # Get the member list
         members: list[discord.Member] = interaction.guild.members
         # Get the exception role list
-        except_roles: list = await load_exception('cmd-role')
+        except_roles: list = await self.config.load_exception('cmd-role')
         
         counter: int = 0
         try:
@@ -204,7 +205,7 @@ class CmdRoles(commands.GroupCog, name="role"):
         # Get the member list
         members: list[discord.Member] = interaction.guild.members
         # Get the exception role list
-        except_roles: list = await load_exception('cmd-role')
+        except_roles: list = await self.config.load_exception('cmd-role')
         
         counter: int = 0
         try:

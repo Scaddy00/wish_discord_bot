@@ -9,7 +9,7 @@ from twitchAPI.object.api import Stream
 import asyncio
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from utils.config import read_file, write_file
+from config_manager import read_file, write_file
 from utils.printing import create_embed, format_datetime_now_extended, format_datetime_extended
 from .stream_button_view import StreamButtonView
 

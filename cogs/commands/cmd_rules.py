@@ -6,15 +6,16 @@ from discord import app_commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from utils.printing import create_embed_from_dict, load_embed_text, load_single_embed_text
-from utils.config import load_rules, add_rules
+from config_manager import ConfigManager
 from cogs.verification import VerificationManager
+from utils.printing import create_embed_from_dict, load_embed_text, load_single_embed_text
 
 class CmdRules(commands.GroupCog, name="rule"):
-    def __init__(self, bot: commands.bot, log: Logger, verification: VerificationManager):
+    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, verification: VerificationManager):
         super().__init__()
         self.bot = bot
         self.log = log
+        self.config = config
         self.verification = verification
     
     @app_commands.command(name="new", description="Crea un nuovo messaggio")
@@ -37,7 +38,7 @@ class CmdRules(commands.GroupCog, name="rule"):
         
         # Check if the reaction emoji is saved in config file
         # If not, request the emoji
-        rules_config: dict = load_rules()
+        rules_config: dict = self.config.load_rules()
         if rules_config.get('emoji', '') == '' or rules_config.get('emoji', '') == None:
             while True:
                 await channel.send('Nel file di configurazione manca l\'emoji necessaria perla reazione. \nInviala di seguito, così potrò procedere con la creazione del messaggio. \nHai **3 minuti** per inviare l\'emoji.')
@@ -92,7 +93,7 @@ class CmdRules(commands.GroupCog, name="rule"):
                 
                 # Save the data in config file
                 rules_config['message_id'] = str(message.id)
-                add_rules(rules_config)
+                self.config.add_rules(rules_config)
                 
                 # INFO Log that data was saved
                 await self.log.command('Dati salvati con successo', 'rule', 'NEW')

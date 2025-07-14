@@ -4,15 +4,16 @@ import discord
 from discord.ext import commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
-from utils.roles import add_role_event, remove_role_event, add_role
 from logger import Logger
+from config_manager import ConfigManager
 from cogs.verification import VerificationManager
-from utils.config import load_rules
+from utils.roles import add_role_event, remove_role_event, add_role
 
 class ReactionEvents(commands.Cog):
-    def __init__(self, bot: commands.Bot, log: Logger, verification: VerificationManager):
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager, verification: VerificationManager):
         self.bot = bot
         self.log = log
+        self.config = config
         self.verification = verification
     
     # ============================= ON_RAW_REACTION_ADD (Add Role) =============================
@@ -24,7 +25,7 @@ class ReactionEvents(commands.Cog):
         member: discord.Member = payload.member
         
         # Check for verification
-        rules_data: dict = load_rules()
+        rules_data: dict = self.config.load_rules()
         if message_id == int(rules_data.get('message_id', '0')) and str(emoji) == rules_data.get('emoji', ''):
             if not member.bot:
                 await add_role(self.log, guild, self.verification.temp_role_id, member.id)
