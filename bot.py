@@ -16,7 +16,7 @@ class WishBot(commands.Bot):
         from cogs.verification import VerificationManager
         from cogs.twitch import TwitchApp
         
-        self.log = Logger(name='Discord_bot')
+        self.log = Logger()
         self.verification = VerificationManager(self, self.log)
         self.twitch_app = TwitchApp(self, self.log)
         config.start()

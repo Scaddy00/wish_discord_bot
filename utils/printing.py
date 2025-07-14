@@ -31,7 +31,7 @@ async def load_embed_text(guild: discord.Guild, item: str) -> list[dict]:
     communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
     
     # Load embed text file
-    embed_text_path: str = path.join(str(getenv('MAIN_PATH')), str(getenv('EMBED_TEXT_FILE_NAME')))
+    embed_text_path: str = path.join(str(getenv('DATA_PATH')), str(getenv('EMBED_TEXT_FILE_NAME')))
     text: dict = read_file(embed_text_path)
     
     if item not in text:

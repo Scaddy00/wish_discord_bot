@@ -16,7 +16,7 @@ class VerificationManager:
         self.temp_role_id = 0
         self.verified_role_id = 0
         self.waiting_users = {}
-        self.file_path = path.join(getenv('MAIN_PATH'), getenv('DATA_PATH'), getenv('VERIFICATION_DATA_FILE_NAME'))
+        self.file_path = path.join(getenv('DATA_PATH'), getenv('VERIFICATION_DATA_FILE_NAME'))
         self.setup()
     
     # ============================= Load Data =============================

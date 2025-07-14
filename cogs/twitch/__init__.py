@@ -22,7 +22,7 @@ class TwitchApp():
         self.log = log
         self.bot = bot
         
-        self.file_path: str = path.join(getenv('MAIN_PATH'), getenv('DATA_PATH'), getenv('TWITCH_FILE_NAME'))
+        self.file_path: str = path.join(getenv('DATA_PATH'), getenv('TWITCH_FILE_NAME'))
         self.stream_info: dict = {}
         self.streamer_name: str = ''
         self.url: str = getenv('TWITCH_URL')
