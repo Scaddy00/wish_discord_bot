@@ -95,33 +95,37 @@ def create_embed(title: str, description: str, color: str, url: str | None = Non
 
 # ============================= Embed creator (DICT) =============================
 def create_embed_from_dict(data: dict) -> Embed:
+    # Ensure data is not None and provide defaults for all required fields
+    if not data:
+        data = {}
+    
     # Create the embed with the standard information
     embed: Embed = Embed(
-        title=data.get('title', ''),
-        description=data.get('description', ''),
+        title=data.get('title', '') or '',
+        description=data.get('description', '') or '',
         color=discord.Colour.from_str(data.get('color', '0x000000')),
-        url=data.get('url', '')
+        url=data.get('url', None) or None
     )
     # Add fields to the embed
     if 'fields' in data and data['fields']:
         for field in data['fields']:
             embed.add_field(
-                name=field.get('name', ''),
-                value=field.get('value', ''),
+                name=field.get('name', '') or '',
+                value=field.get('value', '') or '',
                 inline=field.get('inline', True)
             )
     # Add footer to the embed
-    if 'footer' in data:
+    if 'footer' in data and data['footer']:
         footer = data['footer']
         embed.set_footer(
-            text=footer.get('text', ''),
-            icon_url=footer.get('icon_url', '')
+            text=footer.get('text', '') or '',
+            icon_url=footer.get('icon_url', '') or None
         )
     # Add thumbnail to the embed
     if data.get('thumbnail'):
-        embed.set_thumbnail(url=data.get('thumbnail', ''))
+        embed.set_thumbnail(url=data.get('thumbnail', '') or '')
     # Add image to the embed
     if data.get('image'):
-        embed.set_image(url=data.get('image', ''))
+        embed.set_image(url=data.get('image', '') or '')
 
     return embed
