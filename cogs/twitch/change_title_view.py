@@ -25,7 +25,7 @@ class SetupView(View):
         self.tag = select.values[0]
         modal: InputModal = InputModal(
             title="Modifica un titolo",
-            label=[f'Inserisci il titolo per "{self.tag}"']
+            labels=[f'Inserisci il titolo per "{self.tag}"']
         )
         await interaction.response.send_modal(modal)
         await modal.wait()
