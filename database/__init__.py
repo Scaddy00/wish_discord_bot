@@ -64,7 +64,7 @@ class DB():
     # >>==============<< Insert Message >>==============<< 
     def insert_message(self, timestamp: str, channel_id: str, channel_name: str, user_id: str, user_name: str, message: str) -> None:
         self.cursor.execute(
-            'INSERT INTO messages (timestamp, channel_id, channel_name, user_id, user_name, message) VALUES (?, ?, ?)',
+            'INSERT INTO messages (timestamp, channel_id, channel_name, user_id, user_name, message) VALUES (?, ?, ?, ?, ?, ?)',
             (timestamp, channel_id, channel_name, user_id, user_name, message)
         )
         self.conn.commit()
