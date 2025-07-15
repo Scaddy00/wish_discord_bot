@@ -58,7 +58,7 @@ class CmdRules(commands.GroupCog, name="rule"):
         
         try:
             # Load embed message content
-            message_content: list = await load_embed_text(guild, 'rule')
+            message_content: list = await load_embed_text(guild, 'rule', self.config)
             # Create the embed message
             message: list[discord.Embed] = [create_embed_from_dict(content) for content in message_content]
             
@@ -67,7 +67,7 @@ class CmdRules(commands.GroupCog, name="rule"):
             
             try:
                 # Load the embed content
-                verification_content: dict = await load_single_embed_text(guild, 'verification')
+                verification_content: dict = await load_single_embed_text(guild, 'verification', self.config)
                 
                 # Create the embed
                 verification_message: discord.Embed = create_embed_from_dict(verification_content)

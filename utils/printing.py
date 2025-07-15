@@ -7,6 +7,7 @@ import discord
 from os import path
 # ----------------------------- Custom Libraries -----------------------------
 from .file_io import read_file
+from config_manager import ConfigManager
 
 italian_month: list = ["", "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
 
@@ -26,9 +27,9 @@ def format_datetime_extended(time: str) -> str:
     return converted_datetime.strftime(f"%H:%M %d {italian_month[converted_datetime.month]} %Y")
 
 # ============================= Embed data load =============================
-async def load_embed_text(guild: discord.Guild, item: str) -> list[dict]:
+async def load_embed_text(guild: discord.Guild, item: str, config: ConfigManager) -> list[dict]:
     # Load communication channel
-    communication_channel = guild.get_channel(self.config.communication_channel)
+    communication_channel = guild.get_channel(config.communication_channel)
     
     # Load embed text file
     embed_text_path: str = path.join(str(getenv('DATA_PATH')), str(getenv('EMBED_TEXT_FILE_NAME')))
@@ -47,8 +48,8 @@ async def load_embed_text(guild: discord.Guild, item: str) -> list[dict]:
         return [data]
 
 # ============================= Embed data load (SINGLE) =============================
-async def load_single_embed_text(guild: discord.Guild, item: str) -> dict:
-    embeds = await load_embed_text(guild, item)
+async def load_single_embed_text(guild: discord.Guild, item: str, config: ConfigManager) -> dict:
+    embeds = await load_embed_text(guild, item, config)
     return embeds[0] if embeds else {}
 
 # ============================= Embed creator =============================

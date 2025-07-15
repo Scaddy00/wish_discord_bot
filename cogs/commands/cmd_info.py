@@ -28,7 +28,7 @@ class CmdInfo(commands.GroupCog, name="info"):
         
         try:
             # Load embed message content
-            message_content: dict = await load_single_embed_text(guild, 'info-dreamer')
+            message_content: dict = await load_single_embed_text(guild, 'info-dreamer', self.config)
             # Create the embed message
             message: dict = create_embed_from_dict(message_content)
             
