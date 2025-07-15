@@ -9,24 +9,26 @@ from twitchAPI.object.api import Stream
 import asyncio
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
-from config_manager import read_file, write_file
+from config_manager import ConfigManager
 from utils.printing import create_embed, format_datetime_now_extended, format_datetime_extended
 from .stream_button_view import StreamButtonView
+from utils.file_io import read_file, write_file
 
 class TwitchApp():
-    def __init__(self, bot: commands.Bot, log: Logger):
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager):
         # Twitch data
         app_id = getenv('TWITCH_CLIENT_ID')
         app_secret = getenv('TWITCH_CLIENT_SECRET')
         # Variables
         self.log = log
         self.bot = bot
+        self.config = config
         
         self.file_path: str = path.join(getenv('DATA_PATH'), getenv('TWITCH_FILE_NAME'))
         self.stream_info: dict = {}
         self.streamer_name: str = ''
         self.url: str = getenv('TWITCH_URL')
-        self.channel_id: int = int(getenv('LIVE_CHANNEL_ID'))
+        self.channel_id: int = int(self.config.load_admin('channels', 'live'))
         self.color: discord.Color = f'0x{getenv('TWITCH_COLOR')}'
         
         # Create Twitch app

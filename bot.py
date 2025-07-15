@@ -21,7 +21,7 @@ class WishBot(commands.Bot):
         self.log = Logger()
         self.config = ConfigManager()
         self.verification = VerificationManager(self, self.log)
-        self.twitch_app = TwitchApp(self, self.log)
+        self.twitch_app = TwitchApp(self, self.log, self.config)
 
     async def setup_hook(self):
         # COMMANDS
