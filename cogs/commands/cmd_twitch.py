@@ -126,7 +126,7 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
         try:
             modal: InputModal = InputModal(
                 title='Modifica stream',
-                label=['Inserisci il nuovo nome dello streamer.']
+                labels=['Inserisci il nuovo nome dello streamer.']
             )
             await interaction.response.send_modal(modal)
             await modal.wait()
