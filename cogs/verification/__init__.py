@@ -7,11 +7,13 @@ import discord
 # ----------------------------- Custom libraries -----------------------------
 from utils.file_io import read_file, write_file
 from logger import Logger
+from config_manager import ConfigManager
 
 class VerificationManager:
-    def __init__(self, bot, log: Logger):
+    def __init__(self, bot, log: Logger, config: ConfigManager):
         self.bot = bot
         self.log = log
+        self.config = config
         self.timeout = 0
         self.temp_role_id = 0
         self.verified_role_id = 0
@@ -35,8 +37,8 @@ class VerificationManager:
     # ============================= Reload Data =============================
     def reload_data(self, data) -> None:
         self.timeout = data['config'].get('timeout', 0)
-        self.temp_role_id = data['config'].get('temp_role_id', 0)
-        self.verified_role_id = data['config'].get('verified_role_id', 0)
+        self.temp_role_id = self.config.load_admin('roles', 'in_verification')
+        self.verified_role_id = self.config.load_admin('roles', 'verified')
         self.waiting_users = data.get('pending', {})
     
     # ============================= Setup =============================
@@ -58,14 +60,10 @@ class VerificationManager:
             self.reload_data(default)
     
     # ============================= Update Config =============================
-    def update_config(self, data: dict | str, tag: str = '') -> None:
+    def update_timeout(self, new_timeout: str) -> None:
         config: dict = self.load_data()
         
-        if tag == '':
-            config['config'] = data
-        else:
-            config['config'][tag] = data
-        
+        config['config']['timeout'] = new_timeout
         write_file(self.file_path, config)
         self.reload_data(config)
     
@@ -93,6 +91,8 @@ class VerificationManager:
         if member:
             await member.remove_roles(guild.get_role(self.temp_role_id))
             await member.add_roles(guild.get_role(self.verified_role_id))
+            # INFO Log that the user has been verified
+            await self.log.verification(f'User {member.name} ({member.id}) has been verified', 'verification', str(member.id))
             try:
                 await member.send('✅ Verifica completata! Ora hai accesso al server. Buon divertimento!')
             except:

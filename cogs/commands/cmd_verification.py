@@ -45,20 +45,22 @@ class CmdVerification(commands.GroupCog, name="verification"):
                 f"✔️ Ruolo verificato: {view.verified_role.mention}"
             )
             
-            data: dict = {
-                'timeout': view.timeout,
-                'temp_role_id': view.temp_role.id,
-                'verified_role_id': view.verified_role.id
-            }
+            timeout = view.timeout
+            temp_role_id = view.temp_role.id
+            verified_role_id = view.verified_role.id
             
-            # Update data in verification config
-            self.verification.update_config(data)
+            # Update temp role in verification config
+            self.config.add_admin('roles', 'in_verification', temp_role_id)
+            # Update verified role in verification config
+            self.config.add_admin('roles', 'verified', verified_role_id)
+            # Update timeout in verification config
+            self.verification.update_timeout(timeout)
             
             # Respond with success
             await interaction.followup.send('Dati salvati con successo!')
             
             # INFO Log that the operation is completed
-            await self.log.command(f'Configurazione aggiornata con i seguenti dati: \n - timeout: {data["timeout"]} \n - temp_role_id: {data["temp_role_id"]} ({view.temp_role.name}) \n - verified_role_id: {data["verified_role_id"]} ({view.verified_role.name})', 'verification', 'setup')
+            await self.log.command(f'Configurazione aggiornata con i seguenti dati: \n - timeout: {timeout} \n - temp_role_id: {temp_role_id} ({view.temp_role.name}) \n - verified_role_id: {verified_role_id} ({view.verified_role.name})', 'verification', 'setup')
             
         except Exception as e:
             # EXCEPTION

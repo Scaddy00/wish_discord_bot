@@ -79,6 +79,14 @@ class Logger():
             message=log_message
         )
 
+    # >>==============<< New Verification Record >>==============<< 
+    async def verification(self, log_message: str, status: str, user_id: str) -> None:
+        # Load formatted datetime now
+        now: str = format_datetime_now()
+
+        # Insert new record to db
+        self.db.insert_verification(timestamp=now, status=status, user_id=user_id, message=log_message)
+        
     # >>==============<< Error Message >>==============<<
     def error_message(self, command: str, message: str) -> str:
         return f'{command} -> {message}'

@@ -7,7 +7,7 @@ from os import getenv, path, mkdir
 # ============================= DB Manager class =============================
 class DB():
     def __init__(self):
-        self.tables: dict = ['events', 'commands', 'messages', 'errors']
+        self.tables: dict = ['events', 'commands', 'messages', 'errors', 'verification']
         self.db_path: str = ''
         self.conn: Connection = None
         self.cursor: Cursor = None
@@ -23,6 +23,8 @@ class DB():
             return 'CREATE TABLE IF NOT EXISTS messages (timestamp TEXT, channel_id TEXT, channel_name TEXT, user_id TEXT, user_name TEXT, message TEXT);'
         elif table_name == 'errors':
             return 'CREATE TABLE IF NOT EXISTS errors (timestamp TEXT, type TEXT, message TEXT);'
+        elif table_name == 'verification':
+            return 'CREATE TABLE IF NOT EXISTS verification (timestamp TEXT, status TEXT, user_id TEXT, message TEXT);'
         else:
             raise ValueError(f"Tried to create unknown table: {table_name}")
 
@@ -74,5 +76,13 @@ class DB():
         self.cursor.execute(
             'INSERT INTO errors (timestamp, type, message) VALUES (?, ?, ?)',
             (timestamp, record_type, message)
+        )
+        self.conn.commit()
+    
+    # >>==============<< Insert Verification >>==============<< 
+    def insert_verification(self, timestamp: str, status: str, user_id: str, message: str) -> None:
+        self.cursor.execute(
+            'INSERT INTO verification (timestamp, status, user_id, message) VALUES (?, ?, ?, ?)',
+            (timestamp, status, user_id, message)
         )
         self.conn.commit()

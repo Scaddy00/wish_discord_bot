@@ -29,6 +29,9 @@ class ReactionEvents(commands.Cog):
         if message_id == int(rules_data.get('message_id', '0')) and str(emoji) == rules_data.get('emoji', ''):
             if not member.bot:
                 await add_role(self.log, guild, self.verification.temp_role_id, member.id)
+                # INFO Log that the user has been added to the temp role
+                await self.log.verification(f'User {member.name} ({member.id}) has been added to the temp role', 'verification', str(member.id))
+                # Start timer for verification
                 await self.verification.start_timer(guild.id, member.id)
         
         # Check for roles
