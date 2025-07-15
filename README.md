@@ -64,6 +64,36 @@ The bot uses several JSON configuration files (auto-generated or manually create
 - `twitch_data.json` — Twitch integration settings
 - `verification_data.json` — Verification system data
 
+### Example: `embed_text.json`
+
+Below is an example of what your `embed_text.json` file might look like. You can customize the title, description, and other fields to change how the bot's embed messages appear in Discord.
+
+```json
+{
+  "twitch_live": {
+    "title": "🔴 {streamer} is now LIVE on Twitch!",
+    "description": "Come watch the stream: {url}\n\n**Title:** {title}\n**Game:** {game}",
+    "color": 16711680,
+    "thumbnail": "{profile_image_url}",
+    "footer": "Wish Discord Bot • Stay connected!"
+  },
+  "verification_success": {
+    "title": "✅ Verification Complete!",
+    "description": "Welcome, {user}! You have been successfully verified.",
+    "color": 65280
+  },
+  "role_assigned": {
+    "title": "🎉 Role Assigned",
+    "description": "You have been given the **{role}** role.",
+    "color": 3447003
+  }
+}
+```
+
+- You can use placeholders like `{streamer}`, `{url}`, `{title}`, `{game}`, `{profile_image_url}`, and `{user}` which the bot will replace with real values.
+- The `color` field uses decimal RGB values (e.g., 16711680 for red).
+- Add or modify sections as needed for your server's needs.
+
 ---
 
 ## 💻 Usage
