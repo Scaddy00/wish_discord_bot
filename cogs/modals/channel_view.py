@@ -8,7 +8,7 @@ from .confirm_button import ConfirmButton
 
 # ============================= Channel View =============================
 class ChannelView(View):
-    def __init__(self, author: discord.User, min_values = 0, max_values = 40, timeout = 180):
+    def __init__(self, author: discord.User, min_values = 0, max_values = 25, timeout = 180):
         super().__init__(timeout=timeout)
         self.author = author
         self.values: list[int] = []

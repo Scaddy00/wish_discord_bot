@@ -8,7 +8,7 @@ from .confirm_button import ConfirmButton
 
 # ============================= Role View =============================
 class RoleView(View):
-    def __init__(self, author: discord.User, min_values = 0, max_values = 40, timeout = 180):
+    def __init__(self, author: discord.User, min_values = 0, max_values = 25, timeout = 180):
         super().__init__(timeout=timeout)
         self.author = author
         self.values: list[int] = []
