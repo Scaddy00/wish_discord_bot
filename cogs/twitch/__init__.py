@@ -28,7 +28,8 @@ class TwitchApp():
         self.stream_info: dict = {}
         self.streamer_name: str = ''
         self.url: str = getenv('TWITCH_URL')
-        self.channel_id: int = int(self.config.load_admin('channels', 'live'))
+        live_channel = self.config.load_admin('channels', 'live')
+        self.channel_id: int = int(live_channel) if live_channel and str(live_channel).isdigit() else None
         self.color: discord.Color = f"0x{getenv('TWITCH_COLOR')}"
         
         # Create Twitch app
