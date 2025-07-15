@@ -41,7 +41,7 @@ class ReactionEvents(commands.Cog):
                 await self.verification.start_timer(guild.id, member.id)
         
         # Check for roles
-        await add_role_event(self.bot.log, guild, message_id, emoji, member.id)
+        await add_role_event(self.bot.log, self.config, guild, message_id, emoji, member.id)
         
     # ============================= ON_RAW_REACTION_REMOVE (Remove Role) =============================
     @commands.Cog.listener()
