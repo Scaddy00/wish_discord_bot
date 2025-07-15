@@ -30,7 +30,7 @@ class CmdUtility(commands.GroupCog, name="utility"):
                     f'Nome: `{emoji.name}`\n'
                     f'ID: `{emoji.id}`\n'
                     f'Animata: `{emoji.animated}`\n'
-                    f'Rappresentazione: `<{'a' if emoji.animated else ''}:{emoji.name}:{emoji.id}>`'
+                    f'Rappresentazione: `<{"a" if emoji.animated else ""}:{emoji.name}:{emoji.id}>`'
                 )
             else:  # Emoji Unicode standard
                 unicode_repr = ' '.join(f'U+{ord(char):04X}' for char in emoji_input)
