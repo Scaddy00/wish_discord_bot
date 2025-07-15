@@ -10,12 +10,14 @@ from cogs.twitch import TwitchApp
 from cogs.twitch.add_tag_modal import SetupModal as TagModal
 from cogs.twitch.change_title_view import SetupView as TitleView
 from cogs.modals.input_modal import InputModal
+from config_manager import ConfigManager
 
 class CmdTwitch(commands.GroupCog, name="twitch"):
-    def __init__(self, bot: commands.bot, log: Logger, twitch_app: TwitchApp):
+    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, twitch_app: TwitchApp):
         super().__init__()
         self.bot = bot
         self.log = log
+        self.config = config
         self.twitch_app = twitch_app
     
     @app_commands.command(name="add-tag", description="Aggiunge un nuovo tag per le live e la scelta delle immagini")
@@ -23,7 +25,7 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             modal = TagModal()
@@ -69,7 +71,7 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             view: TitleView = TitleView(author=interaction.user)
@@ -119,7 +121,7 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             modal: InputModal = InputModal(
@@ -158,7 +160,7 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))\
+        communication_channel = guild.get_channel(self.config.communication_channel)\
         
         try:
             # Reset stream info

@@ -9,7 +9,7 @@ from config_manager import ConfigManager
 # ============================= ADD_ROLE =============================
 async def add_role(log: Logger, guild: discord.Guild, role_id: int, member_id: int) -> None:
     # Load communication channel
-    communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+    communication_channel = guild.get_channel(self.config.communication_channel)
     
     # Get the role
     role = guild.get_role(role_id)
@@ -35,7 +35,7 @@ async def add_role(log: Logger, guild: discord.Guild, role_id: int, member_id: i
 # ============================= REMOVE_ROLE =============================
 async def remove_role(log: Logger, guild: discord.Guild, role_id: int, member_id: int) -> None:
     # Load communication channel
-    communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+    communication_channel = guild.get_channel(self.config.communication_channel)
     
     # Get the role
     role = guild.get_role(role_id)

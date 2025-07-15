@@ -23,7 +23,7 @@ class CmdRules(commands.GroupCog, name="rule"):
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         # Get the channel where the interaction started
         channel = interaction.channel
         

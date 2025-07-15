@@ -6,17 +6,21 @@ from discord import app_commands
 from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
+from config_manager import ConfigManager
 
 class CmdUtility(commands.GroupCog, name="utility"):
-    def __init__(self, bot: commands.bot, log: Logger):
+    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
         super().__init__()
         self.bot = bot
         self.log = log
+        self.config = config
     
     @app_commands.command(name="emoji-to-unicode", description="Ottiene il valore unicode di un emoji")
     async def emoji_unicode(self, interaction: discord.Interaction, emoji_input: str) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = interaction.guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             emoji = discord.PartialEmoji.from_str(emoji_input)

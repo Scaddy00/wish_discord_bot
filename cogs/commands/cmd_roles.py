@@ -20,6 +20,8 @@ class CmdRoles(commands.GroupCog, name="role"):
     # ============================= NEW =============================
     @app_commands.command(name="new", description="Crea un nuovo messaggio")
     async def new(self, interaction: discord.Interaction) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
         # Set the default var
         new_roles: dict = {}
         
@@ -27,11 +29,9 @@ class CmdRoles(commands.GroupCog, name="role"):
             return m.author == interaction.user and m.channel == interaction.channel
         
         # Load communication channel
-        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         # Load role channel
-        role_channel = self.bot.get_channel(int(getenv('ROLE_CHANNEL_ID')))
-        # Get the channel where the interaction started
-        channel = interaction.channel
+        role_channel = guild.get_channel(self.config.role_channel)
         
         # INFO Log the start of the creation of the message
         await self.log.command('Creazione di un nuovo messaggio', 'role', 'NEW')
@@ -126,8 +126,10 @@ class CmdRoles(commands.GroupCog, name="role"):
     # ============================= ASSIGN =============================
     @app_commands.command(name="assign", description="Assegna un ruolo ad un utente")
     async def assign(self, interaction: discord.Interaction, role: discord.Role, user: discord.Member) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             if role not in user.roles:
@@ -145,8 +147,10 @@ class CmdRoles(commands.GroupCog, name="role"):
     # ============================= ASSIGN ALL =============================
     @app_commands.command(name="assign-all", description="Assegna un ruolo a tutti gli utenti")
     async def assign_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         # Get the member list
         members: list[discord.Member] = interaction.guild.members
@@ -180,8 +184,10 @@ class CmdRoles(commands.GroupCog, name="role"):
     # ============================= REMOVE =============================
     @app_commands.command(name="remove", description="Rimuove un ruolo ad un utente")
     async def remove(self, interaction: discord.Interaction, role: discord.Role, user: discord.Member) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             if role in user.roles:
@@ -199,8 +205,10 @@ class CmdRoles(commands.GroupCog, name="role"):
     # ============================= REMOVE ALL =============================
     @app_commands.command(name="remove-all", description="Rimuove un ruolo da tutti gli utenti")
     async def remove_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         # Get the member list
         members: list[discord.Member] = interaction.guild.members

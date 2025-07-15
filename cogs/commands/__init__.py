@@ -18,11 +18,11 @@ from .cmd_twitch import CmdTwitch
 
 # ============================= Add Commands =============================
 async def add_commands(bot: commands.Bot, log: Logger, config: ConfigManager, verification: VerificationManager, twitch_app: TwitchApp) -> None:
-    await bot.add_cog(CmdAdmin(bot, log))
+    await bot.add_cog(CmdAdmin(bot, log, config))
     await bot.add_cog(CmdRoles(bot, log, config))
     await bot.add_cog(CmdRules(bot, log, config, verification))
-    await bot.add_cog(CmdInfo(bot, log))
+    await bot.add_cog(CmdInfo(bot, log, config))
     await bot.add_cog(CmdConfig(bot, log, config))
-    await bot.add_cog(CmdUtility(bot, log))
-    await bot.add_cog(CmdVerification(bot, log, verification))
-    await bot.add_cog(CmdTwitch(bot, log, twitch_app))
+    await bot.add_cog(CmdUtility(bot, log, config))
+    await bot.add_cog(CmdVerification(bot, log, config, verification))
+    await bot.add_cog(CmdTwitch(bot, log, config, twitch_app))

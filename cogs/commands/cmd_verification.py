@@ -8,12 +8,14 @@ from os import getenv
 from logger import Logger
 from cogs.verification import VerificationManager
 from cogs.verification.verification_setup_view import SetupView
+from config_manager import ConfigManager
 
 class CmdVerification(commands.GroupCog, name="verification"):
-    def __init__(self, bot: commands.bot, log: Logger, verification: VerificationManager):
+    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, verification: VerificationManager):
         super().__init__()
         self.bot = bot
         self.log = log
+        self.config = config
         self.verification = verification
         
     @app_commands.command(name="setup", description="Inserisce i dati necessari per il sistema di verifica")
@@ -21,7 +23,7 @@ class CmdVerification(commands.GroupCog, name="verification"):
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             view = SetupView(author=interaction.user)

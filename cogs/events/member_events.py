@@ -7,23 +7,25 @@ from os import getenv
 from utils import printing
 from logger import Logger
 from utils.roles import add_role, remove_role
+from config_manager import ConfigManager
 
 class MemberEvents(commands.Cog):
-    def __init__(self, bot: commands.Bot, log: Logger):
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager):
         self.bot = bot
         self.log = log
+        self.config = config
     
     # ============================= ON_MEMBER_JOIN (Welcome) =============================
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
-        # Load bot communication channel
-        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
         # Get guild
         guild: discord.Guild = member.guild
+        # Load bot communication channel
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             welcome_channel: discord.TextChannel = guild.system_channel
-            rule_channel: discord.TextChannel = guild.get_channel(int(getenv('RULE_CHANNEL_ID')))
+            rule_channel: discord.TextChannel = guild.get_channel(self.config.rule_channel)
             # Load embed message content
             message_content: dict = await printing.load_single_embed_text(guild, 'welcome')
             
@@ -47,8 +49,10 @@ class MemberEvents(commands.Cog):
     # ============================= ON_MEMBER_REMOVE (ByeBye) =============================
     @commands.Cog.listener()
     async def on_raw_member_remove(self, payload: discord.RawMemberRemoveEvent) -> None:
+        # Get guild
+        guild: discord.Guild = self.bot.get_guild(payload.guild_id)
         # Load bot communication channel
-        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         # Get the user
         user: discord.User = payload.user
         
@@ -65,12 +69,14 @@ class MemberEvents(commands.Cog):
     # ============================= ON_MEMBER_UPDATE (Server Booster) =============================
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
+        # Get guild
+        guild: discord.Guild = after.guild
         # Load bot communication channel
-        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         if before.premium_since is None and after.premium_since is not None: # Check if Member boosted the server
             # Add the role
-            await add_role(self.log, after.guild, int(getenv('ROLE_ID_SERVER_BOOSTER')), after.id)
+            await add_role(self.log, guild, self.config.server_booster_role, after.id)
         elif before.premium_since is not None and after.premium_since is None: # Check if Member not boosted the server
             # Remove the role
-            await remove_role(self.log, after.guild, int(getenv('ROLE_ID_SERVER_BOOSTER')), after.id)
+            await remove_role(self.log, guild, self.config.server_booster_role, after.id)

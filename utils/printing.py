@@ -28,7 +28,7 @@ def format_datetime_extended(time: str) -> str:
 # ============================= Embed data load =============================
 async def load_embed_text(guild: discord.Guild, item: str) -> list[dict]:
     # Load communication channel
-    communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+    communication_channel = guild.get_channel(self.config.communication_channel)
     
     # Load embed text file
     embed_text_path: str = path.join(str(getenv('DATA_PATH')), str(getenv('EMBED_TEXT_FILE_NAME')))

@@ -18,6 +18,8 @@ class ConfigManager:
         """Initialize the ConfigManager and create the configuration file if it doesn't exist."""
         self._config_path = self._get_config_path()
         self._initialize_config()
+        
+        self.communication_channel: int = int(self.load_admin('channels', 'communication'))
     
     def _get_config_path(self) -> str:
         """Returns the complete path of the configuration file."""
@@ -28,8 +30,17 @@ class ConfigManager:
         if not path.exists(self._config_path):
             default_config = {
                 'admin': {
-                    'roles': {},
-                    'channels': {}
+                    'roles': {
+                        'server_booster': '',
+                        'in_verification': '',
+                        'verified': ''
+                    },
+                    'channels': {
+                        'admin': '',
+                        'communication': '',
+                        'rule': '',
+                        'live': ''
+                    }
                 },
                 'roles': {},
                 'rules': {
@@ -94,7 +105,7 @@ class ConfigManager:
             new_data: New data to save
             section: List of sections to navigate
         """
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         config = self._load_config()
         
         try:

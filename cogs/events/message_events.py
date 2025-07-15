@@ -17,8 +17,10 @@ class MessageEvents(commands.Cog):
     # ============================= ON_MESSAGE =============================
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
+        # Get guild
+        guild: discord.Guild = message.guild
         # Load bot communication channel
-        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             if message.author.bot:

@@ -8,12 +8,14 @@ from datetime import datetime, timedelta, timezone
 import asyncio
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
+from config_manager import ConfigManager
 
 class CmdAdmin(commands.GroupCog, name="admin"):
-    def __init__(self, bot: commands.bot, log: Logger):
+    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
         super().__init__()
         self.bot = bot
         self.log = log
+        self.config = config
     
     async def delete_messages(self, channel: discord.TextChannel) -> int:
         # Get the list of messages in channel
@@ -54,7 +56,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         # Get the channel
         channel = interaction.channel
         
@@ -81,7 +83,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         # INFO Log the start of the clear
         await self.log.command(f'Pulizia del seguente canale: {channel} ({channel.id})', 'admin', 'CLEAR-CHANNEL')

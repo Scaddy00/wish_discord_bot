@@ -19,6 +19,7 @@ class Logger():
             log_message (str): The message of the event
             record_type (str): The record type of the event. 
             Can be:
+            - guild_join
             - welcome
             - remove
             - twitch

@@ -19,7 +19,7 @@ async def check_booster():
         return
 
     # Load bot communication channel
-    communication_channel = _bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+    communication_channel = _bot.get_channel(self.config.communication_channel)
     
     try:
         # Get bot guild

@@ -10,6 +10,7 @@ from config_manager import ConfigManager
 from cogs.modals.config.exception_view import SetupView as ExceptionView
 from cogs.modals.config.admin_check_view import SetupView as AdminCheckView
 from cogs.modals.config.admin_add_view import SetupView as AdminAddView
+from cogs.modals.config.standard_view import SetupView as StandardView
 from utils.printing import create_embed_from_dict
 
 class CmdConfig(commands.GroupCog, name="config"):
@@ -19,13 +20,46 @@ class CmdConfig(commands.GroupCog, name="config"):
         self.log = log
         self.config = config
     
+    # ============================= Standard =============================
+    @app_commands.command(name="standard", description="Esegui la configurazione standard del bot")
+    async def standard(self, interaction: discord.Interaction) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
+
+        # Get admin channels to configure
+        admin_channels: dict = self.config.load_admin('channels')
+        
+        view: StandardView = StandardView(
+            author=interaction.user,
+            tags=admin_channels.keys()
+        )
+        await interaction.response.send_message(
+            "Seleziona i canali",
+            view=view,
+            ephemeral=True
+        )
+        await view.wait()
+        
+        # Save selected channels
+        for tag, channel_id in view.values.items():
+            self.config.add_admin('channels', tag, channel_id)
+            
+        # Respond with success
+        await interaction.followup.send(
+            '✅ Dati salvati con successo!',
+            ephemeral=True
+        )
+        
+        # INFO Log that operation is completed
+        await self.log.command(f'Configurazione standard completata.', 'config', 'STANDARD')
+    
     # ============================= Admin Management =============================
     @app_commands.command(name="admin-check", description="Visualizza tutti i dati inseriti come config di admin")
     async def admin_check(self, interaction: discord.Interaction) -> None:
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             # Get config/admin tags
@@ -81,7 +115,7 @@ class CmdConfig(commands.GroupCog, name="config"):
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             # Get config/admin tags
@@ -136,7 +170,7 @@ class CmdConfig(commands.GroupCog, name="config"):
         # Get the guild from interaction
         guild: discord.Guild = interaction.guild
         # Load communication channel
-        communication_channel = guild.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:            
             view: ExceptionView = ExceptionView(author=interaction.user)

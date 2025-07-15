@@ -1,8 +1,8 @@
 
 # ----------------------------- Imported Libraries -----------------------------
 import discord
-from discord.ui import View, Select, ChannelSelect, RoleSelect, Button
-from discord import SelectOption, ButtonStyle
+from discord.ui import View, Select
+from discord import SelectOption
 # ----------------------------- Custom Libraries -----------------------------
 from cogs.modals.input_modal import InputModal
 from cogs.modals.channel_view import ChannelView

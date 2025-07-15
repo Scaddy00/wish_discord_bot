@@ -10,12 +10,6 @@ from bot import WishBot
 # Load .env file
 load_dotenv()
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Blank Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-bot: commands.Bot
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-BOT_COMMUNICATION_CHANNEL_ID: int = int(str(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
-ADMIN_CHANNEL_ID: int = int(str(getenv('ADMIN_CHANNEL_ID')))
-
 # ============================= BOT SETUP =============================
 intents = discord.Intents.all()
 intents.messages = True

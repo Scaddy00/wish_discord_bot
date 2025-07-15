@@ -188,7 +188,7 @@ class TwitchApp():
             return {}
         
         # Load communication channel
-        communication_channel = self.bot.get_channel(int(getenv('BOT_COMMUNICATION_CHANNEL_ID')))
+        communication_channel = self.bot.get_channel(self.config.communication_channel)
         
         try:
             # Get the channel where the message will be sent
