@@ -25,7 +25,7 @@ class MemberEvents(commands.Cog):
         
         try:
             welcome_channel: discord.TextChannel = guild.system_channel
-            rule_channel: discord.TextChannel = guild.get_channel(self.config.rule_channel)
+            rule_channel: discord.TextChannel = guild.get_channel(self.config.load_admin('channels', 'rule'))
             # Load embed message content
             message_content: dict = await printing.load_single_embed_text(guild, 'welcome')
             
