@@ -7,9 +7,9 @@ from logger import Logger
 from config_manager import ConfigManager
 
 # ============================= ADD_ROLE =============================
-async def add_role(log: Logger, guild: discord.Guild, role_id: int, member_id: int) -> None:
+async def add_role(log: Logger, guild: discord.Guild, role_id: int, member_id: int, config: ConfigManager) -> None:
     # Load communication channel
-    communication_channel = guild.get_channel(self.config.communication_channel)
+    communication_channel = guild.get_channel(config.communication_channel)
     
     # Get the role
     role = guild.get_role(role_id)
@@ -33,9 +33,9 @@ async def add_role(log: Logger, guild: discord.Guild, role_id: int, member_id: i
         await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
 
 # ============================= REMOVE_ROLE =============================
-async def remove_role(log: Logger, guild: discord.Guild, role_id: int, member_id: int) -> None:
+async def remove_role(log: Logger, guild: discord.Guild, role_id: int, member_id: int, config: ConfigManager) -> None:
     # Load communication channel
-    communication_channel = guild.get_channel(self.config.communication_channel)
+    communication_channel = guild.get_channel(config.communication_channel)
     
     # Get the role
     role = guild.get_role(role_id)
@@ -69,7 +69,7 @@ async def add_role_event(log: Logger, config: ConfigManager, guild: discord.Guil
         return
     
     # Call to the function that add the new role
-    await add_role(log, guild, int(role_id), member_id)
+    await add_role(log, guild, int(role_id), member_id, config)
 
 # ============================= REMOVE_ROLE_EVENT =============================
 async def remove_role_event(log: Logger, guild: discord.Guild, config: ConfigManager, message_id: int, emoji: discord.PartialEmoji, member_id: int) -> None:
@@ -81,4 +81,4 @@ async def remove_role_event(log: Logger, guild: discord.Guild, config: ConfigMan
         return
     
     # Call to the function that remove the role
-    await remove_role(log, guild, int(role_id), member_id)
+    await remove_role(log, guild, int(role_id), member_id, config)

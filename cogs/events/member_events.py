@@ -76,7 +76,7 @@ class MemberEvents(commands.Cog):
         
         if before.premium_since is None and after.premium_since is not None: # Check if Member boosted the server
             # Add the role
-            await add_role(self.log, guild, self.config.server_booster_role, after.id)
+            await add_role(self.log, guild, self.config.server_booster_role, after.id, self.config)
         elif before.premium_since is not None and after.premium_since is None: # Check if Member not boosted the server
             # Remove the role
-            await remove_role(self.log, guild, self.config.server_booster_role, after.id)
+            await remove_role(self.log, guild, self.config.server_booster_role, after.id, self.config)

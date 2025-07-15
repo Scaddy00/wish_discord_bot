@@ -133,7 +133,7 @@ class CmdRoles(commands.GroupCog, name="role"):
         
         try:
             if role not in user.roles:
-                await add_role(self.log, interaction.guild, role.id, user.id)
+                await add_role(self.log, interaction.guild, role.id, user.id, self.config)
                 # Respond that the role was assigned correctly
                 await interaction.response.send_message(f'Ruolo {role.mention} assegnato correttamente a {user.mention}!')
                 # INFO Log that the role was assigned correctly
@@ -166,7 +166,7 @@ class CmdRoles(commands.GroupCog, name="role"):
                         return
                 
                 if role not in member.roles:
-                    await add_role(self.log, interaction.guild, role.id, member.id)
+                    await add_role(self.log, interaction.guild, role.id, member.id, self.config)
                     # INFO Log that the role was assigned correctly
                     await self.log.command(f'Ruolo {role.name} ({role.id}) assegnato correttamente a {member.name} ({member.id})', 'role', 'assign-all')
                     counter += 1
@@ -191,7 +191,7 @@ class CmdRoles(commands.GroupCog, name="role"):
         
         try:
             if role in user.roles:
-                await remove_role(self.log, interaction.guild, role.id, user.id)
+                await remove_role(self.log, interaction.guild, role.id, user.id, self.config)
                 # Respond that the role was removed correctly
                 await interaction.response.send_message(f'Ruolo {role.mention} rimosso correttamente da {user.mention}!')
                 # INFO Log that the role was removed correctly
@@ -224,7 +224,7 @@ class CmdRoles(commands.GroupCog, name="role"):
                         return
                 
                 if role in member.roles:
-                    await remove_role(self.log, interaction.guild, role.id, member.id)
+                    await remove_role(self.log, interaction.guild, role.id, member.id, self.config)
                     # INFO Log that the role was removed correctly
                     await self.log.command(f'Ruolo {role.name} ({role.id}) rimosso correttamente da {member.name} ({member.id})', 'role', 'remove-all')
                     counter += 1

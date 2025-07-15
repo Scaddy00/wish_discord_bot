@@ -34,10 +34,10 @@ async def check_booster():
         for member in members:
             if member.premium_since is not None: # Check if member boosted
                 if role not in member.roles: # Check if role isn't already in member roles
-                    await add_role(_log, guild, role.id, member.id) # Add role
+                    await add_role(_log, guild, role.id, member.id, _config) # Add role
             else: # Member not boosted
                 if role in member.roles: # Check if role is in member roles
-                    await remove_role(_log, guild, role.id, member.id) # Remove the role
+                    await remove_role(_log, guild, role.id, member.id, _config) # Remove the role
     except Exception as e:
         # EXCEPTION
         error_message: str = f'Errore durante il controllo. \n{e}'
