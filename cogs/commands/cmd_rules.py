@@ -84,7 +84,7 @@ class CmdRules(commands.GroupCog, name="rule"):
                     await message.add_reaction(emoji)
                 except Exception as e:
                     # EXCEPTION
-                    error_message: str = f'Errore nell\'aggiungere la reazione {rules_config['emoji']}\n{e}'
+                    error_message: str = f"Errore nell'aggiungere la reazione {rules_config['emoji']}\n{e}"
                     await self.log.error(error_message, 'COMMAND - RULE - NEW')
                     await communication_channel.send(self.log.error_message(command='COMMAND - RULE - NEW', message=error_message))
                 

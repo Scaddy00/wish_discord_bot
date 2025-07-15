@@ -33,8 +33,7 @@ class DB():
         if not path.exists(folder_path):
             mkdir(folder_path)
         # Get file path and check if exist
-        # self.db_path = folder_path.join(str(getenv('DB_FILE_NAME')))
-        self.db_path = f"{folder_path}/{getenv('DB_FILE_NAME')}"
+        self.db_path = f'{folder_path}/{getenv("DB_FILE_NAME")}'
         # if not path.exists(self.db_path):
         
         # Connect to db
