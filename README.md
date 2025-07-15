@@ -46,11 +46,32 @@ The bot is designed for flexibility and ease of use, making it suitable for comm
 4. **Configure environment variables:**
     Create a `.env` file in the root directory:
     ```env
-    DISCORD_TOKEN=your_token
-    TWITCH_CLIENT_ID=your_client_id
-    TWITCH_CLIENT_SECRET=your_client_secret
-    BOT_COMMUNICATION_CHANNEL_ID=channel_id
-    # Add other required variables as needed
+    # === Discord Bot ===
+    DISCORD_TOKEN=your_discord_bot_token           # Discord bot token (required)
+    COMMAND_PREFIX=!                               # Command prefix (e.g., ! or /)
+
+    # === Debug mode ===
+    DEBUG_MODE=0                                   # 1 to enable debug mode, 0 for production
+    GUILD_ID=0                                     # Dev guild ID for debug mode (leave empty if not using debug)
+
+    # === Twitch API ===
+    TWITCH_CLIENT_ID=your_twitch_client_id
+    TWITCH_CLIENT_SECRET=your_twitch_client_secret
+    TWITCH_URL=https://www.twitch.tv/              # Base Twitch URL (usually does not need to be changed)
+    TWITCH_COLOR=6441a5                            # Twitch embed color (hex without #, e.g., 9146FF)
+
+    # === Database and data ===
+    DATA_PATH=./data                               # Folder to save data (default: ./data)
+    DB_FILE_NAME=database.db                       # SQLite database file name (default: database.db)
+    CONFIG_FILE_NAME=config.json                   # Config file name (default: config.json)
+    EMBED_TEXT_FILE_NAME=embed_text.json           # Embed texts file name (default: embed_text.json)
+    VERIFICATION_DATA_FILE_NAME=verification_data.json # Verification data file name (default: verification_data.json)
+    TWITCH_FILE_NAME=twitch_data.json              # Twitch data file name (default: twitch_data.json)
+
+    # === Formats and other ===
+    DATETIME_FORMAT=%d/%m/%Y %H:%M:%S              # Datetime format (default: %d/%m/%Y %H:%M:%S)
+
+    # --- Add other variables if needed ---
     ```
 
 ---
