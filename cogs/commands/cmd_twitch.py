@@ -138,7 +138,7 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
             )
             
             # Update data in twitch_app streamer name
-            self.twitch_app.change_streamer_name(modal.input_value)
+            self.twitch_app.change_streamer_name(modal.input_values[0])
             
             # Respond with success
             await interaction.followup.send(
