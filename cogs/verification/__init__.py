@@ -37,8 +37,13 @@ class VerificationManager:
     # ============================= Reload Data =============================
     def reload_data(self, data) -> None:
         self.timeout = data['config'].get('timeout', 0)
-        self.temp_role_id = self.config.load_admin('roles', 'in_verification')
-        self.verified_role_id = self.config.load_admin('roles', 'verified')
+        temp_role_id = self.config.load_admin('roles', 'in_verification')
+        verified_role_id = self.config.load_admin('roles', 'verified')
+        
+        # Convert to int if not None, otherwise set to 0
+        self.temp_role_id = int(temp_role_id) if temp_role_id and temp_role_id != '' else 0
+        self.verified_role_id = int(verified_role_id) if verified_role_id and verified_role_id != '' else 0
+        
         self.waiting_users = data.get('pending', {})
     
     # ============================= Setup =============================
@@ -89,8 +94,18 @@ class VerificationManager:
         member: discord.Member = guild.get_member(user_id)
         
         if member:
-            await member.remove_roles(guild.get_role(self.temp_role_id))
-            await member.add_roles(guild.get_role(self.verified_role_id))
+            # Only remove temp role if it's configured
+            if self.temp_role_id != 0:
+                temp_role = guild.get_role(self.temp_role_id)
+                if temp_role and temp_role in member.roles:
+                    await member.remove_roles(temp_role)
+            
+            # Only add verified role if it's configured
+            if self.verified_role_id != 0:
+                verified_role = guild.get_role(self.verified_role_id)
+                if verified_role and verified_role not in member.roles:
+                    await member.add_roles(verified_role)
+            
             # INFO Log that the user has been verified
             await self.log.verification(f'User {member.name} ({member.id}) has been verified', 'verification', str(member.id))
             try:

@@ -17,6 +17,30 @@ async def add_role(log: Logger, guild: discord.Guild, role_id: int, member_id: i
     # Get the member
     member = guild.get_member(member_id)
     
+    # Check if role_id is None or invalid
+    if role_id is None or role_id == 0:
+        error_message: str = f'Errore durante l\'aggiunta di un nuovo ruolo.\nRole ID è None o 0 per il membro {member.name if member else "Unknown"} ({member_id})'
+        await log.error(error_message, 'EVENT - ROLE ASSIGN AUTO')
+        if communication_channel:
+            await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
+        return
+    
+    # Check if role exists
+    if role is None:
+        error_message: str = f'Errore durante l\'aggiunta di un nuovo ruolo.\nRuolo con ID {role_id} non trovato nel server per il membro {member.name if member else "Unknown"} ({member_id})'
+        await log.error(error_message, 'EVENT - ROLE ASSIGN AUTO')
+        if communication_channel:
+            await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
+        return
+    
+    # Check if member exists
+    if member is None:
+        error_message: str = f'Errore durante l\'aggiunta di un nuovo ruolo.\nMembro con ID {member_id} non trovato nel server per il ruolo {role.name} ({role.id})'
+        await log.error(error_message, 'EVENT - ROLE ASSIGN AUTO')
+        if communication_channel:
+            await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
+        return
+    
     try:
         # Check if the member already has the role
         if role in member.roles:
@@ -30,7 +54,8 @@ async def add_role(log: Logger, guild: discord.Guild, role_id: int, member_id: i
         # EXCEPTION
         error_message: str = f'Errore durante l\'aggiunta di un nuovo ruolo.\n{member.name} ({member.id}) - {role.name} ({role.id})\n{e}'
         await log.error(error_message, 'EVENT - ROLE ASSIGN AUTO')
-        await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
+        if communication_channel:
+            await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
 
 # ============================= REMOVE_ROLE =============================
 async def remove_role(log: Logger, guild: discord.Guild, role_id: int, member_id: int, config: ConfigManager) -> None:
@@ -42,6 +67,30 @@ async def remove_role(log: Logger, guild: discord.Guild, role_id: int, member_id
     
     # Get the member
     member = guild.get_member(member_id)
+    
+    # Check if role_id is None or invalid
+    if role_id is None or role_id == 0:
+        error_message: str = f'Errore durante la rimozione di un ruolo.\nRole ID è None o 0 per il membro {member.name if member else "Unknown"} ({member_id})'
+        await log.error(error_message, 'EVENT - ROLE ASSIGN AUTO')
+        if communication_channel:
+            await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
+        return
+    
+    # Check if role exists
+    if role is None:
+        error_message: str = f'Errore durante la rimozione di un ruolo.\nRuolo con ID {role_id} non trovato nel server per il membro {member.name if member else "Unknown"} ({member_id})'
+        await log.error(error_message, 'EVENT - ROLE ASSIGN AUTO')
+        if communication_channel:
+            await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
+        return
+    
+    # Check if member exists
+    if member is None:
+        error_message: str = f'Errore durante la rimozione di un ruolo.\nMembro con ID {member_id} non trovato nel server per il ruolo {role.name} ({role.id})'
+        await log.error(error_message, 'EVENT - ROLE ASSIGN AUTO')
+        if communication_channel:
+            await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
+        return
     
     try:
         # Check if the member hasn't the role
@@ -56,7 +105,8 @@ async def remove_role(log: Logger, guild: discord.Guild, role_id: int, member_id
         # EXCEPTION
         error_message: str = f'Errore durante la rimozione di un ruolo.\n{member.name} ({member.id}) - {role.name} ({role.id})\n{e}'
         await log.error(error_message, 'EVENT - ROLE ASSIGN AUTO')
-        await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
+        if communication_channel:
+            await communication_channel.send(log.error_message(command='EVENT - ROLE ASSIGN AUTO', message=error_message))
 
 # ============================= ADD_ROLE_EVENT =============================
 async def add_role_event(log: Logger, config: ConfigManager, guild: discord.Guild, message_id: int, emoji: discord.PartialEmoji, member_id: str) -> None:

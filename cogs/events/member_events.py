@@ -25,13 +25,22 @@ class MemberEvents(commands.Cog):
         
         try:
             welcome_channel: discord.TextChannel = guild.system_channel
-            rule_channel: discord.TextChannel = guild.get_channel(self.config.load_admin('channels', 'rule'))
+            rule_channel_id = self.config.load_admin('channels', 'rule')
+            rule_channel: discord.TextChannel = None
+            
+            if rule_channel_id and rule_channel_id != '':
+                rule_channel = guild.get_channel(int(rule_channel_id))
+            
             # Load embed message content
             message_content: dict = await printing.load_single_embed_text(guild, 'welcome', self.config)
             
+            # Format description with rule channel mention if available
+            rule_mention = rule_channel.mention if rule_channel else "#regole"
+            description = message_content['description'].format(user=member.mention, rule=rule_mention)
+            
             message: discord.Embed = printing.create_embed(
                 title=message_content['title'], # Load title
-                description=message_content['description'].format(user=member.mention, rule=rule_channel.mention), # Load description adding the mentions required
+                description=description, # Load description adding the mentions required
                 color=message_content['color'], # Load the color from str
                 image=message_content['image'], # Load image url
                 thumbnail=member.avatar.url if member.avatar != None else message_content['thumbnail']
@@ -44,7 +53,8 @@ class MemberEvents(commands.Cog):
             # EXCEPTION
             error_message: str = f'Errore durante l\'invio del messaggio di benvenuto. \nUtente: {member.name} ({member.id}) \n{e}'
             await self.log.error(error_message, 'EVENT - MEMBER WELCOME')
-            await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER WELCOME', message = error_message))
+            if communication_channel:
+                await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER WELCOME', message = error_message))
     
     # ============================= ON_MEMBER_REMOVE (ByeBye) =============================
     @commands.Cog.listener()
@@ -64,7 +74,8 @@ class MemberEvents(commands.Cog):
             # EXCEPTION
             error_message: str = f'Errore durante l\'invio del messaggio di ByeBye. \nUtente: {user.name} ({user.id})\n{e}'
             await self.log.error(error_message, 'EVENT - MEMBER REMOVE')
-            await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER REMOVE', message = error_message))
+            if communication_channel:
+                await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER REMOVE', message = error_message))
     
     # ============================= ON_MEMBER_UPDATE (Server Booster) =============================
     @commands.Cog.listener()
@@ -76,7 +87,11 @@ class MemberEvents(commands.Cog):
         
         if before.premium_since is None and after.premium_since is not None: # Check if Member boosted the server
             # Add the role
-            await add_role(self.log, guild, self.config.server_booster_role, after.id, self.config)
+            booster_role_id = self.config.load_admin('roles', 'server_booster')
+            if booster_role_id and booster_role_id != '':
+                await add_role(self.log, guild, int(booster_role_id), after.id, self.config)
         elif before.premium_since is not None and after.premium_since is None: # Check if Member not boosted the server
             # Remove the role
-            await remove_role(self.log, guild, self.config.server_booster_role, after.id, self.config)
+            booster_role_id = self.config.load_admin('roles', 'server_booster')
+            if booster_role_id and booster_role_id != '':
+                await remove_role(self.log, guild, int(booster_role_id), after.id, self.config)

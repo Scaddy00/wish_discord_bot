@@ -133,7 +133,7 @@ class ConfigManager:
     
     # ============================= Admin Management =============================
 
-    def load_admin(self, section: str = '', tag: str = '') -> Tuple[dict, str]:
+    def load_admin(self, section: str = '', tag: str = '') -> Union[dict, str, int, None]:
         """
         Load admin configuration data from a specific section.
         
@@ -142,7 +142,7 @@ class ConfigManager:
             tag (str, optional): Specific tag within the section. If empty, returns entire section
         
         Returns:
-            Tuple[dict, str]: Configuration data for the specified section/tag
+            Union[dict, str, int, None]: Configuration data for the specified section/tag
         """
         config = self._load_config()
         
@@ -152,7 +152,7 @@ class ConfigManager:
         if tag == '':
             return config['admin'][section]
         
-        return config['admin'][section][tag]
+        return config['admin'][section].get(tag, None)
 
     def add_admin(self, section: str, tag: str, data: str) -> None:
         """
