@@ -19,11 +19,7 @@ class ConfigManager:
         self._config_path = self._get_config_path()
         self._initialize_config()
         
-        comm_channel_str = self.load_admin('channels', 'communication')
-        if comm_channel_str and str(comm_channel_str).isdigit():
-            self.communication_channel = int(comm_channel_str)
-        else:
-            self.communication_channel = None  # Nessun canale di comunicazione impostato
+        self.communication_channel = self._load_communication_channel()
     
     def _get_config_path(self) -> str:
         """Returns the complete path of the configuration file."""
@@ -62,6 +58,14 @@ class ConfigManager:
     def _save_config(self, config: Dict[str, Any]) -> None:
         """Save the configuration to the file."""
         write_file(self._config_path, config)
+    
+    def _load_communication_channel(self) -> int:
+        """Load the communication channel from the configuration file."""
+        comm_channel_str = self.load_admin('channels', 'communication')
+        if comm_channel_str and str(comm_channel_str).isdigit():
+            return int(comm_channel_str)
+        else:
+            return None
     
     # ============================= Generic Data Operations =============================
     

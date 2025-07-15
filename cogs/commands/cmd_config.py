@@ -43,7 +43,7 @@ class CmdConfig(commands.GroupCog, name="config"):
         for tag, channel_id in view.values.items():
             self.config.add_admin('channels', tag, channel_id)
             if tag == 'communication':
-                self.config.communication_channel = int(channel_id)
+                self.config._load_communication_channel()
             
         # Respond with success
         await interaction.followup.send(
@@ -150,7 +150,7 @@ class CmdConfig(commands.GroupCog, name="config"):
             # Save data in config
             self.config.add_admin(config_tag, tag, value)
             if config_tag == 'channels' and tag == 'communication':
-                self.config.communication_channel = int(value)
+                self.config._load_communication_channel()
             
             # Respond with success
             await interaction.followup.send(
