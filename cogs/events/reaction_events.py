@@ -26,7 +26,13 @@ class ReactionEvents(commands.Cog):
         
         # Check for verification
         rules_data: dict = self.config.load_rules()
-        if message_id == int(rules_data.get('message_id', '0')) and str(emoji) == rules_data.get('emoji', ''):
+        rules_message_id = rules_data.get('message_id')
+        try:
+            rules_message_id_int = int(rules_message_id)
+        except (TypeError, ValueError):
+            rules_message_id_int = None
+
+        if rules_message_id_int and message_id == rules_message_id_int and str(emoji) == rules_data.get('emoji', ''):
             if not member.bot:
                 await add_role(self.log, guild, self.verification.temp_role_id, member.id)
                 # INFO Log that the user has been added to the temp role
@@ -45,4 +51,4 @@ class ReactionEvents(commands.Cog):
         emoji: discord.PartialEmoji = payload.emoji
         member_id: int = payload.user_id
         
-        await remove_role_event(self.bot.log, guild, message_id, emoji, member_id)
+        await remove_role_event(self.bot.log, guild, self.config, message_id, emoji, member_id)
