@@ -19,8 +19,10 @@ class MessageEvents(commands.Cog):
     async def on_message(self, message: discord.Message) -> None:
         # Get guild
         guild: discord.Guild = message.guild
-        # Load bot communication channel
-        communication_channel = guild.get_channel(self.config.communication_channel)
+        # Load bot communication channel only if guild is not None
+        communication_channel = None
+        if guild is not None:
+            communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
             if message.author.bot:
@@ -46,4 +48,5 @@ class MessageEvents(commands.Cog):
             # EXCEPTION
             error_message: str = f'Errore nel salvataggio del seguente messaggio: \n\'{message.content}\' \nCanale: {message.channel.name} ({message.channel.id}) \n{e}'
             await self.log.error(error_message, 'EVENT - MESSAGE')
-            await communication_channel.send(self.log.error_message(command = 'EVENT - MESSAGE', message = error_message))
+            if communication_channel is not None:
+                await communication_channel.send(self.log.error_message(command = 'EVENT - MESSAGE', message = error_message))
