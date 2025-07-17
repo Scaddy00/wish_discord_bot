@@ -7,8 +7,8 @@ from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from cogs.twitch import TwitchApp
-from cogs.twitch.add_tag_modal import SetupModal as TagModal
-from cogs.twitch.change_title_view import SetupView as TitleView
+from cogs.twitch.views_modals.add_tag_modal import SetupModal as TagModal
+from cogs.twitch.views_modals.change_title_view import SetupView as TitleView
 from cogs.modals.input_modal import InputModal
 from config_manager import ConfigManager
 
