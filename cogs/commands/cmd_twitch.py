@@ -147,7 +147,7 @@ class CmdTwitch(commands.GroupCog, name="twitch"):
             )
             
             # INFO Log that the operation is completed
-            await self.log.command(f'Modificato il nome dello streamer: {modal.input_value}', 'twitch', 'change-streamer')
+            await self.log.command(f'Modificato il nome dello streamer: {modal.input_values[0]}', 'twitch', 'change-streamer')
             
         except Exception as e:
             # EXCEPTION
