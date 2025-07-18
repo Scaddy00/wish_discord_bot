@@ -48,7 +48,7 @@ class MemberEvents(commands.Cog):
             
             await welcome_channel.send(embed=message)
             # INFO LOG
-            await self.log.event(f'Nuovo utente aggiunto, {member.name} ({member.id})', 'welcome')
+            await self.log.event(f'Nuovo utente aggiunto, {member.name} ({member.id})', 'guild_join')
         except Exception as e:
             # EXCEPTION
             error_message: str = f'Errore durante l\'invio del messaggio di benvenuto. \nUtente: {member.name} ({member.id}) \n{e}'
@@ -90,7 +90,9 @@ class MemberEvents(commands.Cog):
             booster_role_id = self.config.load_admin('roles', 'server_booster')
             if booster_role_id and booster_role_id != '':
                 await add_role(self.log, guild, int(booster_role_id), after.id, self.config)
-        elif before.premium_since is not None and after.premium_since is None: # Check if Member not boosted the server
+            # INFO LOG - User became booster
+            await self.log.event(f'Utente diventato server booster, {after.name} ({after.id})', 'boost')
+        elif before.premium_since is not None and after.premium_since is not None: # Check if Member not boosted the server
             # Remove the role
             booster_role_id = self.config.load_admin('roles', 'server_booster')
             if booster_role_id and booster_role_id != '':

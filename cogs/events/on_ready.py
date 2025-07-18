@@ -22,7 +22,5 @@ class OnReady(commands.Cog):
     async def on_ready(self) -> None:
         # Authenticate Twitch App
         await self.twitch_app._authenticate()
-        # Setup all tasks
-        await setup_all_tasks(self.bot, self.log, self.config, self.twitch_app)
         # Restore verification pending tasks
         await self.verification.restore_pending_tasks()

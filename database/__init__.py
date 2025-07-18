@@ -86,3 +86,19 @@ class DB():
             (timestamp, status, user_id, message)
         )
         self.conn.commit()
+
+    # >>==============<< Get Events by Type and Date Range >>==============<< 
+    def get_events(self, event_types: list, start_time: str, end_time: str) -> list:
+        """Get events of given types between start_time and end_time (ISO format)."""
+        placeholders = ','.join('?' for _ in event_types)
+        query = f"SELECT timestamp, type, message FROM events WHERE type IN ({placeholders}) AND timestamp BETWEEN ? AND ?"
+        params = event_types + [start_time, end_time]
+        self.cursor.execute(query, params)
+        return self.cursor.fetchall()
+
+    # >>==============<< Get Messages by Date Range >>==============<< 
+    def get_messages(self, start_time: str, end_time: str) -> list:
+        """Get messages between start_time and end_time (ISO format)."""
+        query = "SELECT timestamp, channel_id, channel_name, user_id, user_name, message FROM messages WHERE timestamp BETWEEN ? AND ?"
+        self.cursor.execute(query, (start_time, end_time))
+        return self.cursor.fetchall()

@@ -17,6 +17,7 @@ propcache==0.3.2
 Pygments==2.19.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
+pytz==2025.2
 six==1.17.0
 twitchAPI==4.5.0
 typing_extensions==4.14.1

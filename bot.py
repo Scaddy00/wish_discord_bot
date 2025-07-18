@@ -6,6 +6,7 @@ from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from cogs.commands import add_commands
 from cogs.events import add_events
+from cogs.tasks import setup_all_tasks
 
 # ============================= BOT SETUP HOOK =============================
 class WishBot(commands.Bot):
@@ -28,6 +29,8 @@ class WishBot(commands.Bot):
         await add_commands(self, self.log, self.config, self.verification, self.twitch_app)
         # EVENTS
         await add_events(self, self.log, self.config, self.verification, self.twitch_app)
+        # TASKS
+        await setup_all_tasks(self, self.log, self.config, self.twitch_app)
         
         if getenv("DEBUG_MODE") == "1":
             dev_guild = discord.Object(id=int(getenv('GUILD_ID')))
