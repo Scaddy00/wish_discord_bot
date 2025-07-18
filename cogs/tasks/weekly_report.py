@@ -3,6 +3,7 @@ from discord.ext import tasks, commands
 import datetime
 from logger import Logger
 import pytz
+from utils.printing import create_embed
 
 ROME_TZ = pytz.timezone('Europe/Rome')
 
@@ -47,26 +48,41 @@ class WeeklyReport(commands.Cog):
         end_str = end_dt.strftime('%d/%m/%Y %H:%M')
 
         # Build the report in Italian
-        report = (
-            f"**Report Settimanale Eventi Discord**\n"
+        embed_title = "Report Settimanale Eventi Discord"
+        embed_description = (
             f"Periodo: dal {start_str} al {end_str}\n"
             f"Membri entrati: {join_count}\n"
             f"Membri usciti: {leave_count}\n"
             f"Nuovi server booster: {boost_count}\n"
-            f"\nMessaggi per canale:\n"
         )
+        fields = []
         if msg_per_channel:
             for ch, count in msg_per_channel.items():
-                report += f"- {ch}: {count}\n"
+                fields.append({
+                    'name': ch,
+                    'value': str(count),
+                    'inline': False
+                })
         else:
-            report += "Nessun messaggio registrato.\n"
-        report += "\nFine del report."
-
+            fields.append({
+                'name': 'Messaggi',
+                'value': 'Nessun messaggio registrato.',
+                'inline': False
+            })
+        # Use bot color if available, else fallback
+        color = getattr(self.bot, 'color', '0xA6BBF0')
+        # Create the embed
+        embed = create_embed(
+            title=embed_title,
+            description=embed_description,
+            color=color,
+            fields=fields
+        )
         # Get communication channel from config
         comm_channel_id = getattr(self.bot.config, 'communication_channel', None)
         channel = self.bot.get_channel(comm_channel_id) if comm_channel_id else None
         if channel:
-            await channel.send(report)
+            await channel.send(embed=embed)
 
     @weekly_report.before_loop
     async def before_weekly_report(self):
