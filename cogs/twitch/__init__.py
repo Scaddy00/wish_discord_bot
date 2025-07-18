@@ -75,9 +75,13 @@ class TwitchApp():
     def add_image(self, new_image: dict) -> None:
         """
         Add or update an image URL for a given tag in the embed images section.
+        After adding, sort the tags alphabetically.
         """
         data: dict = self.load_data()
-        data.setdefault('embeds', {}).setdefault('images', {})[new_image['tag']] = new_image['url']
+        images = data.setdefault('embeds', {}).setdefault('images', {})
+        images[new_image['tag']] = new_image['url']
+        # Sort tags alphabetically
+        data['embeds']['images'] = dict(sorted(images.items()))
         write_file(self.file_path, data)
     
     # ============================= Embed Title Management =============================
