@@ -200,7 +200,7 @@ class TwitchApp():
         )
         # If the stream is offline, add the end time to the description
         if self.stream_info['status'] == 'OFF' and self.stream_info['ended_at'] != '':
-            description += '\n**Finita il**\n{ended_at}'.format(ended_at=self.stream_info['ended_at'])
+            description += '\n\n**Finita il**\n{ended_at}'.format(ended_at=self.stream_info['ended_at'])
         return create_embed(
             title=embed_title,
             description=description,
