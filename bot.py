@@ -40,6 +40,5 @@ class WishBot(commands.Bot):
             commands_names: list = [command.name for command in tree]
             print(f"[DEBUG] Nomi dei comandi: {commands_names}")
         else:
-            self.tree.clear_commands(guild=None)
             synced = await self.tree.sync()
             print(f"[PROD] Comandi globali sincronizzati: {len(synced)}")
