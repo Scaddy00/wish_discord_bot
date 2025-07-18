@@ -31,7 +31,7 @@ class WishBot(commands.Bot):
         
         if getenv("DEBUG_MODE") == "1":
             dev_guild = discord.Object(id=int(getenv('GUILD_ID')))
-            self.tree.clear_commands(guild=dev_guild)
+            await self.tree.clear_commands(guild=dev_guild)
             self.tree.copy_global_to(guild=dev_guild)
             synced = await self.tree.sync(guild=dev_guild)
             print(f"[DEBUG] Comandi sincronizzati con la dev guild: {len(synced)}")
@@ -40,6 +40,6 @@ class WishBot(commands.Bot):
             commands_names: list = [command.name for command in tree]
             print(f"[DEBUG] Nomi dei comandi: {commands_names}")
         else:
-            self.tree.clear_commands()
+            await self.tree.clear_commands(guild=None)
             synced = await self.tree.sync()
             print(f"[PROD] Comandi globali sincronizzati: {len(synced)}")
