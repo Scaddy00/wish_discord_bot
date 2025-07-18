@@ -1,6 +1,6 @@
 
 # ----------------------------- Standard library -----------------------------
-from datetime import datetime
+from datetime import datetime, timezone
 from os import getenv
 from discord import Embed
 import discord
@@ -38,13 +38,23 @@ def format_datetime_extended(time: str) -> str:
     Convert ISO format datetime string to extended Italian format.
     
     Args:
-        time (str): ISO format datetime string
+        time (str): ISO format datetime string (UTC timezone)
         
     Returns:
-        str: Datetime in format "HH:MM DD month YYYY" (Italian)
+        str: Datetime in format "HH:MM DD month YYYY" (Italian, local timezone)
     """
-    converted_datetime: datetime = datetime.fromisoformat(time)
-    return converted_datetime.strftime(f"%H:%M %d {italian_month[converted_datetime.month]} %Y")
+    # Parse the ISO format string and handle timezone properly
+    if time.endswith('Z'):
+        # Remove 'Z' and parse as UTC
+        utc_time = time[:-1]
+        converted_datetime: datetime = datetime.fromisoformat(utc_time).replace(tzinfo=timezone.utc)
+    else:
+        # Parse as is (assuming it's already in the correct timezone)
+        converted_datetime: datetime = datetime.fromisoformat(time)
+    
+    # Convert to local timezone
+    local_datetime = converted_datetime.astimezone()
+    return local_datetime.strftime(f"%H:%M %d {italian_month[local_datetime.month]} %Y")
 
 # ============================= Embed data load =============================
 async def load_embed_text(guild: discord.Guild, item: str, config) -> list[dict]:
