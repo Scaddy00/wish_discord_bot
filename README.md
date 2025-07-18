@@ -144,6 +144,26 @@ python main.py
 
 ---
 
+## 🔔 Discord Events
+
+The bot listens and reacts to several Discord events to automate server management and enhance user experience. Here are the main events handled:
+
+- **on_ready**: Triggered when the bot is ready and connected. Used to authenticate Twitch, restore verification tasks, and start background tasks.
+- **on_guild_join**: Welcomes the bot to a new server and sends setup instructions.
+- **on_member_join**: Sends a welcome message to new members and assigns roles if configured.
+- **on_raw_member_remove**: Notifies when a user leaves the server.
+- **on_member_update**: Detects when a user becomes or stops being a server booster and updates roles accordingly.
+- **on_message**: Logs messages sent in the server, except those in excluded channels or by bots.
+- **on_raw_reaction_add**: Handles role assignment and verification when users react to specific messages.
+- **on_raw_reaction_remove**: Handles role removal when users remove reactions from specific messages.
+
+Additionally, the bot runs scheduled background tasks such as:
+- **Booster check**: Periodically checks and updates server booster roles.
+- **Twitch notifications**: Monitors Twitch streams and sends notifications.
+- **Weekly report**: Sends a weekly summary of server activity and events.
+
+---
+
 ## 🧩 Extending the Bot
 
 Wish Discord Bot is modular! You can add new features by creating new cogs in the `cogs/` directory or utilities in `utils/`. The project is structured for easy expansion and maintenance.
