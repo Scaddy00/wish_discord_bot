@@ -5,6 +5,7 @@ from discord.ext import commands
 from os import getenv, path
 from twitchAPI.twitch import Twitch
 from twitchAPI.object.api import Stream
+from datetime import datetime, timezone
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
@@ -36,6 +37,10 @@ class TwitchApp():
         self.color: str = f"0x{getenv('TWITCH_COLOR')}"
         # Twitch API client
         self.app: Twitch = Twitch(app_id, app_secret)
+        # Error tracking for connection issues
+        self.last_connection_error: datetime = None
+        self.connection_error_count: int = 0
+        self.connection_error_notified: bool = False
         # Initialize data and state
         self.setup()
     
@@ -241,6 +246,73 @@ class TwitchApp():
         if communication_channel:
             await communication_channel.send(self.log.error_message(command=context, message=error_message))
 
+    # ============================= Connection Error Handling =============================
+    def _is_connection_error(self, error: Exception) -> bool:
+        """
+        Check if the error is a connection-related error.
+        """
+        error_str = str(error).lower()
+        connection_keywords = [
+            'cannot connect to host',
+            'temporary failure in name resolution',
+            'connection refused',
+            'timeout',
+            'network is unreachable',
+            'no route to host',
+            'connection reset',
+            'ssl'
+        ]
+        return any(keyword in error_str for keyword in connection_keywords)
+
+    async def _handle_connection_error(self, error: Exception, context: str) -> None:
+        """
+        Handle connection errors with rate limiting to prevent spam notifications.
+        """
+        now = datetime.now(timezone.utc)
+        
+        # Check if this is a connection error
+        if not self._is_connection_error(error):
+            # Not a connection error, log normally
+            error_message = f'Errore durante il controllo dell\'inizio di una nuova live.\n{error}'
+            await self._log_and_notify_error(error_message, context)
+            return
+        
+        # Reset error tracking if more than 10 minutes have passed since last error
+        if self.last_connection_error and (now - self.last_connection_error).total_seconds() > 600:
+            self.connection_error_count = 0
+            self.connection_error_notified = False
+        
+        # Update error tracking
+        self.last_connection_error = now
+        self.connection_error_count += 1
+        
+        # Log the error (always)
+        error_message = f'Errore di connessione Twitch: {error}'
+        await self.log.error(error_message, context)
+        
+        # Only notify on first error or after 5 minutes of silence
+        if not self.connection_error_notified or (self.connection_error_count == 1):
+            communication_channel = self.bot.get_channel(self.config.communication_channel)
+            if communication_channel:
+                notification_message = (
+                    f"⚠️ **Errore di connessione Twitch**\n"
+                    f"Impossibile connettersi all'API di Twitch.\n"
+                    f"Errore: {error}\n"
+                    f"Il bot continuerà a riprovare automaticamente ogni minuto.\n"
+                    f"Non verranno inviati altri messaggi di errore per evitare spam."
+                )
+                await communication_channel.send(notification_message)
+                self.connection_error_notified = True
+
+    async def _reset_connection_error_tracking(self) -> None:
+        """
+        Reset connection error tracking when a successful connection is made.
+        """
+        if self.connection_error_count > 0:
+            self.connection_error_count = 0
+            self.connection_error_notified = False
+            await self.log.event('Connessione Twitch ripristinata', 'twitch')
+
     # ============================= Stream Change Detection =============================
     def check_changes(self, data: Stream) -> dict:
         """
@@ -274,6 +346,10 @@ class TwitchApp():
                 return
             # Fetch current stream info from Twitch
             stream: Stream = await get_stream(self.app, self.streamer_name)
+            
+            # Reset connection error tracking on successful connection
+            await self._reset_connection_error_tracking()
+            
             if stream != {}:
                 if self.stream_info['status'] == 'OFF':
                     try:
@@ -334,5 +410,5 @@ class TwitchApp():
                         error_message: str = f'Errore durante il reset dei dati a fine live.\n{e}'
                         await self._log_and_notify_error(error_message, 'TWITCH - CHECK STATUS - RESET')
         except Exception as e:
-            error_message: str = f'Errore durante il controllo dell\'inizio di una nuova live.\n{e}'
-            await self._log_and_notify_error(error_message, 'TWITCH - CHECK STATUS')
+            # Use the new connection error handling
+            await self._handle_connection_error(e, 'TWITCH - CHECK STATUS')
