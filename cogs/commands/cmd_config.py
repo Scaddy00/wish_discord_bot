@@ -94,7 +94,7 @@ class CmdConfig(commands.GroupCog, name="config"):
                     description += f'\n**{tag}**:   {channel.mention} ({channel_id})'
             
             embed_data: dict = {
-                'title': f'Admin Check - {selected_tag.capitalize()}',
+                'title': f'Controllo Admin - {selected_tag.capitalize()}',
                 'description': description,
                 'color': self.bot.color
             }
