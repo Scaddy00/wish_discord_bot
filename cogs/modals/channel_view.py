@@ -18,7 +18,8 @@ class ChannelView(View):
             placeholder="Seleziona il canale",
             custom_id="channel_select",
             min_values=min_values,
-            max_values=max_values
+            max_values=max_values,
+            channel_types=[discord.ChannelType.text, discord.ChannelType.news]
         )
         self.channel_select.callback = self.channel_callback
         self.add_item(self.channel_select)

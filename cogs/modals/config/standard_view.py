@@ -19,7 +19,7 @@ class SetupView(View):
             self.select_channels.append(ChannelSelect(
                 placeholder=f"Seleziona il canale per la sezione {tag}",
                 custom_id=f"select_channel_{tag}",
-                channel_types=[discord.ChannelType.text]
+                channel_types=[discord.ChannelType.text, discord.ChannelType.news]
             ))
             self.select_channels[counter].callback = self.select_channel_callback
             self.add_item(self.select_channels[counter])
