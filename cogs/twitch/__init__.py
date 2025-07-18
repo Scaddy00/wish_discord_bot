@@ -177,7 +177,7 @@ class TwitchApp():
         """
         Extract the image tag from the stream title, or return 'default' if not found.
         """
-        split_title: list = title.split('/')
+        split_title: list = title.split('|')
         return split_title[1].strip() if len(split_title) > 1 else 'default'
     
     # ============================= Embed Message Creation =============================
