@@ -34,7 +34,7 @@ class CmdRules(commands.GroupCog, name="rule"):
         await self.log.command('Creazione di un nuovo messaggio', 'rule', 'NEW')
         
         # Send a response message
-        await interaction.response.send_message('Inizio la creazione di un nuovo messaggio delle regole.')
+        await interaction.response.send_message('Inizio la creazione di un nuovo messaggio delle regole.', ephemeral=True)
         
         # Check if the reaction emoji is saved in config file
         # If not, request the emoji

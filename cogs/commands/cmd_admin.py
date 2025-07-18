@@ -63,7 +63,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         # INFO Log the start of the clear
         await self.log.command(f'Pulizia del seguente canale: {channel} ({channel.id})', 'admin', 'CLEAR')
         
-        await interaction.response.send_message('Avvio la pulizia di questo canale')
+        await interaction.response.send_message('Avvio la pulizia di questo canale', ephemeral=True)
         
         try:
             # Delete the messages and get the number of messages deleted
@@ -88,7 +88,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         # INFO Log the start of the clear
         await self.log.command(f'Pulizia del seguente canale: {channel} ({channel.id})', 'admin', 'CLEAR-CHANNEL')
         
-        await interaction.response.send_message('Avvio la pulizia di questo canale')
+        await interaction.response.send_message('Avvio la pulizia di questo canale', ephemeral=True)
         
         try:
             # Delete the messages and get the number of messages deleted

@@ -39,7 +39,7 @@ class CmdInfo(commands.GroupCog, name="info"):
             await self.log.command('Messaggio inviato', 'info', 'DREAMER')
             
             # Send the response to the initial message
-            await interaction.response.send_message('Il messaggio è stato inviato correttamente')
+            await interaction.response.send_message('Il messaggio è stato inviato correttamente', ephemeral=True)
         
         except Exception as e:
             # EXCEPTION

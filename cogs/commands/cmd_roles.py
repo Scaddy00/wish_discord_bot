@@ -37,11 +37,11 @@ class CmdRoles(commands.GroupCog, name="role"):
         await self.log.command('Creazione di un nuovo messaggio', 'role', 'NEW')
         
         # Send a response message
-        await interaction.response.send_message('Inizio la creazione di un nuovo messaggio per l\'assegnazione automatica dei ruoli.')
+        await interaction.response.send_message('Inizio la creazione di un nuovo messaggio per l\'assegnazione automatica dei ruoli.', ephemeral=True)
 
         try:
             # Request the roles
-            await channel.send('Inserisci l\'emoji e il ruolo seguendo il seguente esempio -> \nHai 3 minuti per completare l\'operazione.\nPer terminare l\'operazione scrivi "stop".')
+            await communication_channel.send('Inserisci l\'emoji e il ruolo seguendo il seguente esempio -> \nHai 3 minuti per completare l\'operazione.\nPer terminare l\'operazione scrivi "stop".')
             while True:
                 # Get the response from the user, with a timeout of 3 minutes (180 s)
                 response = await self.bot.wait_for('message', check=check, timeout=180.0)
@@ -55,7 +55,7 @@ class CmdRoles(commands.GroupCog, name="role"):
                 try:
                     discord.PartialEmoji.from_str(splitted[0])
                 except Exception:
-                    await channel.send(f"L'emoji `{splitted[0]}` non è valida. Riprova.")
+                    await communication_channel.send(f"L'emoji `{splitted[0]}` non è valida. Riprova.", ephemeral=True)
                     continue
                 
                 # Append the emoji and the role id to the list
@@ -82,7 +82,7 @@ class CmdRoles(commands.GroupCog, name="role"):
                         # EXCEPTION
                         error_message: str = f'Errore nell\'aggiungere la reazione {key}\n{e}'
                         await self.log.error(error_message, 'COMMAND - ROLE - NEW')
-                        await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message))
+                        await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message), ephemeral=True)
                 
                 # INFO Log that the reaction were added
                 await self.log.command('Reazione aggiunte al messaggio con successo', 'role', 'NEW')
@@ -95,7 +95,7 @@ class CmdRoles(commands.GroupCog, name="role"):
                     await self.log.command('Dati salvati con successo nel file config.json', 'role', 'new')
                     
                     # Send a message that tell the user that's complete
-                    await channel.send('Lavorazione completata! Il messaggio è stato creato')
+                    await communication_channel.send('Lavorazione completata! Il messaggio è stato creato', ephemeral=True)
                     
                     # INFO Log that the process is complete
                     await self.log.command('Lavorazione completata', 'role', 'new')
@@ -104,16 +104,16 @@ class CmdRoles(commands.GroupCog, name="role"):
                     # EXCEPTION
                     error_message: str = f'Errore durante la creazione di un nuovo messaggio.\n{e}'
                     await self.log.error(error_message, 'COMMAND - ROLE - NEW')
-                    await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message))
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message), ephemeral=True)
                 
             except Exception as e:
                 # EXCEPTION
                 error_message: str = f'Errore durante l\'invio del nuovo messaggio.\n{e}'
                 await self.log.error(error_message, 'COMMAND - ROLE - NEW')
-                await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message))
+                await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message), ephemeral=True)
             
         except TimeoutError:
-            await channel.send('Tempo scaduto. Lavorazione interrotta!')
+            await communication_channel.send('Tempo scaduto. Lavorazione interrotta!', ephemeral=True)
             # EXCEPTION
             error_message: str = 'Tempo scaduto durante la creazione di un nuovo messaggio.'
             await self.log.error(error_message, 'COMMAND - ROLE - NEW')
@@ -121,7 +121,7 @@ class CmdRoles(commands.GroupCog, name="role"):
             # EXCEPTION
             error_message: str = f'Errore durante la creazione di un nuovo messaggio.\n{e}'
             await self.log.error(error_message, 'COMMAND - ROLE - NEW')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message))
+            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message), ephemeral=True)
         
     # ============================= ASSIGN =============================
     @app_commands.command(name="assign", description="Assegna un ruolo ad un utente")
@@ -135,14 +135,14 @@ class CmdRoles(commands.GroupCog, name="role"):
             if role not in user.roles:
                 await add_role(self.log, interaction.guild, role.id, user.id, self.config)
                 # Respond that the role was assigned correctly
-                await interaction.response.send_message(f'Ruolo {role.mention} assegnato correttamente a {user.mention}!')
+                await interaction.response.send_message(f'Ruolo {role.mention} assegnato correttamente a {user.mention}!', ephemeral=True)
                 # INFO Log that the role was assigned correctly
                 await self.log.command(f'Ruolo {role.name} ({role.id}) assegnato correttamente a {user.name} ({user.id})', 'role', 'assign')
         except Exception as e:
             # EXCEPTION
             error_message: str = f'Errore durante la l\'assegnazione del ruolo.\n{e}'
             await self.log.error(error_message, 'COMMAND - ROLE - ASSIGN')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - ASSIGN', message=error_message))
+            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - ASSIGN', message=error_message), ephemeral=True)
 
     # ============================= ASSIGN ALL =============================
     @app_commands.command(name="assign-all", description="Assegna un ruolo a tutti gli utenti")
@@ -172,14 +172,14 @@ class CmdRoles(commands.GroupCog, name="role"):
                     counter += 1
             
             # Respond that how many roles were assigned
-            await interaction.response.send_message(f'Ruolo {role.mention} assegnato a {counter} utenti!')
+            await interaction.response.send_message(f'Ruolo {role.mention} assegnato a {counter} utenti!', ephemeral=True)
             # INFO Log that the role was assigned correctly to all the members
             await self.log.command(f'Ruolo {role.name} ({role.id}) assegnato correttamente a {counter} utenti.', 'role', 'assign-all')
         except Exception as e:
             # EXCEPTION
             error_message: str = f'Errore durante la l\'assegnazione del ruolo.\n{e}'
             await self.log.error(error_message, 'COMMAND - ROLE - ASSIGN-ALL')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - ASSIGN-ALL', message=error_message))
+            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - ASSIGN-ALL', message=error_message), ephemeral=True)
 
     # ============================= REMOVE =============================
     @app_commands.command(name="remove", description="Rimuove un ruolo ad un utente")
@@ -193,14 +193,14 @@ class CmdRoles(commands.GroupCog, name="role"):
             if role in user.roles:
                 await remove_role(self.log, interaction.guild, role.id, user.id, self.config)
                 # Respond that the role was removed correctly
-                await interaction.response.send_message(f'Ruolo {role.mention} rimosso correttamente da {user.mention}!')
+                await interaction.response.send_message(f'Ruolo {role.mention} rimosso correttamente da {user.mention}!', ephemeral=True)
                 # INFO Log that the role was removed correctly
                 await self.log.command(f'Ruolo {role.name} ({role.id}) rimosso correttamente da {user.name} ({user.id})', 'role', 'remove')
         except Exception as e:
             # EXCEPTION
             error_message: str = f'Errore durante la la rimozione del ruolo.\n{e}'
             await self.log.error(error_message, 'COMMAND - ROLE - REMOVE')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - REMOVE', message=error_message))
+            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - REMOVE', message=error_message), ephemeral=True)
 
     # ============================= REMOVE ALL =============================
     @app_commands.command(name="remove-all", description="Rimuove un ruolo da tutti gli utenti")
@@ -230,11 +230,11 @@ class CmdRoles(commands.GroupCog, name="role"):
                     counter += 1
             
             # Respond that how many roles were removed
-            await interaction.response.send_message(f'Ruolo {role.mention} rimosso da {counter} utenti!')
+            await interaction.response.send_message(f'Ruolo {role.mention} rimosso da {counter} utenti!', ephemeral=True)
             # INFO Log that the role was removed correctly from all the members
             await self.log.command(f'Ruolo {role.name} ({role.id}) rimosso correttamente da {counter} utenti.', 'role', 'remove-all')
         except Exception as e:
             # EXCEPTION
             error_message: str = f'Errore durante la la rimozione del ruolo.\n{e}'
             await self.log.error(error_message, 'COMMAND - ROLE - REMOVE-ALL')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - REMOVE-ALL', message=error_message))
+            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - REMOVE-ALL', message=error_message), ephemeral=True)

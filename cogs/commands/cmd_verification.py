@@ -35,14 +35,15 @@ class CmdVerification(commands.GroupCog, name="verification"):
 
             await view.wait()
             if not view.selection_complete:
-                await interaction.followup.send("Selezione non confermata o tempo scaduto.")
+                await interaction.followup.send("Selezione non confermata o tempo scaduto.", ephemeral=True)
                 return
 
             # Send confirmation message with selected values
             await interaction.followup.send(
                 f"✅ Timeout selezionato: **{view.timeout} secondi**\n"
                 f"🛑 Ruolo temporaneo: {view.temp_role.mention}\n"
-                f"✔️ Ruolo verificato: {view.verified_role.mention}"
+                f"✔️ Ruolo verificato: {view.verified_role.mention}",
+                ephemeral=True
             )
             
             timeout = view.timeout
@@ -57,7 +58,7 @@ class CmdVerification(commands.GroupCog, name="verification"):
             self.verification.update_timeout(timeout)
             
             # Respond with success
-            await interaction.followup.send('Dati salvati con successo!')
+            await interaction.followup.send('Dati salvati con successo!', ephemeral=True)
             
             # INFO Log that the operation is completed
             await self.log.command(f'Configurazione aggiornata con i seguenti dati: \n - timeout: {timeout} \n - temp_role_id: {temp_role_id} ({view.temp_role.name}) \n - verified_role_id: {verified_role_id} ({view.verified_role.name})', 'verification', 'setup')

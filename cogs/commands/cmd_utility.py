@@ -30,14 +30,16 @@ class CmdUtility(commands.GroupCog, name="utility"):
                     f'Nome: `{emoji.name}`\n'
                     f'ID: `{emoji.id}`\n'
                     f'Animata: `{emoji.animated}`\n'
-                    f'Rappresentazione: `<{"a" if emoji.animated else ""}:{emoji.name}:{emoji.id}>`'
+                    f'Rappresentazione: `<{"a" if emoji.animated else ""}:{emoji.name}:{emoji.id}>`',
+                    ephemeral=True
                 )
             else:  # Emoji Unicode standard
                 unicode_repr = ' '.join(f'U+{ord(char):04X}' for char in emoji_input)
                 await interaction.response.send_message(
                     f'🔤 **Emoji Unicode**\n'
                     f'Emoji: `{emoji_input}`\n'
-                    f'Codepoint: `{unicode_repr}`'
+                    f'Codepoint: `{unicode_repr}`',
+                    ephemeral=True
                 )
         except Exception as e:
             # EXCEPTION
