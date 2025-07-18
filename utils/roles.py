@@ -8,6 +8,19 @@ from config_manager import ConfigManager
 
 # ============================= ADD_ROLE =============================
 async def add_role(log: Logger, guild: discord.Guild, role_id: int, member_id: int, config: ConfigManager) -> None:
+    """
+    Add a role to a Discord member.
+    
+    Args:
+        log (Logger): Logger instance for error logging
+        guild (discord.Guild): Discord guild instance
+        role_id (int): ID of the role to add
+        member_id (int): ID of the member to add the role to
+        config (ConfigManager): Configuration manager instance
+        
+    Note:
+        Logs errors to both database and communication channel if operation fails.
+    """
     # Load communication channel
     communication_channel = guild.get_channel(config.communication_channel)
     
@@ -59,6 +72,19 @@ async def add_role(log: Logger, guild: discord.Guild, role_id: int, member_id: i
 
 # ============================= REMOVE_ROLE =============================
 async def remove_role(log: Logger, guild: discord.Guild, role_id: int, member_id: int, config: ConfigManager) -> None:
+    """
+    Remove a role from a Discord member.
+    
+    Args:
+        log (Logger): Logger instance for error logging
+        guild (discord.Guild): Discord guild instance
+        role_id (int): ID of the role to remove
+        member_id (int): ID of the member to remove the role from
+        config (ConfigManager): Configuration manager instance
+        
+    Note:
+        Logs errors to both database and communication channel if operation fails.
+    """
     # Load communication channel
     communication_channel = guild.get_channel(config.communication_channel)
     
@@ -110,6 +136,21 @@ async def remove_role(log: Logger, guild: discord.Guild, role_id: int, member_id
 
 # ============================= ADD_ROLE_EVENT =============================
 async def add_role_event(log: Logger, config: ConfigManager, guild: discord.Guild, message_id: int, emoji: discord.PartialEmoji, member_id: str) -> None:
+    """
+    Handle role addition event from reaction.
+    
+    Args:
+        log (Logger): Logger instance for error logging
+        config (ConfigManager): Configuration manager instance
+        guild (discord.Guild): Discord guild instance
+        message_id (int): ID of the message that was reacted to
+        emoji (discord.PartialEmoji): Emoji that was used in the reaction
+        member_id (str): ID of the member who reacted
+        
+    Note:
+        Loads role ID from configuration based on message ID and emoji,
+        then calls add_role function.
+    """
     
     # Load role id
     role_id = await config.load_data('roles', str(message_id), emoji.__str__().replace(' ', ''))
@@ -123,6 +164,21 @@ async def add_role_event(log: Logger, config: ConfigManager, guild: discord.Guil
 
 # ============================= REMOVE_ROLE_EVENT =============================
 async def remove_role_event(log: Logger, guild: discord.Guild, config: ConfigManager, message_id: int, emoji: discord.PartialEmoji, member_id: int) -> None:
+    """
+    Handle role removal event from reaction.
+    
+    Args:
+        log (Logger): Logger instance for error logging
+        guild (discord.Guild): Discord guild instance
+        config (ConfigManager): Configuration manager instance
+        message_id (int): ID of the message that was reacted to
+        emoji (discord.PartialEmoji): Emoji that was used in the reaction
+        member_id (int): ID of the member who reacted
+        
+    Note:
+        Loads role ID from configuration based on message ID and emoji,
+        then calls remove_role function.
+    """
     # Load role id
     role_id = await config.load_data('roles', str(message_id), emoji.__str__().replace(' ', ''))
     

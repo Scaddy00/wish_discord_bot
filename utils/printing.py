@@ -12,21 +12,53 @@ italian_month: list = ["", "gennaio", "febbraio", "marzo", "aprile", "maggio", "
 
 # ============================= Format Datetime Now =============================
 def format_datetime_now() -> str:
+    """
+    Get current datetime formatted according to DATETIME_FORMAT environment variable.
+    
+    Returns:
+        str: Current datetime in the specified format
+    """
     str_format: str = str(getenv('DATETIME_FORMAT'))
     return datetime.now().strftime(str_format)
 
 # ============================= Format Datetime Now Extended =============================
 def format_datetime_now_extended() -> str:
+    """
+    Get current datetime in extended Italian format.
+    
+    Returns:
+        str: Current datetime in format "HH:MM DD month YYYY" (Italian)
+    """
     converted_datetime: datetime = datetime.now()
     return converted_datetime.strftime(f"%H:%M %d {italian_month[converted_datetime.month]} %Y")
 
 # ============================= Format Datetime Extended =============================
 def format_datetime_extended(time: str) -> str:
+    """
+    Convert ISO format datetime string to extended Italian format.
+    
+    Args:
+        time (str): ISO format datetime string
+        
+    Returns:
+        str: Datetime in format "HH:MM DD month YYYY" (Italian)
+    """
     converted_datetime: datetime = datetime.fromisoformat(time)
     return converted_datetime.strftime(f"%H:%M %d {italian_month[converted_datetime.month]} %Y")
 
 # ============================= Embed data load =============================
 async def load_embed_text(guild: discord.Guild, item: str, config) -> list[dict]:
+    """
+    Load embed text data from the embed_text.json file.
+    
+    Args:
+        guild (discord.Guild): Discord guild instance
+        item (str): Key to look up in the embed text file
+        config: Configuration manager instance
+        
+    Returns:
+        list[dict]: List of embed data dictionaries, or empty list if item not found
+    """
     # Load communication channel
     communication_channel = guild.get_channel(config.communication_channel)
     
@@ -48,6 +80,17 @@ async def load_embed_text(guild: discord.Guild, item: str, config) -> list[dict]
 
 # ============================= Embed data load (SINGLE) =============================
 async def load_single_embed_text(guild: discord.Guild, item: str, config) -> dict:
+    """
+    Load a single embed text data item from the embed_text.json file.
+    
+    Args:
+        guild (discord.Guild): Discord guild instance
+        item (str): Key to look up in the embed text file
+        config: Configuration manager instance
+        
+    Returns:
+        dict: Single embed data dictionary, or empty dict if item not found
+    """
     embeds = await load_embed_text(guild, item, config)
     return embeds[0] if embeds else {}
 
@@ -95,6 +138,18 @@ def create_embed(title: str, description: str, color: str, url: str | None = Non
 
 # ============================= Embed creator (DICT) =============================
 def create_embed_from_dict(data: dict) -> Embed:
+    """
+    Create a Discord embed from a dictionary of embed data.
+    
+    Args:
+        data (dict): Dictionary containing embed configuration
+        
+    Returns:
+        Embed: Discord embed object with the specified configuration
+        
+    Note:
+        Handles missing or None values gracefully by providing defaults.
+    """
     # Ensure data is not None and provide defaults for all required fields
     if not data:
         data = {}

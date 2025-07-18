@@ -18,6 +18,11 @@ bot = WishBot(command_prefix=str(getenv('COMMAND_PREFIX')), intents=intents)
 # ============================= MAIN AND START =============================
 # >>==============<< MAIN >>==============<< 
 def main():
+    """
+    Main function that starts the Discord bot.
+    
+    Loads environment variables and runs the bot with the Discord token.
+    """
     # Start the bot
     bot.run(str(getenv('DISCORD_TOKEN')))
 

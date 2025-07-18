@@ -14,9 +14,21 @@ from .views_modals.stream_button_view import StreamButtonView
 from utils.file_io import read_file, write_file
 
 class TwitchApp():
+    """
+    Manages Twitch stream integration with Discord.
+    
+    Handles Twitch API authentication, stream monitoring, and Discord notifications
+    for live streams.
+    """
+    
     def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager):
         """
-        Initializes the Twitch app with Discord bot, logger, and config manager.
+        Initialize the TwitchApp with Discord bot, logger, and config manager.
+        
+        Args:
+            bot (commands.Bot): Discord bot instance
+            log (Logger): Logger instance for logging Twitch events
+            config (ConfigManager): Configuration manager instance
         """
         # Twitch API credentials
         app_id = getenv('TWITCH_CLIENT_ID')

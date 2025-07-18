@@ -8,13 +8,32 @@ from utils.printing import create_embed
 ROME_TZ = pytz.timezone('Europe/Rome')
 
 class WeeklyReport(commands.Cog):
+    """
+    Weekly report cog that generates and sends weekly Discord activity reports.
+    
+    Collects data from the database for the past week and creates an embed
+    with statistics about member joins, leaves, boosts, and message activity.
+    """
+    
     def __init__(self, bot):
+        """
+        Initialize the WeeklyReport cog.
+        
+        Args:
+            bot: Discord bot instance
+        """
         self.bot = bot
         self.logger = Logger()
         self.weekly_report.start()
 
     @tasks.loop(hours=168)  # 168 hours = 1 week
     async def weekly_report(self):
+        """
+        Generate and send weekly Discord activity report.
+        
+        Collects data from the past week (Monday 9:00 to Monday 8:59:59) and
+        creates an embed with statistics about member activity and message counts.
+        """
         # Calcola il periodo: da lunedì scorso 9:00 a oggi lunedì 8:59:59
         now_rome = datetime.datetime.now(ROME_TZ)
         today = now_rome.date()
@@ -86,6 +105,11 @@ class WeeklyReport(commands.Cog):
 
     @weekly_report.before_loop
     async def before_weekly_report(self):
+        """
+        Calculate time until next Monday 9:00 AM (Rome timezone) and wait.
+        
+        Ensures the weekly report runs at the correct time each week.
+        """
         # Calcola quanto manca al prossimo lunedì alle 9:00 ora italiana
         now_rome = datetime.datetime.now(ROME_TZ)
         today = now_rome.date()
@@ -98,4 +122,10 @@ class WeeklyReport(commands.Cog):
         await discord.utils.sleep_until(next_run)
 
 async def setup(bot):
+    """
+    Setup function for the WeeklyReport cog.
+    
+    Args:
+        bot: Discord bot instance to add the cog to
+    """
     await bot.add_cog(WeeklyReport(bot)) 

@@ -10,7 +10,19 @@ from cogs.tasks import setup_all_tasks
 
 # ============================= BOT SETUP HOOK =============================
 class WishBot(commands.Bot):
+    """
+    Main Discord bot class for the Wish Discord Bot.
+    
+    Handles all bot functionality including commands, events, tasks,
+    verification system, and Twitch integration.
+    """
+    
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the WishBot with all necessary components.
+        
+        Sets up logger, config manager, verification system, and Twitch app.
+        """
         super().__init__(*args, **kwargs)
         from logger import Logger
         from config_manager import ConfigManager
@@ -25,6 +37,12 @@ class WishBot(commands.Bot):
         self.twitch_app = TwitchApp(self, self.log, self.config)
 
     async def setup_hook(self):
+        """
+        Setup hook called when the bot is starting up.
+        
+        Loads all commands, events, and tasks. Handles command synchronization
+        for both debug and production modes.
+        """
         # COMMANDS
         await add_commands(self, self.log, self.config, self.verification, self.twitch_app)
         # EVENTS

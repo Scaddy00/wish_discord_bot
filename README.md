@@ -8,8 +8,14 @@ This project is a Discord bot that integrates with Twitch to provide real-time n
 - Manage bot settings and responses through easy-to-edit JSON configuration files.
 - Securely store sensitive information using environment variables.
 - Easily set up and run with minimal configuration.
+- **Database logging**: Comprehensive logging of events, commands, messages, and errors to SQLite database.
+- **User verification system**: Automated verification process with temporary roles and timeouts.
+- **Role management**: Automatic role assignment/removal based on reactions and member status.
+- **Weekly reports**: Automated weekly summaries of server activity and statistics.
+- **Database cleanup**: Automatic cleanup of old records (3+ months) to maintain performance.
+- **Message logging**: Track all messages with configurable channel exclusions.
 
-The bot is designed for flexibility and ease of use, making it suitable for communities that want to stay updated on Twitch activity directly within Discord.
+The bot is designed for flexibility and ease of use, making it suitable for communities that want to stay updated on Twitch activity directly within Discord while maintaining comprehensive server management and logging capabilities.
 
 ---
 
@@ -128,17 +134,40 @@ python main.py
 
 ## 🏷️ Main Commands
 
-- `/admin clear` — Bulk delete messages in a channel
-- `/admin config` — Manage server and bot configuration
-- `/role assign` — Assign roles to users
-- `/role remove` — Remove roles from users
-- `/role mass-assign` — Assign a role to multiple users
+### Admin Commands
+- `/admin clear` — Bulk delete messages in current channel
+- `/admin clear-channel` — Bulk delete messages in specified channel
+
+### Configuration Commands
+- `/config standard` — Execute standard bot configuration
+- `/config admin-check` — View all admin configuration data
+- `/config admin-add` — Add roles or channels to admin config
+- `/config exception-add` — Add role or channel exceptions
+
+### Role Management
+- `/role new` — Create new role assignment message with reactions
+- `/role assign` — Assign a role to a specific user
+- `/role assign-all` — Assign a role to all users (with exceptions)
+- `/role remove` — Remove a role from a specific user
+- `/role remove-all` — Remove a role from all users (with exceptions)
+
+### Verification System
 - `/verification setup` — Set up the verification system
-- `/twitch add-tag` — Add tags for Twitch notifications
-- `/twitch set-title` — Change Twitch stream title
-- `/info user` — Get information about a user
-- `/info server` — Get server statistics and info
-- `/utility ...` — Various utility commands
+
+### Twitch Integration
+- `/twitch add-tag` — Add new tags for live streams and image selection
+- `/twitch change-title` — Change stream titles for different tags
+- `/twitch change-streamer` — Change the streamer name
+- `/twitch reset-info` — Reset last stream information
+
+### Information Commands
+- `/info dreamer` — Send embed with custom Dreamer request information
+
+### Utility Commands
+- `/utility emoji-to-unicode` — Get Unicode value of an emoji
+
+### Rule Commands
+- `/rule new` — Create new rule messages with reactions
 
 *And many more! Use `/help` or check the code for the full list.*
 
@@ -161,6 +190,7 @@ Additionally, the bot runs scheduled background tasks such as:
 - **Booster check**: Periodically checks and updates server booster roles.
 - **Twitch notifications**: Monitors Twitch streams and sends notifications.
 - **Weekly report**: Sends a weekly summary of server activity and events.
+- **Database cleanup**: Daily cleanup of old records (3+ months) to maintain database performance.
 
 ---
 
@@ -168,12 +198,53 @@ Additionally, the bot runs scheduled background tasks such as:
 
 Wish Discord Bot is modular! You can add new features by creating new cogs in the `cogs/` directory or utilities in `utils/`. The project is structured for easy expansion and maintenance.
 
+### Project Structure
+
+```
+wish_discord_bot/
+├── bot.py                 # Main bot class
+├── main.py               # Entry point
+├── database/             # Database management
+├── logger/               # Logging system
+├── config_manager/       # Configuration management
+├── cogs/
+│   ├── commands/         # Slash commands
+│   ├── events/           # Discord event handlers
+│   ├── tasks/            # Background tasks
+│   ├── modals/           # UI components
+│   ├── verification/     # User verification system
+│   └── twitch/           # Twitch integration
+└── utils/                # Utility functions
+```
+
+### Key Features
+
+- **Database Integration**: SQLite database with automatic connection management
+- **Comprehensive Logging**: All events, commands, and errors are logged
+- **Modular Architecture**: Easy to extend with new cogs and features
+- **Configuration Management**: JSON-based configuration with environment variables
+- **Error Handling**: Robust error handling with logging and notifications
+
 ---
 
 ## 📝 License
 
 This project is licensed under the [MIT License](https://choosealicense.com/licenses/mit/).
 
+
+---
+
+## 📚 Code Documentation
+
+The project includes comprehensive docstrings throughout the codebase:
+
+- **Database Operations**: All database methods are documented with parameters and return types
+- **Logging Functions**: Complete documentation of logging methods and their usage
+- **Command Classes**: All Discord commands include parameter descriptions
+- **Event Handlers**: Event processing functions are fully documented
+- **Utility Functions**: Helper functions include usage examples and parameter descriptions
+
+The code follows Google/NumPy docstring format for consistency and IDE compatibility.
 
 ---
 

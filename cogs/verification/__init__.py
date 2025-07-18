@@ -10,7 +10,22 @@ from logger import Logger
 from config_manager import ConfigManager
 
 class VerificationManager:
+    """
+    Manages the Discord user verification system.
+    
+    Handles user verification process including temporary roles, timeouts,
+    and verification status tracking.
+    """
+    
     def __init__(self, bot, log: Logger, config: ConfigManager):
+        """
+        Initialize the VerificationManager.
+        
+        Args:
+            bot: Discord bot instance
+            log (Logger): Logger instance for logging verification events
+            config (ConfigManager): Configuration manager instance
+        """
         self.bot = bot
         self.log = log
         self.config = config
