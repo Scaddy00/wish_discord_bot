@@ -34,7 +34,8 @@ class ConfigManager:
                     'roles': {
                         'server_booster': '',
                         'in_verification': '',
-                        'verified': ''
+                        'verified': '',
+                        'not_verified': ''
                     },
                     'channels': {
                         'communication': '',
@@ -63,7 +64,8 @@ class ConfigManager:
                     'roles': {
                         'server_booster': '',
                         'in_verification': '',
-                        'verified': ''
+                        'verified': '',
+                        'not_verified': ''
                     },
                     'channels': {
                         'communication': '',
@@ -72,6 +74,11 @@ class ConfigManager:
                         'live': ''
                     }
                 }
+            elif 'roles' not in config['admin'] or 'not_verified' not in config['admin']['roles']:
+                if 'roles' not in config['admin']:
+                    config['admin']['roles'] = {}
+                if 'not_verified' not in config['admin']['roles']:
+                    config['admin']['roles']['not_verified'] = ''
             elif 'roles' not in config:
                 config['roles'] = {}
             elif 'rules' not in config:

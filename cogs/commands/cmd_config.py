@@ -16,6 +16,30 @@ from cogs.twitch.views_modals.titles_view import TwitchTitlesView
 from cogs.twitch.views_modals.streamer_name_view import StreamerNameView
 from utils.printing import create_embed_from_dict
 from cogs.modals.config.booster_role_select_view import BoosterRoleSelect
+from cogs.verification.verification_setup_view import SetupView as VerificationSetupView
+
+class NotVerifiedRoleSelect(discord.ui.View):
+    """
+    View for selecting the 'not_verified' role using RoleSelect.
+    """
+    def __init__(self, author: discord.User):
+        super().__init__(timeout=60)
+        self.author = author
+        self.selected_role_id = None
+        self.add_item(self.NotVerifiedRoleDropdown(self))
+
+    class NotVerifiedRoleDropdown(discord.ui.RoleSelect):
+        def __init__(self, parent_view):
+            super().__init__(placeholder="Seleziona il ruolo 'not_verified'", min_values=1, max_values=1)
+            self.parent_view = parent_view
+        async def callback(self, interaction: discord.Interaction):
+            if interaction.user.id != self.parent_view.author.id:
+                await interaction.response.send_message("Questa selezione non ti appartiene.", ephemeral=True)
+                return
+            selected_role = self.values[0]
+            self.parent_view.selected_role_id = str(selected_role.id)
+            await interaction.response.send_message(f"Ruolo 'not_verified' selezionato: {selected_role.mention}", ephemeral=True)
+            self.parent_view.stop()
 
 class CmdConfig(commands.GroupCog, name="config"):
     def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, twitch_app):
@@ -299,6 +323,34 @@ class CmdConfig(commands.GroupCog, name="config"):
             await self.log.error(error_message, 'COMMAND - CONFIG - RETENTION')
             await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - RETENTION', message=error_message))
     
+    @app_commands.command(name="set-not-verified-role", description="Salva l'ID del ruolo 'not_verified' del server")
+    async def set_not_verified_role(self, interaction: discord.Interaction) -> None:
+        """
+        Permette all'admin di selezionare e salvare il ruolo 'not_verified'.
+        """
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        try:
+            view = NotVerifiedRoleSelect(author=interaction.user)
+            await interaction.response.send_message(
+                "Seleziona il ruolo 'not_verified' del server:",
+                view=view,
+                ephemeral=True
+            )
+            await view.wait()
+            if view.selected_role_id:
+                self.config.add_admin('roles', 'not_verified', view.selected_role_id)
+                await interaction.followup.send(f"✅ Ruolo 'not_verified' salvato: <@&{view.selected_role_id}> (ID: {view.selected_role_id})", ephemeral=True)
+                # INFO Log that operation is completed
+                await self.log.command(f"Ruolo 'not_verified' impostato: {view.selected_role_id}", 'config', 'SET-NOT-VERIFIED-ROLE')
+            else:
+                await interaction.followup.send("Nessun ruolo selezionato.", ephemeral=True)
+        except Exception as e:
+            error_message = f"Errore durante la selezione del ruolo 'not_verified'.\n{e}"
+            await self.log.error(error_message, 'COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
+            if communication_channel:
+                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE', message=error_message))
+    
     @app_commands.command(name="setup-iniziale", description="Esegui la configurazione iniziale completa del bot")
     async def setup_iniziale(self, interaction: discord.Interaction) -> None:
         """
@@ -314,56 +366,119 @@ class CmdConfig(commands.GroupCog, name="config"):
                 tags=admin_channels.keys()
             )
             await interaction.response.send_message(
-                "Step 1/4: Seleziona i canali principali.",
+                "Step 1/6: Seleziona i canali principali.",
                 view=view_standard,
                 ephemeral=True
             )
             await view_standard.wait()
+            selected_channels = {}
             for tag, channel_id in view_standard.values.items():
                 self.config.add_admin('channels', tag, channel_id)
                 if tag == 'communication':
                     self.config._load_communication_channel()
+                selected_channels[tag] = channel_id
 
-            # Step 2: Retention days
+            # Step 2: Selezione ruolo 'not_verified'
+            view_not_verified = NotVerifiedRoleSelect(author=interaction.user)
+            await interaction.followup.send(
+                "Step 2/6: Seleziona il ruolo 'not_verified' da assegnare ai nuovi utenti.",
+                view=view_not_verified,
+                ephemeral=True
+            )
+            await view_not_verified.wait()
+            not_verified_role_id = None
+            not_verified_role_mention = None
+            if view_not_verified.selected_role_id:
+                self.config.add_admin('roles', 'not_verified', view_not_verified.selected_role_id)
+                not_verified_role_id = view_not_verified.selected_role_id
+                role = guild.get_role(int(not_verified_role_id))
+                not_verified_role_mention = role.mention if role else f"ID: {not_verified_role_id}"
+            else:
+                not_verified_role_mention = "Non selezionato"
+
+            # Step 3: Configurazione sistema di verifica
+            view_verification = VerificationSetupView(author=interaction.user)
+            await interaction.followup.send(
+                "Step 3/6: Configura il sistema di verifica: seleziona timeout, ruolo temporaneo e ruolo verificato.",
+                view=view_verification,
+                ephemeral=True
+            )
+            await view_verification.wait()
+            verification_data = {}
+            if not view_verification.selection_complete:
+                verification_data['timeout'] = "Non selezionato"
+                verification_data['temp_role'] = "Non selezionato"
+                verification_data['verified_role'] = "Non selezionato"
+            else:
+                timeout = view_verification.timeout
+                temp_role_id = view_verification.temp_role.id
+                verified_role_id = view_verification.verified_role.id
+                self.config.add_admin('roles', 'in_verification', temp_role_id)
+                self.config.add_admin('roles', 'verified', verified_role_id)
+                self.verification.update_timeout(timeout)
+                verification_data['timeout'] = f"{timeout} secondi"
+                temp_role = guild.get_role(temp_role_id)
+                verification_data['temp_role'] = temp_role.mention if temp_role else f"ID: {temp_role_id}"
+                verified_role = guild.get_role(verified_role_id)
+                verification_data['verified_role'] = verified_role.mention if verified_role else f"ID: {verified_role_id}"
+
+            # Step 4: Retention days
             view_retention = RetentionSelectView(author=interaction.user)
             await interaction.followup.send(
-                "Step 2/4: Seleziona il periodo di conservazione dei log:",
+                "Step 4/6: Seleziona il periodo di conservazione dei log:",
                 view=view_retention,
                 ephemeral=True
             )
             await view_retention.wait()
+            retention_days = None
             if view_retention.selection_complete and view_retention.selected_days:
                 self.config.update_retention_days(view_retention.selected_days)
+                retention_days = view_retention.selected_days
+            else:
+                retention_days = "Non selezionato"
 
-            # Step 3: Message logging
+            # Step 5: Message logging
             view_logging = MessageLoggingView(author=interaction.user)
             await interaction.followup.send(
-                "Step 3/4: Configura la registrazione dei messaggi.",
+                "Step 5/6: Configura la registrazione dei messaggi.",
                 view=view_logging,
                 ephemeral=True
             )
             await view_logging.wait()
+            logging_enabled = None
+            logging_channels = []
             if view_logging.selected_enabled is not None:
                 if view_logging.selected_enabled:
                     self.config.enable_message_logging()
+                    logging_enabled = "Abilitata"
                 else:
                     self.config.disable_message_logging()
+                    logging_enabled = "Disabilitata"
                 for channel_id in view_logging.selected_channels:
                     self.config.add_message_logging_channel(channel_id)
+                    channel = guild.get_channel(channel_id)
+                    logging_channels.append(channel.mention if channel else f"ID: {channel_id}")
+            else:
+                logging_enabled = "Non selezionato"
 
-            # Step 4: Twitch titles (View + Modal)
+            # Step 6: Twitch titles (View + Modal)
             view_titles = TwitchTitlesView(author=interaction.user)
             await interaction.followup.send(
-                "Step 4/4: Imposta i titoli Twitch (on/off).",
+                "Step 6/6: Imposta i titoli Twitch (on/off).",
                 view=view_titles,
                 ephemeral=True
             )
             await view_titles.wait()
+            twitch_titles = {}
             if view_titles.titles:
                 self.twitch_app.change_title({'tag': 'on', 'title': view_titles.titles['on']})
                 self.twitch_app.change_title({'tag': 'off', 'title': view_titles.titles['off']})
+                twitch_titles['on'] = view_titles.titles['on']
+                twitch_titles['off'] = view_titles.titles['off']
+            else:
+                twitch_titles['on'] = twitch_titles['off'] = "Non selezionato"
 
-            # Step 5: Twitch streamer name (View + Modal)
+            # Step 7: Twitch streamer name (View + Modal)
             view_streamer = StreamerNameView(author=interaction.user)
             await interaction.followup.send(
                 "Ultimo step: Inserisci il nome dello streamer Twitch.",
@@ -371,13 +486,31 @@ class CmdConfig(commands.GroupCog, name="config"):
                 ephemeral=True
             )
             await view_streamer.wait()
+            streamer_name = view_streamer.streamer_name if view_streamer.streamer_name else "Non selezionato"
             if view_streamer.streamer_name:
                 self.twitch_app.change_streamer_name(view_streamer.streamer_name)
 
             # Recap finale
-            await interaction.followup.send('🎉 Configurazione iniziale completata!', ephemeral=True)
+            recap = """🎉 **Configurazione iniziale completata!**
+
+**Canali configurati:**
+"""
+            for tag, channel_id in selected_channels.items():
+                channel = guild.get_channel(channel_id)
+                recap += f"- {tag}: {channel.mention if channel else f'ID: {channel_id}'}\n"
+            recap += f"\n**Ruolo not_verified:** {not_verified_role_mention}\n"
+            recap += f"\n**Sistema di verifica:**\n- Timeout: {verification_data['timeout']}\n- Ruolo temporaneo: {verification_data['temp_role']}\n- Ruolo verificato: {verification_data['verified_role']}\n"
+            recap += f"\n**Retention giorni:** {retention_days}\n"
+            recap += f"\n**Message logging:** {logging_enabled}\n"
+            if logging_channels:
+                recap += f"- Canali logging: {', '.join(logging_channels)}\n"
+            recap += f"\n**Twitch titles:**\n- ON: {twitch_titles['on']}\n- OFF: {twitch_titles['off']}\n"
+            recap += f"\n**Streamer Twitch:** {streamer_name}\n"
+
+            await interaction.followup.send(recap, ephemeral=True)
             await self.log.command('Configurazione iniziale completata.', 'config', 'SETUP-INIZIALE')
         except Exception as e:
+            # EXCEPTION
             error_message = f'Errore durante la configurazione iniziale.\n{e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - SETUP-INIZIALE')
             if communication_channel:

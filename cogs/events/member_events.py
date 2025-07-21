@@ -22,7 +22,18 @@ class MemberEvents(commands.Cog):
         guild: discord.Guild = member.guild
         # Load bot communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
-        
+
+        # Assign 'not_verified' role if configured
+        not_verified_role_id = self.config.load_admin('roles', 'not_verified')
+        if not_verified_role_id and not_verified_role_id != '':
+            try:
+                await add_role(self.log, guild, int(not_verified_role_id), member.id, self.config)
+            except Exception as e:
+                error_message: str = f"Errore durante l'assegnazione del ruolo 'not_verified'.\nUtente: {member.name} ({member.id})\n{e}"
+                await self.log.error(error_message, 'EVENT - MEMBER NOT VERIFIED ROLE')
+                if communication_channel:
+                    await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER NOT VERIFIED ROLE', message = error_message))
+
         try:
             welcome_channel: discord.TextChannel = guild.system_channel
             rule_channel_id = self.config.load_admin('channels', 'rule')
@@ -51,7 +62,7 @@ class MemberEvents(commands.Cog):
             await self.log.event(f'Nuovo utente aggiunto, {member.name} ({member.id})', 'guild_join')
         except Exception as e:
             # EXCEPTION
-            error_message: str = f'Errore durante l\'invio del messaggio di benvenuto. \nUtente: {member.name} ({member.id}) \n{e}'
+            error_message: str = f"Errore durante l'invio del messaggio di benvenuto. \nUtente: {member.name} ({member.id}) \n{e}"
             await self.log.error(error_message, 'EVENT - MEMBER WELCOME')
             if communication_channel:
                 await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER WELCOME', message = error_message))
