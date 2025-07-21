@@ -43,8 +43,7 @@ class TwitchApp():
         self.streamer_name: str = ''
         self.url: str = getenv('TWITCH_URL')
         # Discord channel for live notifications
-        live_channel = self.config.load_admin('channels', 'live')
-        self.channel_id: int = int(live_channel) if live_channel and str(live_channel).isdigit() else None
+        self.channel_id: int = self.config.load_admin('channels', 'live')
         # Embed color as hex string
         self.color: str = f"0x{getenv('TWITCH_COLOR')}"
         # Twitch API client
