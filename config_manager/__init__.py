@@ -20,6 +20,7 @@ class ConfigManager:
         self._initialize_config()
         
         self.communication_channel = self._load_communication_channel()
+        self.report_channel = self._load_report_channel()
     
     def _get_config_path(self) -> str:
         """Returns the complete path of the configuration file."""
@@ -36,8 +37,8 @@ class ConfigManager:
                         'verified': ''
                     },
                     'channels': {
-                        'admin': '',
                         'communication': '',
+                        'report': '',
                         'rule': '',
                         'live': ''
                     }
@@ -47,9 +48,47 @@ class ConfigManager:
                     'emoji': '',
                     'message_id': ''
                 },
-                'exception': {}
+                'exception': {},
+                'message_logging': {
+                    'enabled': False,
+                    'channels': []
+                },
+                'retention_days': 90
             }
             write_file(self._config_path, default_config)
+        else:
+            config = self._load_config()
+            if 'admin' not in config:
+                config['admin'] = {
+                    'roles': {
+                        'server_booster': '',
+                        'in_verification': '',
+                        'verified': ''
+                    },
+                    'channels': {
+                        'communication': '',
+                        'report': '',
+                        'rule': '',
+                        'live': ''
+                    }
+                }
+            elif 'roles' not in config:
+                config['roles'] = {}
+            elif 'rules' not in config:
+                config['rules'] = {
+                    'emoji': '',
+                    'message_id': ''
+                }
+            elif 'exception' not in config:
+                config['exception'] = {}
+            elif 'message_logging' not in config:
+                config['message_logging'] = {
+                    'enabled': False,
+                    'channels': []
+                }
+            elif 'retention_days' not in config:
+                config['retention_days'] = 90
+            self._save_config(config)
     
     def _load_config(self) -> Dict[str, Any]:
         """Load and return the content of the configuration file."""
@@ -64,6 +103,14 @@ class ConfigManager:
         comm_channel_str = self.load_admin('channels', 'communication')
         if comm_channel_str and str(comm_channel_str).isdigit():
             return int(comm_channel_str)
+        else:
+            return None
+    
+    def _load_report_channel(self) -> int:
+        """Load the report channel from the configuration file."""
+        report_channel_str = self.load_admin('channels', 'report')
+        if report_channel_str and str(report_channel_str).isdigit():
+            return int(report_channel_str)
         else:
             return None
     
@@ -348,6 +395,83 @@ class ConfigManager:
         if tag in config['roles']:
             del config['roles'][tag]
             self._save_config(config)
+    
+    # ============================= Message Logging Management =============================
+    def load_message_logging(self) -> dict:
+        """
+        Load message logging configuration.
+        
+        Returns:
+            Message logging configuration
+        """
+        config = self._load_config()
+        return config['message_logging']
+    
+    def enable_message_logging(self) -> None:
+        """
+        Enable message logging.
+        """
+        config = self._load_config()
+        config['message_logging']['enabled'] = True
+        self._save_config(config)
+    
+    def disable_message_logging(self) -> None:
+        """
+        Disable message logging.
+        """
+        config = self._load_config()
+        config['message_logging']['enabled'] = False
+        self._save_config(config)
+    
+    def load_message_logging_channels(self) -> List[int]:
+        """
+        Load message logging channels.
+        
+        Returns:
+            List of channel IDs
+        """
+        config = self._load_config()
+        return config['message_logging']['channels']
+    
+    def add_message_logging_channel(self, channel_id: int) -> None:
+        """
+        Add a channel to message logging.
+        
+        Parameters:
+            channel_id: Channel ID to add
+        """
+        config = self._load_config()
+        config['message_logging']['channels'].append(channel_id)
+        self._save_config(config)
+    
+    def remove_message_logging_channel(self, channel_id: int) -> None:
+        """
+        Remove a channel from message logging.
+        
+        Parameters:
+            channel_id: Channel ID to remove
+        """
+        config = self._load_config()
+        config['message_logging']['channels'].remove(channel_id)
+        self._save_config(config)
+    
+    # ============================= Retention Days Management =============================
+    def load_retention_days(self) -> int:
+        """
+        Load the retention period (in days)
+        Returns:
+            int: Number of days to retain log messages
+        """
+        config = self._load_config()
+        return config['retention_days']
+    
+    def update_retention_days(self, days: int) -> None:
+        """
+        Update the retention period (in days)
+        """
+        config = self._load_config()
+        config['retention_days'] = days
+        self._save_config(config)
     
     # ============================= Utility Methods =============================
     

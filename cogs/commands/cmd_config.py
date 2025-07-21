@@ -10,6 +10,8 @@ from cogs.modals.config.exception_view import SetupView as ExceptionView
 from cogs.modals.config.admin_check_view import SetupView as AdminCheckView
 from cogs.modals.config.admin_add_view import SetupView as AdminAddView
 from cogs.modals.config.standard_view import SetupView as StandardView
+from cogs.modals.config.message_logging_view import SetupView as MessageLoggingView
+from cogs.modals.config.retention_select_view import RetentionSelectView
 from utils.printing import create_embed_from_dict
 
 class CmdConfig(commands.GroupCog, name="config"):
@@ -213,3 +215,82 @@ class CmdConfig(commands.GroupCog, name="config"):
             error_message: str = f'Errore durante l\'aggiunta di nuove eccezioni al file config.\n{e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - EXCEPTION-ADD')
             await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - EXCEPTION-ADD', message=error_message))
+    
+    # ============================= Message Logging Management =============================
+    @app_commands.command(name="message-logging-setup", description="Configura la registrazione dei messaggi")
+    async def message_logging_setup(self, interaction: discord.Interaction) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
+        # Load communication channel
+        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        
+        try:
+            # Get config/message_logging tags
+            message_logging_data: dict = self.config.load_message_logging()
+            
+            view: MessageLoggingView = MessageLoggingView(
+                author=interaction.user
+            )
+            await interaction.response.send_message(
+                f"Seleziona se abilitare o disabilitare la registrazione dei messaggi e i canali in cui verranno registrati i messaggi.\nAl momento la registrazione dei messaggi è {'**abilitata**' if message_logging_data['enabled'] else '**disabilitata**'}.",
+                view=view,
+                ephemeral=True
+            )
+            await view.wait()
+            
+            # Save selected data
+            if view.selected_enabled:
+                self.config.enable_message_logging()
+            else:
+                self.config.disable_message_logging()
+            for channel_id in view.selected_channels:
+                self.config.add_message_logging_channel(channel_id)
+            
+            # Respond with success
+            await interaction.followup.send(
+                '✅ Dati salvati con successo!',
+                ephemeral=True
+            )
+            
+            # INFO Log that operation is completed
+            await self.log.command(f'Configurazione della registrazione dei messaggi completata.', 'config', 'MESSAGE-LOGGING-SETUP')
+            
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante la configurazione della registrazione dei messaggi.\n{e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - MESSAGE-LOGGING-SETUP')
+            await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - MESSAGE-LOGGING-SETUP', message=error_message))
+    
+    # ============================= Retention Days =============================
+    @app_commands.command(name="retention", description="Aggiorna il periodo di conservazione dei log (1, 2, 3, 6 mesi)")
+    async def retention(self, interaction: discord.Interaction) -> None:
+        """Permette di aggiornare il periodo di conservazione dei log tramite una select."""
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
+        # Load communication channel
+        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        
+        try:
+            view = RetentionSelectView(author=interaction.user)
+            await interaction.response.send_message(
+                "Seleziona il periodo di conservazione dei log:",
+                view=view,
+                ephemeral=True
+            )
+            await view.wait()
+            
+            # Save selected data
+            if view.selection_complete and view.selected_days:
+                self.config.update_retention_days(view.selected_days)
+                
+                # Respond with success
+                await interaction.followup.send(f"✅ Periodo di conservazione aggiornato a {view.selected_days} giorni.", ephemeral=True)
+                
+                # INFO Log that operation is completed
+                await self.log.command(f'Periodo di conservazione aggiornato a {view.selected_days} giorni.', 'config', 'RETENTION')
+                
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante l\'aggiornamento del periodo di conservazione dei log.\n{e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - RETENTION')
+            await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - RETENTION', message=error_message))

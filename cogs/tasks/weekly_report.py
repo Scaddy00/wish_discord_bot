@@ -97,9 +97,9 @@ class WeeklyReport(commands.Cog):
             color=color,
             fields=fields
         )
-        # Get communication channel from config
-        comm_channel_id = getattr(self.bot.config, 'communication_channel', None)
-        channel = self.bot.get_channel(comm_channel_id) if comm_channel_id else None
+        # Get report channel from config
+        report_channel_id = getattr(self.bot.config, 'report_channel', None)
+        channel = self.bot.get_channel(report_channel_id) if report_channel_id else None
         if channel:
             await channel.send(embed=embed)
 

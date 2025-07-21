@@ -28,12 +28,13 @@ class MessageEvents(commands.Cog):
             if message.author.bot:
                 return
             
-            # Get exception list
-            channel_exceptions: list[int] = self.config.load_exception('message_logger')
-            
-            # Check if the channel id is in exception list
-            if message.channel.id in channel_exceptions:
-                return
+            # Check if message logging is enabled
+            if self.config.load_message_logging()['enabled']:
+                # Get message logging channels
+                message_logging_channels: list[int] = self.config.load_message_logging_channels()
+                # Check if the channel id is in message logging channels
+                if message.channel.id not in message_logging_channels:
+                    return
 
             # Log the message
             await self.log.message(
