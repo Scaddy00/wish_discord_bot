@@ -12,14 +12,18 @@ from cogs.modals.config.admin_add_view import SetupView as AdminAddView
 from cogs.modals.config.standard_view import SetupView as StandardView
 from cogs.modals.config.message_logging_view import SetupView as MessageLoggingView
 from cogs.modals.config.retention_select_view import RetentionSelectView
+from cogs.twitch.views_modals.titles_view import TwitchTitlesView
+from cogs.twitch.views_modals.streamer_name_view import StreamerNameView
 from utils.printing import create_embed_from_dict
+from cogs.modals.config.booster_role_select_view import BoosterRoleSelect
 
 class CmdConfig(commands.GroupCog, name="config"):
-    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
+    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, twitch_app):
         super().__init__()
         self.bot = bot
         self.log = log
         self.config = config
+        self.twitch_app = twitch_app
     
     # ============================= Standard =============================
     @app_commands.command(name="standard", description="Esegui la configurazione standard del bot")
@@ -294,3 +298,118 @@ class CmdConfig(commands.GroupCog, name="config"):
             error_message: str = f'Errore durante l\'aggiornamento del periodo di conservazione dei log.\n{e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - RETENTION')
             await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - RETENTION', message=error_message))
+    
+    @app_commands.command(name="setup-iniziale", description="Esegui la configurazione iniziale completa del bot")
+    async def setup_iniziale(self, interaction: discord.Interaction) -> None:
+        """
+        Runs the initial setup wizard for the bot, guiding the user through all main configuration steps.
+        """
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        try:
+            # Step 1: Standard configuration (channels)
+            admin_channels: dict = self.config.load_admin('channels')
+            view_standard = StandardView(
+                author=interaction.user,
+                tags=admin_channels.keys()
+            )
+            await interaction.response.send_message(
+                "Step 1/4: Seleziona i canali principali.",
+                view=view_standard,
+                ephemeral=True
+            )
+            await view_standard.wait()
+            for tag, channel_id in view_standard.values.items():
+                self.config.add_admin('channels', tag, channel_id)
+                if tag == 'communication':
+                    self.config._load_communication_channel()
+
+            # Step 2: Retention days
+            view_retention = RetentionSelectView(author=interaction.user)
+            await interaction.followup.send(
+                "Step 2/4: Seleziona il periodo di conservazione dei log:",
+                view=view_retention,
+                ephemeral=True
+            )
+            await view_retention.wait()
+            if view_retention.selection_complete and view_retention.selected_days:
+                self.config.update_retention_days(view_retention.selected_days)
+
+            # Step 3: Message logging
+            view_logging = MessageLoggingView(author=interaction.user)
+            await interaction.followup.send(
+                "Step 3/4: Configura la registrazione dei messaggi.",
+                view=view_logging,
+                ephemeral=True
+            )
+            await view_logging.wait()
+            if view_logging.selected_enabled is not None:
+                if view_logging.selected_enabled:
+                    self.config.enable_message_logging()
+                else:
+                    self.config.disable_message_logging()
+                for channel_id in view_logging.selected_channels:
+                    self.config.add_message_logging_channel(channel_id)
+
+            # Step 4: Twitch titles (View + Modal)
+            view_titles = TwitchTitlesView(author=interaction.user)
+            await interaction.followup.send(
+                "Step 4/4: Imposta i titoli Twitch (on/off).",
+                view=view_titles,
+                ephemeral=True
+            )
+            await view_titles.wait()
+            if view_titles.titles:
+                self.twitch_app.change_title({'tag': 'on', 'title': view_titles.titles['on']})
+                self.twitch_app.change_title({'tag': 'off', 'title': view_titles.titles['off']})
+
+            # Step 5: Twitch streamer name (View + Modal)
+            view_streamer = StreamerNameView(author=interaction.user)
+            await interaction.followup.send(
+                "Ultimo step: Inserisci il nome dello streamer Twitch.",
+                view=view_streamer,
+                ephemeral=True
+            )
+            await view_streamer.wait()
+            if view_streamer.streamer_name:
+                self.twitch_app.change_streamer_name(view_streamer.streamer_name)
+
+            # Recap finale
+            await interaction.followup.send('🎉 Configurazione iniziale completata!', ephemeral=True)
+            await self.log.command('Configurazione iniziale completata.', 'config', 'SETUP-INIZIALE')
+        except Exception as e:
+            error_message = f'Errore durante la configurazione iniziale.\n{e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - SETUP-INIZIALE')
+            if communication_channel:
+                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - SETUP-INIZIALE', message=error_message))
+    
+    # ============================= Booster Role =============================
+    @app_commands.command(name="set-booster-role", description="Salva l'ID del ruolo booster del server")
+    async def set_booster_role(self, interaction: discord.Interaction) -> None:
+        """
+        Allows the admin to select and save the server booster role ID.
+        """
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        
+        try:
+            view = BoosterRoleSelect(author=interaction.user)
+            await interaction.response.send_message(
+                "Seleziona il ruolo booster del server:",
+                view=view,
+                ephemeral=True
+            )
+            await view.wait()
+            if view.selected_role_id:
+                self.config.add_admin('roles', 'server_booster', view.selected_role_id)
+                await interaction.followup.send(f"✅ Ruolo booster salvato: <@&{view.selected_role_id}> (ID: {view.selected_role_id})", ephemeral=True)
+                # INFO Log that operation is completed
+                await self.log.command(f"Ruolo booster impostato: {view.selected_role_id}", 'config', 'SET-BOOSTER-ROLE')
+            else:
+                await interaction.followup.send("Nessun ruolo selezionato.", ephemeral=True)
+        except Exception as e:
+            # EXCEPTION
+            error_message = f'Errore durante la selezione del ruolo booster.\n{e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - SET-BOOSTER-ROLE')
+            if communication_channel:
+                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - SET-BOOSTER-ROLE', message=error_message))
