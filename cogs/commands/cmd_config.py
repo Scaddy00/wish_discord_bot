@@ -17,6 +17,8 @@ from cogs.twitch.views_modals.streamer_name_view import StreamerNameView
 from utils.printing import create_embed_from_dict
 from cogs.modals.config.booster_role_select_view import BoosterRoleSelect
 from cogs.verification.verification_setup_view import SetupView as VerificationSetupView
+from discord.ui import View, Select, RoleSelect, Button
+from discord import SelectOption
 
 class NotVerifiedRoleSelect(discord.ui.View):
     """
@@ -40,6 +42,106 @@ class NotVerifiedRoleSelect(discord.ui.View):
             self.parent_view.selected_role_id = str(selected_role.id)
             await interaction.response.send_message(f"Ruolo 'not_verified' selezionato: {selected_role.mention}", ephemeral=True)
             self.parent_view.stop()
+
+class NotVerifiedAndVerificationSetupView(View):
+    def __init__(self, author: discord.User):
+        super().__init__(timeout=180)
+        self.author = author
+        self.selection_complete = False
+        self.not_verified_role: discord.Role = None
+        self.timeout: int = None
+        self.temp_role: discord.Role = None
+        self.verified_role: discord.Role = None
+
+        # Not verified role select
+        self.not_verified_select = RoleSelect(
+            placeholder="Seleziona il ruolo 'not_verified'",
+            custom_id="not_verified_role_select",
+            min_values=1,
+            max_values=1,
+            row=0
+        )
+        self.not_verified_select.callback = self.not_verified_callback
+        self.add_item(self.not_verified_select)
+
+        # Timeout select
+        select_timeout: Select = Select(
+            placeholder="Seleziona timeout verifica",
+            custom_id="timeout_select",
+            options=[
+                SelectOption(label="5 minuti", value="300"),
+                SelectOption(label="10 minuti", value="600"),
+                SelectOption(label="15 minuti", value="900"),
+                SelectOption(label="30 minuti", value="1800"),
+            ],
+            row=1
+        )
+        select_timeout.callback = self.timeout_callback
+        self.add_item(select_timeout)
+
+        # Temp role select
+        self.temp_role_select = RoleSelect(
+            placeholder="Seleziona ruolo temporaneo",
+            custom_id="temp_role_select",
+            min_values=1,
+            max_values=1,
+            row=2
+        )
+        self.temp_role_select.callback = self.temp_role_callback
+        self.add_item(self.temp_role_select)
+
+        # Verified role select
+        self.verified_role_select = RoleSelect(
+            placeholder="Seleziona ruolo verificato",
+            custom_id="verified_role_select",
+            min_values=1,
+            max_values=1,
+            row=3
+        )
+        self.verified_role_select.callback = self.verified_role_callback
+        self.add_item(self.verified_role_select)
+
+        # Confirm button
+        button_confirm = Button(
+            label="Conferma",
+            style=discord.ButtonStyle.green,
+            row=4
+        )
+        button_confirm.callback = self.confirm_callback
+        self.add_item(button_confirm)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.author.id:
+            await interaction.response.send_message("Solo l'autore può usare questa interfaccia.", ephemeral=True)
+            return False
+        return True
+
+    async def not_verified_callback(self, interaction: discord.Interaction):
+        role_id = int(interaction.data["values"][0])
+        self.not_verified_role = interaction.guild.get_role(role_id)
+        await interaction.response.defer()
+
+    async def timeout_callback(self, interaction: discord.Interaction):
+        self.timeout = int(interaction.data["values"][0])
+        await interaction.response.defer()
+
+    async def temp_role_callback(self, interaction: discord.Interaction):
+        role_id = int(interaction.data["values"][0])
+        self.temp_role = interaction.guild.get_role(role_id)
+        await interaction.response.defer()
+
+    async def verified_role_callback(self, interaction: discord.Interaction):
+        role_id = int(interaction.data["values"][0])
+        self.verified_role = interaction.guild.get_role(role_id)
+        await interaction.response.defer()
+
+    async def confirm_callback(self, interaction: discord.Interaction):
+        if self.not_verified_role and self.timeout and self.temp_role and self.verified_role:
+            self.selection_complete = True
+            self.stop()
+            await interaction.response.send_message("✅ Selezione confermata!", ephemeral=True)
+        else:
+            await interaction.response.send_message("⚠️ Completa tutte le selezioni prima di confermare.", ephemeral=True)
 
 class CmdConfig(commands.GroupCog, name="config"):
     def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, twitch_app):
@@ -366,7 +468,7 @@ class CmdConfig(commands.GroupCog, name="config"):
                 tags=admin_channels.keys()
             )
             await interaction.response.send_message(
-                "Step 1/6: Seleziona i canali principali.",
+                "Step 1/5: Seleziona i canali principali.",
                 view=view_standard,
                 ephemeral=True
             )
@@ -378,54 +480,32 @@ class CmdConfig(commands.GroupCog, name="config"):
                     self.config._load_communication_channel()
                 selected_channels[tag] = channel_id
 
-            # Step 2: Selezione ruolo 'not_verified'
-            view_not_verified = NotVerifiedRoleSelect(author=interaction.user)
+            # Step 2: Selezione ruolo 'not_verified' + verifica
+            view_nv_verif = NotVerifiedAndVerificationSetupView(author=interaction.user)
             await interaction.followup.send(
-                "Step 2/6: Seleziona il ruolo 'not_verified' da assegnare ai nuovi utenti.",
-                view=view_not_verified,
+                "Step 2/5: Seleziona il ruolo 'not_verified' e configura la verifica (timeout, ruoli)",
+                view=view_nv_verif,
                 ephemeral=True
             )
-            await view_not_verified.wait()
-            not_verified_role_id = None
-            not_verified_role_mention = None
-            if view_not_verified.selected_role_id:
-                self.config.add_admin('roles', 'not_verified', view_not_verified.selected_role_id)
-                not_verified_role_id = view_not_verified.selected_role_id
-                role = guild.get_role(int(not_verified_role_id))
-                not_verified_role_mention = role.mention if role else f"ID: {not_verified_role_id}"
-            else:
-                not_verified_role_mention = "Non selezionato"
+            await view_nv_verif.wait()
+            not_verified_role_mention = "Non selezionato"
+            verification_data = {"timeout": "Non selezionato", "temp_role": "Non selezionato", "verified_role": "Non selezionato"}
+            if view_nv_verif.selection_complete:
+                # Salva not_verified
+                self.config.add_admin('roles', 'not_verified', view_nv_verif.not_verified_role.id)
+                not_verified_role_mention = view_nv_verif.not_verified_role.mention
+                # Salva verifica
+                self.config.add_admin('roles', 'in_verification', view_nv_verif.temp_role.id)
+                self.config.add_admin('roles', 'verified', view_nv_verif.verified_role.id)
+                self.verification.update_timeout(view_nv_verif.timeout)
+                verification_data['timeout'] = f"{view_nv_verif.timeout} secondi"
+                verification_data['temp_role'] = view_nv_verif.temp_role.mention
+                verification_data['verified_role'] = view_nv_verif.verified_role.mention
 
-            # Step 3: Configurazione sistema di verifica
-            view_verification = VerificationSetupView(author=interaction.user)
-            await interaction.followup.send(
-                "Step 3/6: Configura il sistema di verifica: seleziona timeout, ruolo temporaneo e ruolo verificato.",
-                view=view_verification,
-                ephemeral=True
-            )
-            await view_verification.wait()
-            verification_data = {}
-            if not view_verification.selection_complete:
-                verification_data['timeout'] = "Non selezionato"
-                verification_data['temp_role'] = "Non selezionato"
-                verification_data['verified_role'] = "Non selezionato"
-            else:
-                timeout = view_verification.timeout
-                temp_role_id = view_verification.temp_role.id
-                verified_role_id = view_verification.verified_role.id
-                self.config.add_admin('roles', 'in_verification', temp_role_id)
-                self.config.add_admin('roles', 'verified', verified_role_id)
-                self.verification.update_timeout(timeout)
-                verification_data['timeout'] = f"{timeout} secondi"
-                temp_role = guild.get_role(temp_role_id)
-                verification_data['temp_role'] = temp_role.mention if temp_role else f"ID: {temp_role_id}"
-                verified_role = guild.get_role(verified_role_id)
-                verification_data['verified_role'] = verified_role.mention if verified_role else f"ID: {verified_role_id}"
-
-            # Step 4: Retention days
+            # Step 3: Retention days
             view_retention = RetentionSelectView(author=interaction.user)
             await interaction.followup.send(
-                "Step 4/6: Seleziona il periodo di conservazione dei log:",
+                "Step 3/5: Seleziona il periodo di conservazione dei log:",
                 view=view_retention,
                 ephemeral=True
             )
@@ -437,10 +517,10 @@ class CmdConfig(commands.GroupCog, name="config"):
             else:
                 retention_days = "Non selezionato"
 
-            # Step 5: Message logging
+            # Step 4: Message logging
             view_logging = MessageLoggingView(author=interaction.user)
             await interaction.followup.send(
-                "Step 5/6: Configura la registrazione dei messaggi.",
+                "Step 4/5: Configura la registrazione dei messaggi.",
                 view=view_logging,
                 ephemeral=True
             )
@@ -461,10 +541,10 @@ class CmdConfig(commands.GroupCog, name="config"):
             else:
                 logging_enabled = "Non selezionato"
 
-            # Step 6: Twitch titles (View + Modal)
+            # Step 5: Twitch titles (View + Modal)
             view_titles = TwitchTitlesView(author=interaction.user)
             await interaction.followup.send(
-                "Step 6/6: Imposta i titoli Twitch (on/off).",
+                "Step 5/5: Imposta i titoli Twitch (on/off).",
                 view=view_titles,
                 ephemeral=True
             )
@@ -478,7 +558,7 @@ class CmdConfig(commands.GroupCog, name="config"):
             else:
                 twitch_titles['on'] = twitch_titles['off'] = "Non selezionato"
 
-            # Step 7: Twitch streamer name (View + Modal)
+            # Step 6: Twitch streamer name (View + Modal)
             view_streamer = StreamerNameView(author=interaction.user)
             await interaction.followup.send(
                 "Ultimo step: Inserisci il nome dello streamer Twitch.",
