@@ -7,7 +7,7 @@ from os import getenv
 from logger import Logger
 from config_manager import ConfigManager
 from cogs.verification import VerificationManager
-from utils.roles import add_role_event, remove_role_event, add_role
+from utils.roles import add_role_event, remove_role_event, add_role, remove_role
 
 class ReactionEvents(commands.Cog):
     def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager, verification: VerificationManager):
@@ -37,6 +37,10 @@ class ReactionEvents(commands.Cog):
                 # Only add temp role if it's configured
                 if self.verification.temp_role_id != 0:
                     await add_role(self.log, guild, self.verification.temp_role_id, member.id, self.config)
+                    # Remove not_verified role if configured
+                    not_verified_role_id = self.config.load_admin('roles', 'not_verified')
+                    if not_verified_role_id and not_verified_role_id != '':
+                        await remove_role(self.log, guild, int(not_verified_role_id), member.id, self.config)
                     # INFO Log that the user has been added to the temp role
                     await self.log.verification(f'User {member.name} ({member.id}) has been added to the temp role', 'verification', str(member.id))
                     # Start timer for verification
