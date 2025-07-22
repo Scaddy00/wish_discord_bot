@@ -2,7 +2,7 @@
 # ----------------------------- Imported Libraries -----------------------------
 import discord
 from discord.ext import commands
-from os import getenv
+import asyncio
 # ----------------------------- Custom Libraries -----------------------------
 from utils import printing
 from logger import Logger
@@ -18,6 +18,7 @@ class MemberEvents(commands.Cog):
     # ============================= ON_MEMBER_JOIN (Welcome) =============================
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
+        await asyncio.sleep(1)  # Wait 1 second to allow Discord to propagate the user info
         # Get guild
         guild: discord.Guild = member.guild
         # Load bot communication channel
