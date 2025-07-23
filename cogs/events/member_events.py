@@ -44,21 +44,24 @@ class MemberEvents(commands.Cog):
                 rule_channel = guild.get_channel(int(rule_channel_id))
             
             # Load embed message content
-            message_content: dict = await printing.load_single_embed_text(guild, 'welcome', self.config)
+            # message_content: dict = await printing.load_single_embed_text(guild, 'welcome', self.config)
+            message_content: list[dict] = await printing.load_embed_text(guild, 'welcome', self.config)
             
-            # Format description with rule channel mention if available
-            rule_mention = rule_channel.mention if rule_channel else "#regole"
-            description = message_content['description'].format(user=member.mention, rule=rule_mention)
+            description: str = message_content[0]['description'].format(user=member.mention, rule=rule_channel.mention if rule_channel else "#regole")
+            message: list[discord.Embed] = [
+                printing.create_embed(
+                    title=message_content[0]['title'], # Load title
+                    description=description, # Load description adding the mentions required
+                    color=message_content[0]['color'], # Load the color from str
+                    image=message_content[0]['image'], # Load image url
+                    thumbnail=member.avatar.url if member.avatar != None else message_content[0]['thumbnail'], # Load thumbnail url
+                ),
+                printing.create_embed(
+                    image=message_content[1]['image'], # Load image url
+                )
+            ]
             
-            message: discord.Embed = printing.create_embed(
-                title=message_content['title'], # Load title
-                description=description, # Load description adding the mentions required
-                color=message_content['color'], # Load the color from str
-                image=message_content['image'], # Load image url
-                thumbnail=member.avatar.url if member.avatar != None else message_content['thumbnail']
-            )
-            
-            await welcome_channel.send(embed=message)
+            await welcome_channel.send(embeds=message)
             # INFO LOG
             await self.log.event(f'Nuovo utente aggiunto, {member.name} ({member.id})', 'guild_join')
         except Exception as e:
