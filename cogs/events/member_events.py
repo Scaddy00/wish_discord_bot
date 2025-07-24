@@ -44,7 +44,6 @@ class MemberEvents(commands.Cog):
                 rule_channel = guild.get_channel(int(rule_channel_id))
             
             # Load embed message content
-            # message_content: dict = await printing.load_single_embed_text(guild, 'welcome', self.config)
             message_content: list[dict] = await printing.load_embed_text(guild, 'welcome', self.config)
             
             description: str = message_content[0]['description'].format(user=member.mention, rule=rule_channel.mention if rule_channel else "#regole")
@@ -56,8 +55,8 @@ class MemberEvents(commands.Cog):
                     image=message_content[0]['image'], # Load image url
                     thumbnail=member.avatar.url if member.avatar != None else message_content[0]['thumbnail'], # Load thumbnail url
                 ),
-                printing.create_embed(
-                    image=message_content[1]['image'], # Load image url
+                printing.create_embed_from_dict(
+                    data=message_content[1]
                 )
             ]
             
