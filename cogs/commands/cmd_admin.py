@@ -128,7 +128,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     self.log.db.insert_welcome(timestamp, str(member.id), str(member))
                     added += 1
 
-            await interaction.channel.send(f'Sono stati aggiunti **{added} utenti** alla tabella delle benvenute.', ephemeral=True)
+            await interaction.followup.send(f'Sono stati aggiunti **{added} utenti** alla tabella delle benvenute.', ephemeral=True)
             await self.log.command(f'Aggiunti {added} utenti alla tabella welcome.', 'admin', 'UPDATE-WELCOME-DB')
         except Exception as e:
             error_message: str = f'Errore durante l\'aggiornamento del database delle benvenute.\n{e}'
