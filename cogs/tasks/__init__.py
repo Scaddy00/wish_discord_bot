@@ -14,3 +14,4 @@ async def setup_all_tasks(bot: commands.bot, log: Logger, config: ConfigManager,
     await setup_twitch_task(twitch_app)
     await bot.loop.create_task(bot.load_extension('cogs.tasks.weekly_report'))
     await bot.loop.create_task(bot.load_extension('cogs.tasks.database_cleanup'))
+    await bot.loop.create_task(bot.load_extension('cogs.tasks.welcome'))

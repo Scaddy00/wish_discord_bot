@@ -20,7 +20,7 @@ class DB():
         Sets up the database path, creates necessary tables if they don't exist,
         and initializes connection variables.
         """
-        self.tables: dict = ['events', 'commands', 'messages', 'errors', 'verification']
+        self.tables: dict = ['events', 'commands', 'messages', 'errors', 'verification', 'welcome']
         self.db_path: str = ''
         self.conn: Connection = None
         self.cursor: Cursor = None
@@ -33,7 +33,7 @@ class DB():
         
         Args:
             table_name (str): Name of the table to create ('events', 'commands', 
-                            'messages', 'errors', 'verification')
+                            'messages', 'errors', 'verification', 'welcome')
         
         Returns:
             str: SQL CREATE TABLE statement
@@ -51,6 +51,8 @@ class DB():
             return 'CREATE TABLE IF NOT EXISTS errors (timestamp TEXT, type TEXT, message TEXT);'
         elif table_name == 'verification':
             return 'CREATE TABLE IF NOT EXISTS verification (timestamp TEXT, status TEXT, user_id TEXT, message TEXT);'
+        elif table_name == 'welcome':
+            return 'CREATE TABLE IF NOT EXISTS welcome (timestamp TEXT, user_id TEXT, user_name TEXT);'
         else:
             raise ValueError(f"Tried to create unknown table: {table_name}")
 
@@ -185,6 +187,24 @@ class DB():
         self.conn.commit()
         self.close_db()
 
+    # >>==============<< Insert Welcome >>==============<< 
+    def insert_welcome(self, timestamp: str, user_id: str, user_name: str) -> None:
+        """
+        Insert a welcome record into the database.
+        
+        Args:
+            timestamp (str): ISO format timestamp of the welcome message
+            user_id (str): Discord user ID who received the welcome message
+            user_name (str): Username who received the welcome message
+        """
+        self.open_db()
+        self.cursor.execute(
+            'INSERT INTO welcome (timestamp, user_id, user_name) VALUES (?, ?, ?)',
+            (timestamp, user_id, user_name)
+        )
+        self.conn.commit()
+        self.close_db()
+    
     # ============================= Get Functions =============================
     # >>==============<< Get Events by Type and Date Range >>==============<< 
     def get_events(self, event_types: list, start_time: str, end_time: str) -> list:
@@ -226,6 +246,46 @@ class DB():
         result = self.cursor.fetchall()
         self.close_db()
         return result
+    
+    # >>==============<< Get Welcome by User ID >>==============<< 
+    def get_welcome(self, user_id: str = None) -> dict | list:
+        """
+        Get welcome message for a given user ID or all welcome messages.
+        
+        Args:
+            user_id (str): Discord user ID to search for
+            
+        Returns:
+            dict | list: Dictionary containing (timestamp, user_id, user_name) for matching welcome message or empty dictionary if no welcome message found or list of dictionaries for all welcome messages
+        """
+        self.open_db()
+        if user_id:
+            query = "SELECT timestamp, user_id, user_name FROM welcome WHERE user_id = ?"   
+            self.cursor.execute(query, (user_id,))
+        else:
+            query = "SELECT timestamp, user_id, user_name FROM welcome"
+            self.cursor.execute(query)
+        result = self.cursor.fetchall()
+        self.close_db()
+        
+        if user_id:
+            output: dict = {}
+            if result:
+                output = { 
+                'timestamp': result[0][0],
+                'user_id': int(result[0][1]),
+                'user_name': result[0][2]
+            }
+        else:
+            output: list = []
+            if result:
+                for row in result:
+                    output.append({
+                        'timestamp': row[0],
+                        'user_id': int(row[1]),
+                        'user_name': row[2]
+                    })
+        return output
     
     # ============================= Delete Functions =============================
     # >>==============<< Delete Messages by Date Range >>==============<< 

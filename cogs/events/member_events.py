@@ -3,11 +3,12 @@
 import discord
 from discord.ext import commands
 import asyncio
+from datetime import datetime
 # ----------------------------- Custom Libraries -----------------------------
-from utils import printing
 from logger import Logger
 from utils.roles import add_role, remove_role
 from config_manager import ConfigManager
+from cogs.tasks.welcome import create_welcome_message
 
 class MemberEvents(commands.Cog):
     def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager):
@@ -36,31 +37,15 @@ class MemberEvents(commands.Cog):
                     await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER NOT VERIFIED ROLE', message = error_message))
 
         try:
+            # Get welcome channel
             welcome_channel: discord.TextChannel = guild.system_channel
-            rule_channel_id = self.config.load_admin('channels', 'rule')
-            rule_channel: discord.TextChannel = None
             
-            if rule_channel_id and rule_channel_id != '':
-                rule_channel = guild.get_channel(int(rule_channel_id))
-            
-            # Load embed message content
-            message_content: list[dict] = await printing.load_embed_text(guild, 'welcome', self.config)
-            
-            description: str = message_content[0]['description'].format(user=member.mention, rule=rule_channel.mention if rule_channel else "#regole")
-            message: list[discord.Embed] = [
-                printing.create_embed(
-                    title=message_content[0]['title'], # Load title
-                    description=description, # Load description adding the mentions required
-                    color=message_content[0]['color'], # Load the color from str
-                    image=message_content[0]['image'], # Load image url
-                    thumbnail=member.avatar.url if member.avatar != None else message_content[0]['thumbnail'], # Load thumbnail url
-                ),
-                printing.create_embed_from_dict(
-                    data=message_content[1]
-                )
-            ]
-            
+            # Create welcome message
+            message = await create_welcome_message(member, self.config, guild)
+            # Send welcome message to user
             await welcome_channel.send(embeds=message)
+            # Insert welcome message into database
+            self.log.db.insert_welcome(datetime.now().isoformat(), str(member.id), member.name)
             # INFO LOG
             await self.log.event(f'Nuovo utente aggiunto, {member.name} ({member.id})', 'guild_join')
         except Exception as e:
