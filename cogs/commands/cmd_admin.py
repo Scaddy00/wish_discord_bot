@@ -105,3 +105,32 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR-CHANNEL')
             await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - CLEAR-CHANNEL', message=error_message))
 
+    @app_commands.command(name="update-welcome-db", description="Aggiorna la tabella welcome del database")
+    async def update_welcome_db(self, interaction: discord.Interaction) -> None:
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel)
+        await self.log.command('Aggiornamento del database delle benvenute', 'admin', 'UPDATE-WELCOME-DB')
+        await interaction.response.send_message('Avvio l\'aggiornamento del database delle benvenute', ephemeral=True)
+
+        try:
+            members: list[discord.Member] = guild.members
+            # Get all existing welcome records
+            existing_welcomes = self.log.db.get_welcome()
+            existing_user_ids = {entry['user_id'] for entry in existing_welcomes}
+
+            added = 0
+            for member in members:
+                if member.bot:
+                    continue  # Skip bots
+                if member.id not in existing_user_ids:
+                    # Insert into db (use current timestamp and full username)
+                    timestamp = datetime.now(timezone.utc).isoformat()
+                    self.log.db.insert_welcome(timestamp, str(member.id), str(member))
+                    added += 1
+
+            await interaction.channel.send(f'Sono stati aggiunti **{added} utenti** alla tabella delle benvenute.', ephemeral=True)
+            await self.log.command(f'Aggiunti {added} utenti alla tabella welcome.', 'admin', 'UPDATE-WELCOME-DB')
+        except Exception as e:
+            error_message: str = f'Errore durante l\'aggiornamento del database delle benvenute.\n{e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - UPDATE-WELCOME-DB')
+            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - UPDATE-WELCOME-DB', message=error_message))
