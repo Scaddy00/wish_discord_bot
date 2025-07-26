@@ -100,7 +100,7 @@ class Welcome(commands.Cog):
             
             # Check if welcome message exists for each user
             for user in users:
-                if user.id not in sent_user_ids:
+                if user.id not in sent_user_ids and user.bot == False:
                     # Create welcome message
                     message = await create_welcome_message(user, self.config, guild)
                     # Send welcome message to user
