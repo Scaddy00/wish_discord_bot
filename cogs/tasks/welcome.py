@@ -6,6 +6,7 @@ from datetime import datetime
 from logger import Logger
 import pytz
 from os import getenv
+import asyncio
 
 # ----------------------------- Custom Libraries -----------------------------
 from config_manager import ConfigManager
@@ -97,6 +98,8 @@ class Welcome(commands.Cog):
                 await self.log.error("Welcome channel not found.", 'EVENT - TASK WELCOME')
                 return
             users = [member for member in guild.members]
+            
+            await asyncio.sleep(1)
             
             # Check if welcome message exists for each user
             for user in users:
