@@ -35,7 +35,7 @@ def read_file(path: str) -> dict:
         TODO: Add proper exception logging.
     """
     try:
-        with open(path, 'r') as file:
+        with open(path, 'r', encoding='utf-8') as file:
             return json.load(file)
     except Exception as e:
         # EXCEPTION

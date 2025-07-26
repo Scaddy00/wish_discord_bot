@@ -76,6 +76,11 @@ async def load_embed_text(guild: discord.Guild, item: str, config) -> list[dict]
     embed_text_path: str = path.join(str(getenv('DATA_PATH')), str(getenv('EMBED_TEXT_FILE_NAME')))
     text: dict = read_file(embed_text_path)
     
+    # Check if text was loaded successfully
+    if not text:
+        await communication_channel.send(f'Errore nel caricamento del file embed_text.json. Verificare che il file esista e sia valido.')
+        return []
+    
     if item not in text:
         await communication_channel.send(f'L\'elemento "{item}" non è presente nel file embed_text.json.')
         return []
