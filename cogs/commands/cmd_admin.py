@@ -143,15 +143,25 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         await interaction.response.send_message('Avvio l\'esecuzione forzata della task di benvenuto', ephemeral=True)
 
         try:
+            # Debug: List all available cogs
+            available_cogs = [cog_name for cog_name in self.bot.cogs.keys()]
+            await interaction.followup.send(f'Cog disponibili: {available_cogs}', ephemeral=True)
+            
             # Get the Welcome cog from the bot
             welcome_cog = self.bot.get_cog('Welcome')
             if not welcome_cog:
-                await interaction.followup.send('Errore: Cog Welcome non trovato.', ephemeral=True)
-                await self.log.error('Welcome cog non trovato', 'COMMAND - ADMIN - FORCE-WELCOME')
+                await interaction.followup.send(f'Errore: Cog Welcome non trovato. Cog disponibili: {available_cogs}', ephemeral=True)
+                await self.log.error(f'Welcome cog non trovato. Cog disponibili: {available_cogs}', 'COMMAND - ADMIN - FORCE-WELCOME')
                 return
 
+            # Debug: Check if execute_welcome_task method exists
+            if not hasattr(welcome_cog, 'execute_welcome_task'):
+                await interaction.followup.send('Errore: Metodo execute_welcome_task non trovato nel cog.', ephemeral=True)
+                await self.log.error('Metodo execute_welcome_task non trovato nel cog Welcome', 'COMMAND - ADMIN - FORCE-WELCOME')
+                return
+            
             # Execute the welcome task manually
-            await welcome_cog.welcome()
+            await welcome_cog.execute_welcome_task()
             
             await interaction.followup.send('Task di benvenuto eseguita con successo.', ephemeral=True)
             await self.log.command('Task di benvenuto eseguita manualmente con successo', 'admin', 'FORCE-WELCOME')

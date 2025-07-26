@@ -5,6 +5,7 @@ from discord.ext import tasks, commands
 from datetime import datetime
 from logger import Logger
 import pytz
+from os import getenv
 
 # ----------------------------- Custom Libraries -----------------------------
 from config_manager import ConfigManager
@@ -74,28 +75,26 @@ class Welcome(commands.Cog):
         self.log = log
         self.config = config
 
-    @tasks.loop(hours=1)
-    async def welcome(self):
+    async def execute_welcome_task(self):
         """
-        Periodic task that checks for new users and sends them a welcome message if they haven't received one yet.
+        Execute the welcome task logic manually.
+        This method can be called directly without the task decorator.
         """
         try:
             # Get welcome message records from database
             welcome_messages = self.log.db.get_welcome()
             sent_user_ids = extract_user_ids_from_welcome(welcome_messages)
-            # Get welcome channel
-            welcome_channel_id = self.config.load_admin('channels', 'welcome')
-            welcome_channel: discord.TextChannel = None
-            
-            if welcome_channel_id and welcome_channel_id != '':
-                welcome_channel = self.bot.get_channel(int(welcome_channel_id))
-            if not welcome_channel:
-                await self.log.error("Welcome channel not found.", 'EVENT - TASK WELCOME')
-                return
             # Get guild
-            guild = self.bot.get_guild(self.config.guild_id) if hasattr(self.config, 'guild_id') else None
+            guild = self.bot.get_guild(int(getenv('GUILD_ID')))
             if not guild:
                 await self.log.error("Guild not found.", 'EVENT - TASK WELCOME')
+                return
+            
+            # Get welcome channel
+            welcome_channel: discord.TextChannel = guild.system_channel
+            
+            if not welcome_channel:
+                await self.log.error("Welcome channel not found.", 'EVENT - TASK WELCOME')
                 return
             users = [member for member in guild.members]
             
@@ -108,6 +107,8 @@ class Welcome(commands.Cog):
                     await welcome_channel.send(embeds=message)
                     # Insert welcome message into database
                     self.log.db.insert_welcome(datetime.now().isoformat(), str(user.id), user.name)
+                    # INFO LOG
+                    await self.log.event(f"Messaggio di benvenuto inviato a {user.name} ({user.id})", 'welcome')
             # INFO LOG
             await self.log.event(f"Messaggio di benvenuto inviato a {len(sent_user_ids)} utenti", 'welcome')
         except Exception as e:
@@ -117,6 +118,13 @@ class Welcome(commands.Cog):
             await self.log.error(error_message, 'EVENT - TASK WELCOME')
             if communication_channel:
                 await communication_channel.send(self.log.error_message(command = 'EVENT - TASK WELCOME', message = error_message))
+
+    @tasks.loop(hours=1)
+    async def welcome(self):
+        """
+        Periodic task that checks for new users and sends them a welcome message if they haven't received one yet.
+        """
+        await self.execute_welcome_task()
 
 async def setup(bot):
     """
