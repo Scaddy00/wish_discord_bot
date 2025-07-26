@@ -134,3 +134,29 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             error_message: str = f'Errore durante l\'aggiornamento del database delle benvenute.\n{e}'
             await self.log.error(error_message, 'COMMAND - ADMIN - UPDATE-WELCOME-DB')
             await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - UPDATE-WELCOME-DB', message=error_message))
+
+    @app_commands.command(name="force-welcome", description="Forza l'esecuzione manuale della task di benvenuto")
+    async def force_welcome(self, interaction: discord.Interaction) -> None:
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel)
+        await self.log.command('Esecuzione forzata della task di benvenuto', 'admin', 'FORCE-WELCOME')
+        await interaction.response.send_message('Avvio l\'esecuzione forzata della task di benvenuto', ephemeral=True)
+
+        try:
+            # Get the Welcome cog from the bot
+            welcome_cog = self.bot.get_cog('Welcome')
+            if not welcome_cog:
+                await interaction.followup.send('Errore: Cog Welcome non trovato.', ephemeral=True)
+                await self.log.error('Welcome cog non trovato', 'COMMAND - ADMIN - FORCE-WELCOME')
+                return
+
+            # Execute the welcome task manually
+            await welcome_cog.welcome()
+            
+            await interaction.followup.send('Task di benvenuto eseguita con successo.', ephemeral=True)
+            await self.log.command('Task di benvenuto eseguita manualmente con successo', 'admin', 'FORCE-WELCOME')
+        except Exception as e:
+            error_message: str = f'Errore durante l\'esecuzione forzata della task di benvenuto.\n{e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - FORCE-WELCOME')
+            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - FORCE-WELCOME', message=error_message))
+            await interaction.followup.send('Errore durante l\'esecuzione della task di benvenuto.', ephemeral=True)
