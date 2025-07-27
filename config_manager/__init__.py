@@ -7,6 +7,35 @@ from typing import Union, List, Dict, Any, Optional, Tuple
 from utils.file_io import read_file, write_file
 from logger import Logger
 
+default_config = {
+    'admin': {
+        'roles': {
+            'server_booster': '',
+            'in_verification': '',
+            'verified': '',
+            'not_verified': ''
+        },
+        'channels': {
+            'communication': '',
+            'report': '',
+            'rule': '',
+            'live': ''
+        }
+    },
+    'roles': {},
+    'rules': {
+        'emoji': '',
+        'message_id': 0,
+        'embed_id': 0,
+        'channel_id': 0
+    },
+    'exception': {},
+    'message_logging': {
+        'enabled': False,
+        'channels': []
+    },
+    'retention_days': 90
+}
 
 class ConfigManager:
     """
@@ -29,73 +58,34 @@ class ConfigManager:
     def _initialize_config(self) -> None:
         """Initialize the configuration file with the basic structure if it doesn't exist."""
         if not path.exists(self._config_path):
-            default_config = {
-                'admin': {
-                    'roles': {
-                        'server_booster': '',
-                        'in_verification': '',
-                        'verified': '',
-                        'not_verified': ''
-                    },
-                    'channels': {
-                        'communication': '',
-                        'report': '',
-                        'rule': '',
-                        'live': ''
-                    }
-                },
-                'roles': {},
-                'rules': {
-                    'emoji': '',
-                    'message_id': ''
-                },
-                'exception': {},
-                'message_logging': {
-                    'enabled': False,
-                    'channels': []
-                },
-                'retention_days': 90
-            }
             write_file(self._config_path, default_config)
         else:
             config = self._load_config()
-            if 'admin' not in config:
-                config['admin'] = {
-                    'roles': {
-                        'server_booster': '',
-                        'in_verification': '',
-                        'verified': '',
-                        'not_verified': ''
-                    },
-                    'channels': {
-                        'communication': '',
-                        'report': '',
-                        'rule': '',
-                        'live': ''
-                    }
-                }
-            elif 'roles' not in config['admin'] or 'not_verified' not in config['admin']['roles']:
-                if 'roles' not in config['admin']:
-                    config['admin']['roles'] = {}
-                if 'not_verified' not in config['admin']['roles']:
-                    config['admin']['roles']['not_verified'] = ''
-            elif 'roles' not in config:
-                config['roles'] = {}
-            elif 'rules' not in config:
-                config['rules'] = {
-                    'emoji': '',
-                    'message_id': ''
-                }
-            elif 'exception' not in config:
-                config['exception'] = {}
-            elif 'message_logging' not in config:
-                config['message_logging'] = {
-                    'enabled': False,
-                    'channels': []
-                }
-            elif 'retention_days' not in config:
-                config['retention_days'] = 90
+            
+            # Check and add missing fields from default_config
+            self._ensure_config_structure(config, default_config)
+            
             self._save_config(config)
+    
+    def _ensure_config_structure(self, config: Dict[str, Any], default_structure: Dict[str, Any]) -> None:
+        """
+        Recursively ensure that all fields from default_structure exist in config.
+        
+        Args:
+            config: Current configuration dictionary
+            default_structure: Default configuration structure to check against
+        """
+        for key, default_value in default_structure.items():
+            if key not in config:
+                # Add missing key with default value
+                config[key] = default_value
+            elif isinstance(default_value, dict) and isinstance(config[key], dict):
+                # Recursively check nested dictionaries
+                self._ensure_config_structure(config[key], default_value)
+            elif isinstance(default_value, list) and isinstance(config[key], list):
+                # For lists, ensure they exist (don't modify content)
+                pass
+            # For other types (str, int, bool), the key exists so no action needed
     
     def _load_config(self) -> Dict[str, Any]:
         """Load and return the content of the configuration file."""

@@ -60,20 +60,20 @@ class CmdRules(commands.GroupCog, name="rule"):
             # Load embed message content
             message_content: list = await load_embed_text(guild, 'rule', self.config)
             # Create the embed message
-            message: list[discord.Embed] = [create_embed_from_dict(content) for content in message_content]
+            rule_embed: list[discord.Embed] = [create_embed_from_dict(content) for content in message_content]
             
             # Send the message in rule channel
-            await address_channel.send(embeds=message)
+            rule_message: discord.Message = await address_channel.send(embeds=rule_embed)
             
             try:
                 # Load the embed content
                 verification_content: dict = await load_single_embed_text(guild, 'verification', self.config)
                 
                 # Create the embed
-                verification_message: discord.Embed = create_embed_from_dict(verification_content)
+                verification_embed: discord.Embed = create_embed_from_dict(verification_content)
                 
                 # Send the embed with the reaction emoji
-                message: discord.Message = await address_channel.send(embed=verification_message)
+                verification_message: discord.Message = await address_channel.send(embed=verification_embed)
                 
                 # INFO Log that the message for the reaction was sent
                 await self.log.command('Messaggio reazione inviato', 'rule', 'NEW')
@@ -81,7 +81,7 @@ class CmdRules(commands.GroupCog, name="rule"):
                 # Add the reaction
                 try:
                     emoji = discord.PartialEmoji.from_str(rules_config['emoji'])
-                    await message.add_reaction(emoji)
+                    await verification_message.add_reaction(emoji)
                 except Exception as e:
                     # EXCEPTION
                     error_message: str = f"Errore nell'aggiungere la reazione {rules_config['emoji']}\n{e}"
@@ -92,8 +92,13 @@ class CmdRules(commands.GroupCog, name="rule"):
                 await self.log.command('Reazione aggiunta al messaggio', 'rule', 'NEW')
                 
                 # Save the data in config file
-                rules_config['message_id'] = str(message.id)
+                rules_config['message_id'] = verification_message.id
+                rules_config['embed_id'] = rule_message.id
+                rules_config['channel_id'] = address_channel.id
                 self.config.add_rules(rules_config)
+                
+                # Send a message to the user
+                await interaction.followup.send('Messaggio creato con successo!', ephemeral=True)
                 
                 # INFO Log that data was saved
                 await self.log.command('Dati salvati con successo', 'rule', 'NEW')
@@ -118,3 +123,69 @@ class CmdRules(commands.GroupCog, name="rule"):
             error_message: str = f'Errore durante la creazione di un nuovo messaggio.\n{e}'
             await self.log.error(error_message, 'COMMAND - RULE - NEW')
             await communication_channel.send(self.log.error_message(command='COMMAND - RULE - NEW', message=error_message))
+
+    @app_commands.command(name="reload", description="Ricarica l'embed delle regole esistente")
+    async def reload(self, interaction: discord.Interaction) -> None:
+        # Get the guild from interaction
+        guild: discord.Guild = interaction.guild
+        # Load communication channel
+        communication_channel = guild.get_channel(self.config.communication_channel)
+        
+        # INFO Log the start of the reload operation
+        await self.log.command('Ricarica dell\'embed delle regole', 'rule', 'RELOAD')
+        
+        # Send a response message
+        await interaction.response.send_message('Inizio il reload dell\'embed delle regole.', ephemeral=True)
+        
+        try:
+            # Load rules configuration
+            rules_config: dict = self.config.load_rules()
+            embed_id: int = rules_config.get('embed_id', 0)
+            channel_id: int = rules_config.get('channel_id', 0)
+            
+            if not embed_id:
+                error_message: str = 'Nessun embed_id trovato nella configurazione. Esegui prima /rule new.'
+                await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
+                await interaction.followup.send(error_message, ephemeral=True)
+                return
+            
+            # Find the message with the embed_id
+            rule_channel = guild.get_channel(channel_id)
+            if not rule_channel:
+                error_message: str = 'Canale delle regole non trovato nella configurazione.'
+                await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
+                await interaction.followup.send(error_message, ephemeral=True)
+                return
+            
+            try:
+                # Fetch the message using the embed_id
+                rule_message: discord.Message = await rule_channel.fetch_message(embed_id)
+            except discord.NotFound:
+                error_message: str = f'Messaggio con ID {embed_id} non trovato nel canale delle regole.'
+                await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
+                await interaction.followup.send(error_message, ephemeral=True)
+                return
+            except Exception as e:
+                error_message: str = f'Errore nel recuperare il messaggio con ID {embed_id}: {e}'
+                await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
+                await interaction.followup.send(error_message, ephemeral=True)
+                return
+            
+            # Load new embed content
+            message_content: list = await load_embed_text(guild, 'rule', self.config)
+            # Create the new embed message
+            new_rule_embed: list[discord.Embed] = [create_embed_from_dict(content) for content in message_content]
+            
+            # Edit the existing message with new embeds
+            await rule_message.edit(embeds=new_rule_embed)
+            
+            # INFO Log successful reload
+            await self.log.command('Embed delle regole ricaricato con successo', 'rule', 'RELOAD')
+            await interaction.followup.send('Embed delle regole ricaricato con successo!', ephemeral=True)
+            
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f'Errore durante il reload dell\'embed delle regole.\n{e}'
+            await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
+            await communication_channel.send(self.log.error_message(command='COMMAND - RULE - RELOAD', message=error_message))
+            await interaction.followup.send('Si è verificato un errore durante il reload dell\'embed.', ephemeral=True)
