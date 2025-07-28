@@ -19,7 +19,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         self.config = config
     
     # ============================= Helper Methods =============================
-    async def delete_messages(self, channel: discord.TextChannel) -> int:
+    async def delete_messages(self, channel) -> int:
         # Get the list of messages in channel
         messages: list[discord.Message] = []
         async for msg in channel.history(limit=100, oldest_first=False):
@@ -52,7 +52,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         # Return the number of messages deleted
         return len(recent_deleted) + old_deleted
 
-    async def delete_user_messages(self, channel: discord.TextChannel, user: discord.Member) -> int:
+    async def delete_user_messages(self, channel, user: discord.Member) -> int:
         # Get the list of messages in channel
         messages: list[discord.Message] = []
         async for msg in channel.history(limit=100, oldest_first=False):
@@ -164,13 +164,18 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - CLEAR-USER')
 
     @app_commands.command(name="clear-channel", description="Cancella tutti i messaggi nel canale indicato")
-    async def clear_channel(self, interaction: discord.Interaction, channel: discord.TextChannel) -> None:
+    async def clear_channel(self, interaction: discord.Interaction, channel: discord.abc.GuildChannel) -> None:
         """Cancella tutti i messaggi nel canale specificato"""
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         
         await self.log.command(f'Pulizia del seguente canale: {channel} ({channel.id})', 'admin', 'CLEAR-CHANNEL')
         await interaction.response.send_message('Avvio la pulizia di questo canale', ephemeral=True)
+        
+        # Check if the channel supports message operations
+        if not isinstance(channel, (discord.TextChannel, discord.ForumChannel, discord.StageChannel, discord.VoiceChannel)):
+            await safe_send_message(interaction, "❌ Questo tipo di canale non supporta la cancellazione di messaggi.")
+            return
         
         try:
             deleted: int = await self.delete_messages(channel)
@@ -201,13 +206,18 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - CLEAR-CHANNEL')
 
     @app_commands.command(name="clear-channel-user", description="Cancella tutti i messaggi di un utente specifico nel canale indicato")
-    async def clear_channel_user(self, interaction: discord.Interaction, channel: discord.TextChannel, user: discord.Member) -> None:
+    async def clear_channel_user(self, interaction: discord.Interaction, channel: discord.abc.GuildChannel, user: discord.Member) -> None:
         """Cancella tutti i messaggi di un utente specifico nel canale specificato"""
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         
         await self.log.command(f'Pulizia messaggi dell\'utente {user} ({user.id}) nel canale: {channel} ({channel.id})', 'admin', 'CLEAR-CHANNEL-USER')
         await interaction.response.send_message(f'Avvio la pulizia dei messaggi di {user.mention} nel canale {channel.mention}', ephemeral=True)
+        
+        # Check if the channel supports message operations
+        if not isinstance(channel, (discord.TextChannel, discord.ForumChannel, discord.StageChannel, discord.VoiceChannel)):
+            await safe_send_message(interaction, "❌ Questo tipo di canale non supporta la cancellazione di messaggi.")
+            return
         
         try:
             deleted: int = await self.delete_user_messages(channel, user)
