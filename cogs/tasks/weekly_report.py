@@ -26,6 +26,32 @@ class WeeklyReport(commands.Cog):
         self.logger = Logger()
         self.weekly_report.start()
 
+    def convert_italian_timestamp_to_datetime(self, italian_timestamp: str) -> datetime.datetime:
+        """
+        Convert Italian timestamp format (dd/mm/yyyy hh:mm:ss) to datetime object.
+        
+        Args:
+            italian_timestamp (str): Timestamp in format 'dd/mm/yyyy hh:mm:ss'
+            
+        Returns:
+            datetime.datetime: Datetime object in Rome timezone
+        """
+        try:
+            # Parse Italian timestamp format
+            dt = datetime.datetime.strptime(italian_timestamp, '%d/%m/%Y %H:%M:%S')
+            # Assume it's in Rome timezone
+            dt = dt.replace(tzinfo=ROME_TZ)
+            return dt
+        except ValueError:
+            # Try without seconds if seconds are missing
+            try:
+                dt = datetime.datetime.strptime(italian_timestamp, '%d/%m/%Y %H:%M')
+                dt = dt.replace(tzinfo=ROME_TZ)
+                return dt
+            except ValueError:
+                # If all parsing fails, return None
+                return None
+
     @tasks.loop(hours=168)  # 168 hours = 1 week
     async def weekly_report(self):
         """
@@ -42,21 +68,19 @@ class WeeklyReport(commands.Cog):
         last_monday = this_monday - datetime.timedelta(days=7)
         start_dt = datetime.datetime.combine(last_monday, datetime.time(9, 0, 0), tzinfo=ROME_TZ)
         end_dt = datetime.datetime.combine(this_monday, datetime.time(8, 59, 59), tzinfo=ROME_TZ)
-        # Per il DB serve UTC
-        start_utc = start_dt.astimezone(datetime.timezone.utc)
-        end_utc = end_dt.astimezone(datetime.timezone.utc)
-        start_time = start_utc.isoformat(sep=' ', timespec='seconds')
-        end_time = end_utc.isoformat(sep=' ', timespec='seconds')
 
-        # Get events from DB
+        # Get events from DB - convert to Italian timestamp format for comparison
         event_types = ['guild_join', 'remove', 'boost']
-        events = self.logger.db.get_events(event_types, start_time, end_time)
+        start_time_italian = start_dt.strftime('%d/%m/%Y %H:%M:%S')
+        end_time_italian = end_dt.strftime('%d/%m/%Y %H:%M:%S')
+        
+        events = self.logger.db.get_events(event_types, start_time_italian, end_time_italian)
         join_count = sum(1 for e in events if e[1] == 'guild_join')
         leave_count = sum(1 for e in events if e[1] == 'remove')
         boost_count = sum(1 for e in events if e[1] == 'boost')
 
-        # Get messages from DB
-        messages = self.logger.db.get_messages(start_time, end_time)
+        # Get messages from DB - convert to Italian timestamp format for comparison
+        messages = self.logger.db.get_messages(start_time_italian, end_time_italian)
         msg_per_channel = {}
         for msg in messages:
             channel_name = msg[2] or 'Sconosciuto'

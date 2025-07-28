@@ -27,14 +27,16 @@ class DatabaseCleanup(commands.Cog):
             # Calculate cutoff date
             now_rome = datetime.datetime.now(ROME_TZ)
             cutoff_date = now_rome - datetime.timedelta(days=retention_days)
-            cutoff_utc = cutoff_date.astimezone(datetime.timezone.utc)
-            cutoff_time = cutoff_utc.isoformat(sep=' ', timespec='seconds')
-            current_utc = now_rome.astimezone(datetime.timezone.utc)
-            current_time = current_utc.isoformat(sep=' ', timespec='seconds')
+            
+            # Convert to Italian timestamp format for database queries
+            cutoff_time_italian = cutoff_date.strftime('%d/%m/%Y %H:%M:%S')
+            current_time_italian = now_rome.strftime('%d/%m/%Y %H:%M:%S')
+            
             # Delete records older than the retention period
-            deleted_messages = self.logger.db.delete_messages_by_range(cutoff_time, current_time)
-            deleted_events = self.logger.db.delete_events_by_range(cutoff_time, current_time)
-            deleted_commands = self.logger.db.delete_commands_by_range(cutoff_time, current_time)
+            deleted_messages = self.logger.db.delete_messages_by_range(cutoff_time_italian, current_time_italian)
+            deleted_events = self.logger.db.delete_events_by_range(cutoff_time_italian, current_time_italian)
+            deleted_commands = self.logger.db.delete_commands_by_range(cutoff_time_italian, current_time_italian)
+            
             # Create cleanup message
             cleanup_message = (
                 f"Pulizia database completata - {now_rome.strftime('%d/%m/%Y %H:%M')}\n"
@@ -43,12 +45,14 @@ class DatabaseCleanup(commands.Cog):
                 f"Comandi eliminati: {deleted_commands}\n"
                 f"Data di cutoff: {cutoff_date.strftime('%d/%m/%Y')} (Retention: {retention_days} giorni)"
             )
+            
             # Insert cleanup message into database
             self.logger.db.insert_event(
-                timestamp=current_time,
+                timestamp=current_time_italian,
                 record_type="database_cleanup",
                 message=cleanup_message
             )
+            
             # Get report channel from config
             report_channel_id = getattr(self.bot.config, 'report_channel', None)
             if report_channel_id:
@@ -85,4 +89,10 @@ class DatabaseCleanup(commands.Cog):
         await discord.utils.sleep_until(next_run)
 
 async def setup(bot):
+    """
+    Setup function for the DatabaseCleanup cog.
+    
+    Args:
+        bot: Discord bot instance to add the cog to
+    """
     await bot.add_cog(DatabaseCleanup(bot)) 

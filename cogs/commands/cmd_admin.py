@@ -156,3 +156,47 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             await self.log.error(error_message, 'COMMAND - ADMIN - FORCE-WELCOME')
             await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - FORCE-WELCOME', message=error_message))
             await interaction.followup.send('Errore durante l\'esecuzione della task di benvenuto.', ephemeral=True)
+
+    @app_commands.command(name="send-weekly-report", description="Invia manualmente il report settimanale degli eventi Discord")
+    async def send_weekly_report(self, interaction: discord.Interaction) -> None:
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel)
+        await self.log.command('Invio manuale del report settimanale', 'admin', 'SEND-WEEKLY-REPORT')
+        await interaction.response.send_message('Avvio l\'invio manuale del report settimanale', ephemeral=True)
+
+        try:
+            # Get the WeeklyReport cog from the bot
+            weekly_report_cog = self.bot.get_cog('WeeklyReport')
+
+            # Execute the weekly report task manually
+            await weekly_report_cog.weekly_report()
+            
+            await interaction.followup.send('Report settimanale inviato con successo.', ephemeral=True)
+            await self.log.command('Report settimanale inviato manualmente con successo', 'admin', 'SEND-WEEKLY-REPORT')
+        except Exception as e:
+            error_message: str = f'Errore durante l\'invio manuale del report settimanale.\n{e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - SEND-WEEKLY-REPORT')
+            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - SEND-WEEKLY-REPORT', message=error_message))
+            await interaction.followup.send('Errore durante l\'invio del report settimanale.', ephemeral=True)
+
+    @app_commands.command(name="database-cleanup", description="Esegue manualmente la pulizia del database rimuovendo i record vecchi")
+    async def database_cleanup(self, interaction: discord.Interaction) -> None:
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel)
+        await self.log.command('Esecuzione manuale della pulizia del database', 'admin', 'DATABASE-CLEANUP')
+        await interaction.response.send_message('Avvio la pulizia manuale del database', ephemeral=True)
+
+        try:
+            # Get the DatabaseCleanup cog from the bot
+            database_cleanup_cog = self.bot.get_cog('DatabaseCleanup')
+
+            # Execute the database cleanup task manually
+            await database_cleanup_cog.database_cleanup()
+            
+            await interaction.followup.send('Pulizia del database eseguita con successo.', ephemeral=True)
+            await self.log.command('Pulizia del database eseguita manualmente con successo', 'admin', 'DATABASE-CLEANUP')
+        except Exception as e:
+            error_message: str = f'Errore durante l\'esecuzione manuale della pulizia del database.\n{e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - DATABASE-CLEANUP')
+            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - DATABASE-CLEANUP', message=error_message))
+            await interaction.followup.send('Errore durante la pulizia del database.', ephemeral=True)
