@@ -14,7 +14,6 @@ from .cmd_info import CmdInfo
 from .cmd_config import CmdConfig
 from .cmd_utility import CmdUtility
 from .cmd_verification import CmdVerification
-from .cmd_twitch import CmdTwitch
 
 # ============================= Add Commands =============================
 async def add_commands(bot: commands.Bot, log: Logger, config: ConfigManager, verification: VerificationManager, twitch_app: TwitchApp) -> None:
@@ -25,4 +24,3 @@ async def add_commands(bot: commands.Bot, log: Logger, config: ConfigManager, ve
     await bot.add_cog(CmdConfig(bot, log, config, twitch_app, verification))
     await bot.add_cog(CmdUtility(bot, log, config))
     await bot.add_cog(CmdVerification(bot, log, config, verification))
-    await bot.add_cog(CmdTwitch(bot, log, config, twitch_app))

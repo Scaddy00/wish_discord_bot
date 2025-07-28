@@ -18,11 +18,11 @@ class CmdVerification(commands.GroupCog, name="verification"):
         self.config = config
         self.verification = verification
         
+    # ============================= Verification Setup =============================
     @app_commands.command(name="setup", description="Inserisce i dati necessari per il sistema di verifica")
     async def setup(self, interaction: discord.Interaction) -> None:
-        # Get the guild from interaction
+        """Configura il sistema di verifica con timeout e ruoli"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:

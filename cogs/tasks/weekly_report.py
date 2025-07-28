@@ -97,13 +97,14 @@ class WeeklyReport(commands.Cog):
             f"Membri entrati: {join_count}\n"
             f"Membri usciti: {leave_count}\n"
             f"Nuovi server booster: {boost_count}\n"
+            f"\nMessaggi per canale:\n"
         )
         fields = []
         if msg_per_channel:
             for ch, count in msg_per_channel.items():
                 fields.append({
                     'name': ch,
-                    'value': str(count),
+                    'value': f'{count} messaggi',
                     'inline': False
                 })
         else:

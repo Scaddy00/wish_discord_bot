@@ -16,14 +16,13 @@ class CmdInfo(commands.GroupCog, name="info"):
         self.log = log
         self.config = config
     
+    # ============================= Dreamer Information =============================
     @app_commands.command(name="dreamer-unico", description="Invia un embed con le info per avere un Dreamer unico")
     async def dreamer(self, interaction: discord.Interaction, channel: discord.TextChannel) -> None:
-        # Get the guild from interaction
+        """Invia un embed con le informazioni per ottenere un Dreamer unico"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
         
-        # INFO Log the start of the creation of the message
         await self.log.command('Creazione di un nuovo messaggio', 'info', 'DREAMER UNICO')
         
         try:
@@ -49,12 +48,10 @@ class CmdInfo(commands.GroupCog, name="info"):
     
     @app_commands.command(name="dreamer-sub", description="Invia un embed con le info dei vari livelli di abbonamento")
     async def dreamer_sub(self, interaction: discord.Interaction, channel: discord.TextChannel) -> None:
-        # Get the guild from interaction
+        """Invia un embed con le informazioni sui vari livelli di abbonamento Dreamer"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
         
-        # INFO Log the start of the creation of the message
         await self.log.command('Creazione di un nuovo messaggio', 'info', 'DREAMER SUB')
         
         try:

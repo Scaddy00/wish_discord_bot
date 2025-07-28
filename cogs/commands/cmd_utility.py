@@ -15,11 +15,11 @@ class CmdUtility(commands.GroupCog, name="utility"):
         self.log = log
         self.config = config
     
+    # ============================= Emoji Tools =============================
     @app_commands.command(name="emoji-to-unicode", description="Ottiene il valore unicode di un emoji")
     async def emoji_unicode(self, interaction: discord.Interaction, emoji_input: str) -> None:
-        # Get the guild from interaction
+        """Converte un emoji nel suo valore unicode o mostra informazioni per emoji personalizzate"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:

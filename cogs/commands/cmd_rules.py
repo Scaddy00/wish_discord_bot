@@ -18,22 +18,18 @@ class CmdRules(commands.GroupCog, name="rule"):
         self.config = config
         self.verification = verification
     
-    @app_commands.command(name="new", description="Crea un nuovo messaggio")
+    # ============================= Rule Message Management =============================
+    @app_commands.command(name="new", description="Crea un nuovo messaggio delle regole")
     async def new(self, interaction: discord.Interaction, address_channel: discord.TextChannel) -> None:
-        # Get the guild from interaction
+        """Crea un nuovo messaggio delle regole con embed e sistema di verifica"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
-        # Get the channel where the interaction started
         channel = interaction.channel
         
         def check(m):
             return m.author == interaction.user and m.channel == interaction.channel
         
-        # INFO Log the start of the creation of the message
         await self.log.command('Creazione di un nuovo messaggio', 'rule', 'NEW')
-        
-        # Send a response message
         await interaction.response.send_message('Inizio la creazione di un nuovo messaggio delle regole.', ephemeral=True)
         
         # Check if the reaction emoji is saved in config file
@@ -126,15 +122,11 @@ class CmdRules(commands.GroupCog, name="rule"):
 
     @app_commands.command(name="reload", description="Ricarica l'embed delle regole esistente")
     async def reload(self, interaction: discord.Interaction) -> None:
-        # Get the guild from interaction
+        """Ricarica l'embed delle regole esistente con contenuto aggiornato"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
         
-        # INFO Log the start of the reload operation
         await self.log.command('Ricarica dell\'embed delle regole', 'rule', 'RELOAD')
-        
-        # Send a response message
         await interaction.response.send_message('Inizio il reload dell\'embed delle regole.', ephemeral=True)
         
         try:

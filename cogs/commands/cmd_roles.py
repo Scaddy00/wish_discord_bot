@@ -17,26 +17,20 @@ class CmdRoles(commands.GroupCog, name="role"):
         self.log = log
         self.config = config
     
-    # ============================= NEW =============================
-    @app_commands.command(name="new", description="Crea un nuovo messaggio")
+    # ============================= Role Message Management =============================
+    @app_commands.command(name="new", description="Crea un nuovo messaggio per l'assegnazione automatica dei ruoli")
     async def new(self, interaction: discord.Interaction) -> None:
-        # Get the guild from interaction
+        """Crea un nuovo messaggio con reazioni per l'assegnazione automatica dei ruoli"""
         guild: discord.Guild = interaction.guild
-        # Set the default var
         new_roles: dict = {}
         
         def check(m):
             return m.author == interaction.user and m.channel == interaction.channel
         
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
-        # Load role channel
         role_channel = guild.get_channel(self.config.role_channel)
         
-        # INFO Log the start of the creation of the message
         await self.log.command('Creazione di un nuovo messaggio', 'role', 'NEW')
-        
-        # Send a response message
         await interaction.response.send_message('Inizio la creazione di un nuovo messaggio per l\'assegnazione automatica dei ruoli.', ephemeral=True)
 
         try:
@@ -123,12 +117,11 @@ class CmdRoles(commands.GroupCog, name="role"):
             await self.log.error(error_message, 'COMMAND - ROLE - NEW')
             await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message), ephemeral=True)
         
-    # ============================= ASSIGN =============================
+    # ============================= Role Assignment =============================
     @app_commands.command(name="assign", description="Assegna un ruolo ad un utente")
     async def assign(self, interaction: discord.Interaction, role: discord.Role, user: discord.Member) -> None:
-        # Get the guild from interaction
+        """Assegna un ruolo specifico ad un utente"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
@@ -144,12 +137,10 @@ class CmdRoles(commands.GroupCog, name="role"):
             await self.log.error(error_message, 'COMMAND - ROLE - ASSIGN')
             await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - ASSIGN', message=error_message), ephemeral=True)
 
-    # ============================= ASSIGN ALL =============================
     @app_commands.command(name="assign-all", description="Assegna un ruolo a tutti gli utenti")
     async def assign_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
-        # Get the guild from interaction
+        """Assegna un ruolo a tutti gli utenti del server (escludendo quelli con ruoli di eccezione)"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
         
         # Get the member list
@@ -181,12 +172,11 @@ class CmdRoles(commands.GroupCog, name="role"):
             await self.log.error(error_message, 'COMMAND - ROLE - ASSIGN-ALL')
             await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - ASSIGN-ALL', message=error_message), ephemeral=True)
 
-    # ============================= REMOVE =============================
+    # ============================= Role Removal =============================
     @app_commands.command(name="remove", description="Rimuove un ruolo ad un utente")
     async def remove(self, interaction: discord.Interaction, role: discord.Role, user: discord.Member) -> None:
-        # Get the guild from interaction
+        """Rimuove un ruolo specifico da un utente"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
         
         try:
@@ -202,12 +192,10 @@ class CmdRoles(commands.GroupCog, name="role"):
             await self.log.error(error_message, 'COMMAND - ROLE - REMOVE')
             await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - REMOVE', message=error_message), ephemeral=True)
 
-    # ============================= REMOVE ALL =============================
     @app_commands.command(name="remove-all", description="Rimuove un ruolo da tutti gli utenti")
     async def remove_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
-        # Get the guild from interaction
+        """Rimuove un ruolo da tutti gli utenti del server (escludendo quelli con ruoli di eccezione)"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
         
         # Get the member list

@@ -50,63 +50,49 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         # Return the number of messages deleted
         return len(recent_deleted) + old_deleted
         
-    
+    # ============================= Channel Management =============================
     @app_commands.command(name="clear", description="Cancella tutti i messaggi in questo canale")
     async def clear(self, interaction: discord.Interaction) -> None:
-        # Get the guild from interaction
+        """Cancella tutti i messaggi nel canale corrente"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
-        # Get the channel
         channel = interaction.channel
         
-        # INFO Log the start of the clear
         await self.log.command(f'Pulizia del seguente canale: {channel} ({channel.id})', 'admin', 'CLEAR')
-        
         await interaction.response.send_message('Avvio la pulizia di questo canale', ephemeral=True)
         
         try:
-            # Delete the messages and get the number of messages deleted
             deleted: int = await self.delete_messages(channel)
-            # Respond with success and the number of messages deleted
             await interaction.channel.send(f'Sono stati cancellati **{deleted} messaggi**', delete_after=30)
-            # INFO Log the success and the number of messages deleted
             await self.log.command(f'Cancellati {deleted} messaggi dal seguente canale: {channel} ({channel.id})', 'admin', 'CLEAR')
         except Exception as e:
-            # EXCEPTION
             error_message: str = f'Errore durante l\'eliminazione dei messaggi nel seguente canale: {channel} ({channel.id}).\n{e}'
             await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR')
             await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - CLEAR', message=error_message))
-    
+
     @app_commands.command(name="clear-channel", description="Cancella tutti i messaggi nel canale indicato")
     async def clear_channel(self, interaction: discord.Interaction, channel: discord.TextChannel) -> None:
-        # Get the guild from interaction
+        """Cancella tutti i messaggi nel canale specificato"""
         guild: discord.Guild = interaction.guild
-        # Load communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
         
-        # INFO Log the start of the clear
         await self.log.command(f'Pulizia del seguente canale: {channel} ({channel.id})', 'admin', 'CLEAR-CHANNEL')
-        
         await interaction.response.send_message('Avvio la pulizia di questo canale', ephemeral=True)
         
         try:
-            # Delete the messages and get the number of messages deleted
             deleted: int = await self.delete_messages(channel)
-            # Delete the original response to the command
             await interaction.delete_original_response()
-            # Respond with success and the number of messages deleted
             await interaction.channel.send(f'Sono stati cancellati **{deleted} messaggi**', delete_after=30)
-            # INFO Log the success and the number of messages deleted
             await self.log.command(f'Cancellati {deleted} messaggi dal seguente canale: {channel} ({channel.id})', 'admin', 'CLEAR-CHANNEL')
         except Exception as e:
-            # EXCEPTION
             error_message: str = f'Errore durante l\'eliminazione dei messaggi nel seguente canale: {channel} ({channel.id}).\n{e}'
             await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR-CHANNEL')
             await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - CLEAR-CHANNEL', message=error_message))
 
+    # ============================= Database Management =============================
     @app_commands.command(name="update-welcome-db", description="Aggiorna la tabella welcome del database")
     async def update_welcome_db(self, interaction: discord.Interaction) -> None:
+        """Aggiorna la tabella welcome del database con tutti i membri del server"""
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         await self.log.command('Aggiornamento del database delle benvenute', 'admin', 'UPDATE-WELCOME-DB')
@@ -135,8 +121,33 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             await self.log.error(error_message, 'COMMAND - ADMIN - UPDATE-WELCOME-DB')
             await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - UPDATE-WELCOME-DB', message=error_message))
 
+    @app_commands.command(name="database-cleanup", description="Esegue manualmente la pulizia del database rimuovendo i record vecchi")
+    async def database_cleanup(self, interaction: discord.Interaction) -> None:
+        """Esegue manualmente la pulizia del database rimuovendo i record obsoleti"""
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel)
+        await self.log.command('Esecuzione manuale della pulizia del database', 'admin', 'DATABASE-CLEANUP')
+        await interaction.response.send_message('Avvio la pulizia manuale del database', ephemeral=True)
+
+        try:
+            # Get the DatabaseCleanup cog from the bot
+            database_cleanup_cog = self.bot.get_cog('DatabaseCleanup')
+
+            # Execute the database cleanup task manually
+            await database_cleanup_cog.database_cleanup()
+            
+            await interaction.followup.send('Pulizia del database eseguita con successo.', ephemeral=True)
+            await self.log.command('Pulizia del database eseguita manualmente con successo', 'admin', 'DATABASE-CLEANUP')
+        except Exception as e:
+            error_message: str = f'Errore durante l\'esecuzione manuale della pulizia del database.\n{e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - DATABASE-CLEANUP')
+            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - DATABASE-CLEANUP', message=error_message))
+            await interaction.followup.send('Errore durante la pulizia del database.', ephemeral=True)
+
+    # ============================= Task Management =============================
     @app_commands.command(name="force-welcome", description="Forza l'esecuzione manuale della task di benvenuto")
     async def force_welcome(self, interaction: discord.Interaction) -> None:
+        """Forza l'esecuzione manuale della task di benvenuto per tutti i nuovi membri"""
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         await self.log.command('Esecuzione forzata della task di benvenuto', 'admin', 'FORCE-WELCOME')
@@ -159,6 +170,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
 
     @app_commands.command(name="send-weekly-report", description="Invia manualmente il report settimanale degli eventi Discord")
     async def send_weekly_report(self, interaction: discord.Interaction) -> None:
+        """Invia manualmente il report settimanale degli eventi Discord"""
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         await self.log.command('Invio manuale del report settimanale', 'admin', 'SEND-WEEKLY-REPORT')
@@ -178,25 +190,3 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             await self.log.error(error_message, 'COMMAND - ADMIN - SEND-WEEKLY-REPORT')
             await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - SEND-WEEKLY-REPORT', message=error_message))
             await interaction.followup.send('Errore durante l\'invio del report settimanale.', ephemeral=True)
-
-    @app_commands.command(name="database-cleanup", description="Esegue manualmente la pulizia del database rimuovendo i record vecchi")
-    async def database_cleanup(self, interaction: discord.Interaction) -> None:
-        guild: discord.Guild = interaction.guild
-        communication_channel = guild.get_channel(self.config.communication_channel)
-        await self.log.command('Esecuzione manuale della pulizia del database', 'admin', 'DATABASE-CLEANUP')
-        await interaction.response.send_message('Avvio la pulizia manuale del database', ephemeral=True)
-
-        try:
-            # Get the DatabaseCleanup cog from the bot
-            database_cleanup_cog = self.bot.get_cog('DatabaseCleanup')
-
-            # Execute the database cleanup task manually
-            await database_cleanup_cog.database_cleanup()
-            
-            await interaction.followup.send('Pulizia del database eseguita con successo.', ephemeral=True)
-            await self.log.command('Pulizia del database eseguita manualmente con successo', 'admin', 'DATABASE-CLEANUP')
-        except Exception as e:
-            error_message: str = f'Errore durante l\'esecuzione manuale della pulizia del database.\n{e}'
-            await self.log.error(error_message, 'COMMAND - ADMIN - DATABASE-CLEANUP')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - DATABASE-CLEANUP', message=error_message))
-            await interaction.followup.send('Errore durante la pulizia del database.', ephemeral=True)
