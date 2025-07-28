@@ -30,6 +30,8 @@ class MemberEvents(commands.Cog):
         if not_verified_role_id and not_verified_role_id != '':
             try:
                 await add_role(self.log, guild, int(not_verified_role_id), member.id, self.config)
+                # INFO LOG
+                await self.log.verification(f'User {member.name} ({member.id}) non è verificato', 'unverified', str(member.id))
             except Exception as e:
                 error_message: str = f"Errore durante l'assegnazione del ruolo 'not_verified'.\nUtente: {member.name} ({member.id})\n{e}"
                 await self.log.error(error_message, 'EVENT - MEMBER NOT VERIFIED ROLE')

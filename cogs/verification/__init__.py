@@ -122,7 +122,7 @@ class VerificationManager:
                     await member.add_roles(verified_role)
             
             # INFO Log that the user has been verified
-            await self.log.verification(f'User {member.name} ({member.id}) has been verified', 'verification', str(member.id))
+            await self.log.verification(f'User {member.name} ({member.id}) has been verified', 'verified', str(member.id))
             try:
                 await member.send('✅ Verifica completata! Ora hai accesso al server. Buon divertimento!')
             except:

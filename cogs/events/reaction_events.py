@@ -42,7 +42,7 @@ class ReactionEvents(commands.Cog):
                     if not_verified_role_id and not_verified_role_id != '':
                         await remove_role(self.log, guild, int(not_verified_role_id), member.id, self.config)
                     # INFO Log that the user has been added to the temp role
-                    await self.log.verification(f'User {member.name} ({member.id}) has been added to the temp role', 'verification', str(member.id))
+                    await self.log.verification(f'User {member.name} ({member.id}) è in stato di verifica', 'pending', str(member.id))
                     # Start timer for verification
                     await self.verification.start_timer(guild.id, member.id)
                 else:
