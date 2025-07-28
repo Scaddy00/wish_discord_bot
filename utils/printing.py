@@ -6,13 +6,12 @@ from discord import Embed
 import discord
 from os import path
 # ----------------------------- Custom Libraries -----------------------------
-from logger import Logger
 from .file_io import read_file
 
 italian_month: list = ["", "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
 
 # ============================= Safe Send Message =============================
-async def safe_send_message(interaction: discord.Interaction, message: str = None, ephemeral: bool = True, embed: discord.Embed = None, logger: Logger = None, log_command: str = "SAFE-SEND") -> None:
+async def safe_send_message(interaction: discord.Interaction, message: str = None, ephemeral: bool = True, embed: discord.Embed = None, logger = None, log_command: str = "SAFE-SEND") -> None:
     """
     Safely send a message to the interaction, handling webhook errors.
     
