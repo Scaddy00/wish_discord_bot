@@ -41,24 +41,7 @@ class CmdConfig(commands.GroupCog, name="config"):
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
         try:
-            admin_channels: dict = self.config.load_admin('channels')
-            view: StandardView = StandardView(
-                author=interaction.user,
-                tags=admin_channels.keys()
-            )
-            await interaction.response.send_message(
-                "Seleziona i canali principali del bot",
-                view=view,
-                ephemeral=True
-            )
-            await view.wait()
-            
-            # Save selected channels
-            for tag, channel_id in view.values.items():
-                self.config.add_admin('channels', tag, channel_id)
-                if tag == 'communication':
-                    self.config._load_communication_channel()
-            
+            await self._setup_standard_config(interaction)
             await interaction.followup.send('✅ Canali configurati con successo!', ephemeral=True)
             await self.log.command('Configurazione canali principali completata.', 'config', 'STANDARD')
             
@@ -75,18 +58,10 @@ class CmdConfig(commands.GroupCog, name="config"):
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
         try:
-            view = RetentionSelectView(author=interaction.user)
-            await interaction.response.send_message(
-                "Seleziona il periodo di conservazione dei log:",
-                view=view,
-                ephemeral=True
-            )
-            await view.wait()
-            
-            if view.selection_complete and view.selected_days:
-                self.config.update_retention_days(view.selected_days)
-                await interaction.followup.send(f"✅ Periodo di conservazione aggiornato a {view.selected_days} giorni.", ephemeral=True)
-                await self.log.command(f'Periodo di conservazione aggiornato a {view.selected_days} giorni.', 'config', 'RETENTION')
+            retention_days = await self._setup_retention_config(interaction)
+            if retention_days != "Non selezionato":
+                await interaction.followup.send(f"✅ Periodo di conservazione aggiornato a {retention_days} giorni.", ephemeral=True)
+                await self.log.command(f'Periodo di conservazione aggiornato a {retention_days} giorni.', 'config', 'RETENTION')
             else:
                 await interaction.followup.send("Nessun periodo selezionato.", ephemeral=True)
                 
@@ -103,25 +78,8 @@ class CmdConfig(commands.GroupCog, name="config"):
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
         try:
-            message_logging_data: dict = self.config.load_message_logging()
-            view: MessageLoggingView = MessageLoggingView(author=interaction.user)
-            
-            await interaction.response.send_message(
-                f"Configura la registrazione dei messaggi.\nAl momento è {'**abilitata**' if message_logging_data['enabled'] else '**disabilitata**'}.",
-                view=view,
-                ephemeral=True
-            )
-            await view.wait()
-            
-            if view.selected_enabled is not None:
-                if view.selected_enabled:
-                    self.config.enable_message_logging()
-                else:
-                    self.config.disable_message_logging()
-                
-                for channel_id in view.selected_channels:
-                    self.config.add_message_logging_channel(channel_id)
-                
+            logging_enabled, logging_channels = await self._setup_message_logging_config(interaction)
+            if logging_enabled != "Non selezionato":
                 await interaction.followup.send('✅ Configurazione logging completata!', ephemeral=True)
                 await self.log.command('Configurazione logging messaggi completata.', 'config', 'MESSAGE-LOGGING')
             else:
@@ -197,28 +155,17 @@ class CmdConfig(commands.GroupCog, name="config"):
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
         try:
-            view = NotVerifiedAndVerificationSetupView(author=interaction.user)
-            await interaction.response.send_message(
-                "Configura il sistema di verifica: timeout, ruolo temporaneo e ruolo verificato.",
-                view=view,
-                ephemeral=True
-            )
-            await view.wait()
-            
-            if view.selection_complete:
-                self.config.add_admin('roles', 'in_verification', view.temp_role.id)
-                self.config.add_admin('roles', 'verified', view.verified_role.id)
-                self.verification.update_timeout(view.timeout)
-                
+            verification_data = await self._setup_verification_config(interaction)
+            if verification_data["timeout"] != "Non selezionato":
                 await interaction.followup.send(
                     f"✅ Sistema di verifica configurato:\n"
-                    f"⏱️ Timeout: {view.timeout} secondi\n"
-                    f"🛑 Ruolo temporaneo: {view.temp_role.mention}\n"
-                    f"✔️ Ruolo verificato: {view.verified_role.mention}",
+                    f"⏱️ Timeout: {verification_data['timeout']}\n"
+                    f"🛑 Ruolo temporaneo: {verification_data['temp_role']}\n"
+                    f"✔️ Ruolo verificato: {verification_data['verified_role']}",
                     ephemeral=True
                 )
                 
-                await self.log.command(f'Sistema di verifica configurato: timeout={view.timeout}s, temp_role={view.temp_role.id}, verified_role={view.verified_role.id}', 'config', 'VERIFICATION-SETUP')
+                await self.log.command(f'Sistema di verifica configurato: timeout={verification_data["timeout"]}, temp_role={verification_data["temp_role"]}, verified_role={verification_data["verified_role"]}', 'config', 'VERIFICATION-SETUP')
             else:
                 await interaction.followup.send("Configurazione non completata.", ephemeral=True)
                 
@@ -351,26 +298,15 @@ class CmdConfig(commands.GroupCog, name="config"):
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
         try:
-            view = TwitchTitlesView(author=interaction.user)
-            await interaction.response.send_message(
-                "Configura i titoli Twitch per stream on/off:",
-                view=view,
-                ephemeral=True
-            )
-            await view.wait()
-            
-            if view.titles:
-                self.twitch_app.change_title({'tag': 'on', 'title': view.titles['on']})
-                self.twitch_app.change_title({'tag': 'off', 'title': view.titles['off']})
-                
+            twitch_titles = await self._setup_twitch_titles_config(interaction)
+            if twitch_titles["on"] != "Non selezionato":
                 await interaction.followup.send(
                     f"✅ Titoli Twitch configurati:\n"
-                    f"🟢 ON: {view.titles['on']}\n"
-                    f"🔴 OFF: {view.titles['off']}",
+                    f"🟢 ON: {twitch_titles['on']}\n"
+                    f"🔴 OFF: {twitch_titles['off']}",
                     ephemeral=True
                 )
-                
-                await self.log.command(f'Titoli Twitch configurati: ON="{view.titles["on"]}", OFF="{view.titles["off"]}"', 'config', 'TWITCH-TITLES')
+                await self.log.command(f'Titoli Twitch configurati: ON="{twitch_titles["on"]}", OFF="{twitch_titles["off"]}"', 'config', 'TWITCH-TITLES')
             else:
                 await interaction.followup.send("Configurazione titoli non completata.", ephemeral=True)
                 
@@ -387,23 +323,13 @@ class CmdConfig(commands.GroupCog, name="config"):
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
         try:
-            view = StreamerNameView(author=interaction.user)
-            await interaction.response.send_message(
-                "Inserisci il nome dello streamer Twitch:",
-                view=view,
-                ephemeral=True
-            )
-            await view.wait()
-            
-            if view.streamer_name:
-                self.twitch_app.change_streamer_name(view.streamer_name)
-                
+            streamer_name = await self._setup_twitch_streamer_config(interaction)
+            if streamer_name != "Non selezionato":
                 await interaction.followup.send(
-                    f"✅ Streamer Twitch configurato: **{view.streamer_name}**",
+                    f"✅ Streamer Twitch configurato: **{streamer_name}**",
                     ephemeral=True
                 )
-                
-                await self.log.command(f'Streamer Twitch configurato: {view.streamer_name}', 'config', 'TWITCH-STREAMER')
+                await self.log.command(f'Streamer Twitch configurato: {streamer_name}', 'config', 'TWITCH-STREAMER')
             else:
                 await interaction.followup.send("Nome streamer non inserito.", ephemeral=True)
                 

@@ -32,7 +32,12 @@ class SetupView(View):
         self.select_channels: ChannelSelect = ChannelSelect(
             placeholder="Seleziona i canali in cui verranno registrati i messaggi",
             custom_id="message_logging_channels_select",
-            channel_types=[discord.ChannelType.text, discord.ChannelType.forum],
+            channel_types=[
+                discord.ChannelType.text,
+                discord.ChannelType.forum,
+                discord.ChannelType.stage_voice,
+                discord.ChannelType.voice
+            ],
             min_values=1,
             max_values=25
         )
