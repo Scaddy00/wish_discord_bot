@@ -6,9 +6,42 @@ from discord import Embed
 import discord
 from os import path
 # ----------------------------- Custom Libraries -----------------------------
+from logger import Logger
 from .file_io import read_file
 
 italian_month: list = ["", "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
+
+# ============================= Safe Send Message =============================
+async def safe_send_message(interaction: discord.Interaction, message: str = None, ephemeral: bool = True, embed: discord.Embed = None, logger: Logger = None, log_command: str = "SAFE-SEND") -> None:
+    """
+    Safely send a message to the interaction, handling webhook errors.
+    
+    Args:
+        interaction (discord.Interaction): The Discord interaction to respond to
+        message (str, optional): The message to send. Defaults to None.
+        ephemeral (bool, optional): Whether the message should be ephemeral. Defaults to True.
+        embed (discord.Embed, optional): The embed to send. Defaults to None.
+        logger: Logger instance for error logging. Defaults to None.
+        log_command (str, optional): Command name for logging. Defaults to "SAFE-SEND".
+    """
+    try:
+        if embed:
+            await interaction.followup.send(embed=embed, ephemeral=ephemeral)
+        else:
+            await interaction.followup.send(message, ephemeral=ephemeral)
+    except discord.NotFound:
+        # If webhook is invalid, try to send a new response
+        try:
+            if embed:
+                await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+            else:
+                await interaction.response.send_message(message, ephemeral=ephemeral)
+        except Exception as e:
+            # If even that fails, just log the error
+            if logger:
+                await logger.error(f'Impossibile inviare messaggio all\'utente: {e}', log_command)
+            else:
+                print(f'SAFE-SEND ERROR: Impossibile inviare messaggio all\'utente: {e}')
 
 # ============================= Format Datetime Now =============================
 def format_datetime_now() -> str:

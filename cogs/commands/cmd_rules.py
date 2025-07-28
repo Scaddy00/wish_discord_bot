@@ -8,7 +8,7 @@ from os import getenv
 from logger import Logger
 from config_manager import ConfigManager
 from cogs.verification import VerificationManager
-from utils.printing import create_embed_from_dict, load_embed_text, load_single_embed_text
+from utils.printing import create_embed_from_dict, load_embed_text, load_single_embed_text, safe_send_message
 
 class CmdRules(commands.GroupCog, name="rule"):
     def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, verification: VerificationManager):
@@ -80,7 +80,7 @@ class CmdRules(commands.GroupCog, name="rule"):
                     await verification_message.add_reaction(emoji)
                 except Exception as e:
                     # EXCEPTION
-                    error_message: str = f"Errore nell'aggiungere la reazione {rules_config['emoji']}\n{e}"
+                    error_message: str = f"Errore nell'aggiungere la reazione {rules_config['emoji']}: {e}"
                     await self.log.error(error_message, 'COMMAND - RULE - NEW')
                     await communication_channel.send(self.log.error_message(command='COMMAND - RULE - NEW', message=error_message))
                 
@@ -94,14 +94,14 @@ class CmdRules(commands.GroupCog, name="rule"):
                 self.config.add_rules(rules_config)
                 
                 # Send a message to the user
-                await interaction.followup.send('Messaggio creato con successo!', ephemeral=True)
+                await safe_send_message(interaction, 'Messaggio creato con successo!')
                 
                 # INFO Log that data was saved
                 await self.log.command('Dati salvati con successo', 'rule', 'NEW')
                 
             except Exception as e:
                 # EXCEPTION
-                error_message: str = f'Errore durante la fase di invio del messaggio con reazione e aggiunta della reazione.\n{e}'
+                error_message: str = f'Errore durante la fase di invio del messaggio con reazione e aggiunta della reazione: {e}'
                 await self.log.error(error_message, 'COMMAND - RULE - NEW')
                 await communication_channel.send(self.log.error_message(command='COMMAND - RULE - NEW', message=error_message))
             
@@ -116,7 +116,7 @@ class CmdRules(commands.GroupCog, name="rule"):
             await self.log.error(error_message, 'COMMAND - RULE - NEW')
         except Exception as e:
             # EXCEPTION
-            error_message: str = f'Errore durante la creazione di un nuovo messaggio.\n{e}'
+            error_message: str = f'Errore durante la creazione di un nuovo messaggio: {e}'
             await self.log.error(error_message, 'COMMAND - RULE - NEW')
             await communication_channel.send(self.log.error_message(command='COMMAND - RULE - NEW', message=error_message))
 
@@ -138,7 +138,7 @@ class CmdRules(commands.GroupCog, name="rule"):
             if not embed_id:
                 error_message: str = 'Nessun embed_id trovato nella configurazione. Esegui prima /rule new.'
                 await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
-                await interaction.followup.send(error_message, ephemeral=True)
+                await safe_send_message(interaction, error_message)
                 return
             
             # Find the message with the embed_id
@@ -146,7 +146,7 @@ class CmdRules(commands.GroupCog, name="rule"):
             if not rule_channel:
                 error_message: str = 'Canale delle regole non trovato nella configurazione.'
                 await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
-                await interaction.followup.send(error_message, ephemeral=True)
+                await safe_send_message(interaction, error_message)
                 return
             
             try:
@@ -155,12 +155,12 @@ class CmdRules(commands.GroupCog, name="rule"):
             except discord.NotFound:
                 error_message: str = f'Messaggio con ID {embed_id} non trovato nel canale delle regole.'
                 await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
-                await interaction.followup.send(error_message, ephemeral=True)
+                await safe_send_message(interaction, error_message)
                 return
             except Exception as e:
                 error_message: str = f'Errore nel recuperare il messaggio con ID {embed_id}: {e}'
                 await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
-                await interaction.followup.send(error_message, ephemeral=True)
+                await safe_send_message(interaction, error_message)
                 return
             
             # Load new embed content
@@ -173,11 +173,27 @@ class CmdRules(commands.GroupCog, name="rule"):
             
             # INFO Log successful reload
             await self.log.command('Embed delle regole ricaricato con successo', 'rule', 'RELOAD')
-            await interaction.followup.send('Embed delle regole ricaricato con successo!', ephemeral=True)
+            await safe_send_message(interaction, 'Embed delle regole ricaricato con successo!')
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
+            await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
+            await safe_send_message(interaction, f"❌ {error_message}")
             
         except Exception as e:
             # EXCEPTION
-            error_message: str = f'Errore durante il reload dell\'embed delle regole.\n{e}'
+            error_message: str = f'Errore durante il reload dell\'embed delle regole: {e}'
             await self.log.error(error_message, 'COMMAND - RULE - RELOAD')
-            await communication_channel.send(self.log.error_message(command='COMMAND - RULE - RELOAD', message=error_message))
-            await interaction.followup.send('Si è verificato un errore durante il reload dell\'embed.', ephemeral=True)
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - RULE - RELOAD', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - RULE - RELOAD')

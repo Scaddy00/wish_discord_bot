@@ -9,6 +9,7 @@ from logger import Logger
 from cogs.verification import VerificationManager
 from cogs.verification.verification_setup_view import SetupView
 from config_manager import ConfigManager
+from utils.printing import safe_send_message
 
 class CmdVerification(commands.GroupCog, name="verification"):
     def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, verification: VerificationManager):
@@ -35,15 +36,15 @@ class CmdVerification(commands.GroupCog, name="verification"):
 
             await view.wait()
             if not view.selection_complete:
-                await interaction.followup.send("Selezione non confermata o tempo scaduto.", ephemeral=True)
+                await safe_send_message(interaction, "Selezione non confermata o tempo scaduto.")
                 return
 
             # Send confirmation message with selected values
-            await interaction.followup.send(
+            await safe_send_message(
+                interaction,
                 f"✅ Timeout selezionato: **{view.timeout} secondi**\n"
                 f"🛑 Ruolo temporaneo: {view.temp_role.mention}\n"
-                f"✔️ Ruolo verificato: {view.verified_role.mention}",
-                ephemeral=True
+                f"✔️ Ruolo verificato: {view.verified_role.mention}"
             )
             
             timeout = view.timeout
@@ -58,13 +59,30 @@ class CmdVerification(commands.GroupCog, name="verification"):
             self.verification.update_timeout(timeout)
             
             # Respond with success
-            await interaction.followup.send('Dati salvati con successo!', ephemeral=True)
+            await safe_send_message(interaction, 'Dati salvati con successo!')
             
             # INFO Log that the operation is completed
             await self.log.command(f'Configurazione aggiornata con i seguenti dati: \n - timeout: {timeout} \n - temp_role_id: {temp_role_id} ({view.temp_role.name}) \n - verified_role_id: {verified_role_id} ({view.verified_role.name})', 'verification', 'setup')
             
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
+            await self.log.error(error_message, 'COMMAND - VERIFICATION - SETUP')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - VERIFICATION - SETUP')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
         except Exception as e:
             # EXCEPTION
-            error_message: str = f'Errore durante la creazione di un nuovo messaggio.\n{e}'
+            error_message: str = f'Errore durante la creazione di un nuovo messaggio: {e}'
             await self.log.error(error_message, 'COMMAND - VERIFICATION - SETUP')
-            await communication_channel.send(self.log.error_message(command='COMMAND - VERIFICATION - SETUP', message=error_message))
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - VERIFICATION - SETUP', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - VERIFICATION - SETUP')

@@ -8,7 +8,7 @@ from logger import Logger
 from config_manager import ConfigManager
 from cogs.twitch import TwitchApp
 from cogs.verification import VerificationManager
-from utils.printing import create_embed_from_dict
+from utils.printing import create_embed_from_dict, safe_send_message
 # ----------------------------- Modals -----------------------------
 from cogs.modals.config.exception_view import SetupView as ExceptionView
 from cogs.modals.config.admin_check_view import SetupView as AdminCheckView
@@ -42,14 +42,30 @@ class CmdConfig(commands.GroupCog, name="config"):
         
         try:
             await self._setup_standard_config(interaction)
-            await interaction.followup.send('✅ Canali configurati con successo!', ephemeral=True)
+            await safe_send_message(interaction, '✅ Canali configurati con successo!', logger=self.log, log_command='COMMAND - CONFIG - STANDARD')
             await self.log.command('Configurazione canali principali completata.', 'config', 'STANDARD')
             
-        except Exception as e:
-            error_message = f'Errore durante la configurazione dei canali.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - STANDARD')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - STANDARD')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - STANDARD')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - STANDARD')
+            
+        except Exception as e:
+            error_message = f'Errore durante la configurazione dei canali: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - STANDARD')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - STANDARD')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - STANDARD', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - STANDARD', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - STANDARD')
     
     @app_commands.command(name="retention", description="Configura il periodo di conservazione dei log")
     async def retention(self, interaction: discord.Interaction) -> None:
@@ -60,36 +76,87 @@ class CmdConfig(commands.GroupCog, name="config"):
         try:
             retention_days = await self._setup_retention_config(interaction)
             if retention_days != "Non selezionato":
-                await interaction.followup.send(f"✅ Periodo di conservazione aggiornato a {retention_days} giorni.", ephemeral=True)
+                await safe_send_message(interaction, f"✅ Periodo di conservazione aggiornato a {retention_days} giorni.", logger=self.log, log_command='COMMAND - CONFIG - RETENTION')
                 await self.log.command(f'Periodo di conservazione aggiornato a {retention_days} giorni.', 'config', 'RETENTION')
             else:
-                await interaction.followup.send("Nessun periodo selezionato.", ephemeral=True)
+                await safe_send_message(interaction, "Nessun periodo selezionato.", logger=self.log, log_command='COMMAND - CONFIG - RETENTION')
                 
-        except Exception as e:
-            error_message = f'Errore durante l\'aggiornamento del periodo di conservazione.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - RETENTION')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - RETENTION')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - RETENTION')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - RETENTION')
+            
+        except Exception as e:
+            error_message = f'Errore durante l\'aggiornamento del periodo di conservazione: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - RETENTION')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - RETENTION')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - RETENTION', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - RETENTION', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - RETENTION')
     
     @app_commands.command(name="message-logging", description="Configura la registrazione dei messaggi")
     async def message_logging(self, interaction: discord.Interaction) -> None:
         """Configura la registrazione dei messaggi e i canali di logging"""
         guild: discord.Guild = interaction.guild
-        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        
+        # Check if communication channel is configured
+        if not self.config.communication_channel:
+            await interaction.response.send_message(
+                "❌ Canale di comunicazione non configurato. Configura prima il canale di comunicazione con `/config standard`.",
+                ephemeral=True
+            )
+            return
+            
+        communication_channel = guild.get_channel(self.config.communication_channel)
+        if not communication_channel:
+            await interaction.response.send_message(
+                f"❌ Canale di comunicazione (ID: {self.config.communication_channel}) non trovato. Verifica la configurazione.",
+                ephemeral=True
+            )
+            return
         
         try:
             logging_enabled, logging_channels = await self._setup_message_logging_config(interaction)
             if logging_enabled != "Non selezionato":
-                await interaction.followup.send('✅ Configurazione logging completata!', ephemeral=True)
+                await safe_send_message(interaction, '✅ Configurazione logging completata!', logger=self.log, log_command='COMMAND - CONFIG - MESSAGE-LOGGING')
                 await self.log.command('Configurazione logging messaggi completata.', 'config', 'MESSAGE-LOGGING')
             else:
-                await interaction.followup.send("Configurazione non completata.", ephemeral=True)
+                await safe_send_message(interaction, "Configurazione non completata.", logger=self.log, log_command='COMMAND - CONFIG - MESSAGE-LOGGING')
+            
+        except discord.NotFound as e:
+            if "webhook" in str(e).lower():
+                error_message = f'Errore webhook: Il canale di comunicazione potrebbe non essere configurato correttamente.\n{e}'
+            else:
+                error_message = f'Risorsa non trovata: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - MESSAGE-LOGGING')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - MESSAGE-LOGGING')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - MESSAGE-LOGGING')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - MESSAGE-LOGGING')
             
         except Exception as e:
-            error_message = f'Errore durante la configurazione del logging.\n{e}'
+            error_message = f'Errore durante la configurazione del logging: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - MESSAGE-LOGGING')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - MESSAGE-LOGGING')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - MESSAGE-LOGGING', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - MESSAGE-LOGGING', message=error_message))
+                except Exception as comm_error:
+                    # If we can't send to communication channel, just log it
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - MESSAGE-LOGGING')
     
     # ============================= Role Management =============================
     @app_commands.command(name="set-not-verified-role", description="Configura il ruolo 'not_verified'")
@@ -109,16 +176,32 @@ class CmdConfig(commands.GroupCog, name="config"):
             
             if view.selected_role_id:
                 self.config.add_admin('roles', 'not_verified', view.selected_role_id)
-                await interaction.followup.send(f"✅ Ruolo 'not_verified' configurato: <@&{view.selected_role_id}>", ephemeral=True)
+                await safe_send_message(interaction, f"✅ Ruolo 'not_verified' configurato: <@&{view.selected_role_id}>", logger=self.log, log_command='COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
                 await self.log.command(f"Ruolo 'not_verified' configurato: {view.selected_role_id}", 'config', 'SET-NOT-VERIFIED-ROLE')
             else:
-                await interaction.followup.send("Nessun ruolo selezionato.", ephemeral=True)
+                await safe_send_message(interaction, "Nessun ruolo selezionato.", logger=self.log, log_command='COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
                 
-        except Exception as e:
-            error_message = f"Errore durante la configurazione del ruolo 'not_verified'.\n{e}"
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
+            
+        except Exception as e:
+            error_message = f"Errore durante la configurazione del ruolo 'not_verified': {e}"
+            await self.log.error(error_message, 'COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
     
     @app_commands.command(name="set-booster-role", description="Configura il ruolo booster del server")
     async def set_booster_role(self, interaction: discord.Interaction) -> None:
@@ -137,16 +220,32 @@ class CmdConfig(commands.GroupCog, name="config"):
             
             if view.selected_role_id:
                 self.config.add_admin('roles', 'server_booster', view.selected_role_id)
-                await interaction.followup.send(f"✅ Ruolo booster configurato: <@&{view.selected_role_id}>", ephemeral=True)
+                await safe_send_message(interaction, f"✅ Ruolo booster configurato: <@&{view.selected_role_id}>", logger=self.log, log_command='COMMAND - CONFIG - SET-BOOSTER-ROLE')
                 await self.log.command(f"Ruolo booster configurato: {view.selected_role_id}", 'config', 'SET-BOOSTER-ROLE')
             else:
-                await interaction.followup.send("Nessun ruolo selezionato.", ephemeral=True)
+                await safe_send_message(interaction, "Nessun ruolo selezionato.", logger=self.log, log_command='COMMAND - CONFIG - SET-BOOSTER-ROLE')
                 
-        except Exception as e:
-            error_message = f'Errore durante la configurazione del ruolo booster.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - SET-BOOSTER-ROLE')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - SET-BOOSTER-ROLE')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - SET-BOOSTER-ROLE')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - SET-BOOSTER-ROLE')
+            
+        except Exception as e:
+            error_message = f'Errore durante la configurazione del ruolo booster: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - SET-BOOSTER-ROLE')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - SET-BOOSTER-ROLE')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - SET-BOOSTER-ROLE', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - SET-BOOSTER-ROLE', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - SET-BOOSTER-ROLE')
     
     @app_commands.command(name="verification-setup", description="Configura il sistema di verifica")
     async def verification_setup(self, interaction: discord.Interaction) -> None:
@@ -157,23 +256,41 @@ class CmdConfig(commands.GroupCog, name="config"):
         try:
             verification_data = await self._setup_verification_config(interaction)
             if verification_data["timeout"] != "Non selezionato":
-                await interaction.followup.send(
+                await safe_send_message(
+                    interaction,
                     f"✅ Sistema di verifica configurato:\n"
                     f"⏱️ Timeout: {verification_data['timeout']}\n"
                     f"🛑 Ruolo temporaneo: {verification_data['temp_role']}\n"
                     f"✔️ Ruolo verificato: {verification_data['verified_role']}",
-                    ephemeral=True
+                    logger=self.log,
+                    log_command='COMMAND - CONFIG - VERIFICATION-SETUP'
                 )
                 
                 await self.log.command(f'Sistema di verifica configurato: timeout={verification_data["timeout"]}, temp_role={verification_data["temp_role"]}, verified_role={verification_data["verified_role"]}', 'config', 'VERIFICATION-SETUP')
             else:
-                await interaction.followup.send("Configurazione non completata.", ephemeral=True)
+                await safe_send_message(interaction, "Configurazione non completata.", logger=self.log, log_command='COMMAND - CONFIG - VERIFICATION-SETUP')
                 
-        except Exception as e:
-            error_message = f'Errore durante la configurazione del sistema di verifica.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - VERIFICATION-SETUP')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - VERIFICATION-SETUP')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - VERIFICATION-SETUP')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - VERIFICATION-SETUP')
+            
+        except Exception as e:
+            error_message = f'Errore durante la configurazione del sistema di verifica: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - VERIFICATION-SETUP')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - VERIFICATION-SETUP')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - VERIFICATION-SETUP', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - VERIFICATION-SETUP', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - VERIFICATION-SETUP')
     
     # ============================= Admin Management =============================
     @app_commands.command(name="admin-check", description="Visualizza i dati di configurazione admin")
@@ -209,15 +326,31 @@ class CmdConfig(commands.GroupCog, name="config"):
                 'color': self.bot.color
             }
             embed: discord.Embed = create_embed_from_dict(embed_data)
-            await interaction.followup.send(embed=embed)
+            await safe_send_message(interaction, embed=embed, logger=self.log, log_command='COMMAND - CONFIG - ADMIN-CHECK')
             
             await self.log.command(f'Visualizzati dati admin per: {selected_tag}', 'config', 'ADMIN-CHECK')
             
-        except Exception as e:
-            error_message = f'Errore durante la visualizzazione dei dati admin.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - ADMIN-CHECK')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - ADMIN-CHECK')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - ADMIN-CHECK')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - ADMIN-CHECK')
+            
+        except Exception as e:
+            error_message = f'Errore durante la visualizzazione dei dati admin: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - ADMIN-CHECK')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - ADMIN-CHECK')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - ADMIN-CHECK', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - ADMIN-CHECK', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - ADMIN-CHECK')
     
     @app_commands.command(name="admin-add", description="Aggiunge un ruolo o canale alla configurazione admin")
     async def admin_add(self, interaction: discord.Interaction) -> None:
@@ -237,26 +370,44 @@ class CmdConfig(commands.GroupCog, name="config"):
             tag: str = view.new_tag
             value: str = f'{view.values[0]}'
             
-            await interaction.followup.send(
+            await safe_send_message(
+                interaction,
                 f"Dati inseriti:\n"
                 f"📁 Sezione: {config_tag}\n"
                 f"🏷️ Tag: {tag}\n"
                 f"🆔 ID: {value}",
-                ephemeral=True
+                logger=self.log,
+                log_command='COMMAND - CONFIG - ADMIN-ADD'
             )
             
             self.config.add_admin(config_tag, tag, value)
             if config_tag == 'channels' and tag == 'communication':
                 self.config._load_communication_channel()
             
-            await interaction.followup.send('✅ Dati salvati con successo!', ephemeral=True)
+            await safe_send_message(interaction, '✅ Dati salvati con successo!', logger=self.log, log_command='COMMAND - CONFIG - ADMIN-ADD')
             await self.log.command(f'Nuovo elemento aggiunto a config/admin: {config_tag}/{tag}={value}', 'config', 'ADMIN-ADD')
             
-        except Exception as e:
-            error_message = f'Errore durante l\'aggiunta di dati admin.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - ADMIN-ADD')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - ADMIN-ADD')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - ADMIN-ADD')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - ADMIN-ADD')
+            
+        except Exception as e:
+            error_message = f'Errore durante l\'aggiunta di dati admin: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - ADMIN-ADD')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - ADMIN-ADD')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - ADMIN-ADD', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - ADMIN-ADD', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - ADMIN-ADD')
     
     @app_commands.command(name="exception-add", description="Aggiunge eccezioni per ruoli o canali")
     async def exception_add(self, interaction: discord.Interaction) -> None:
@@ -272,23 +423,41 @@ class CmdConfig(commands.GroupCog, name="config"):
             tag: str = view.tag
             values: list[int] = view.values
             
-            await interaction.followup.send(
+            await safe_send_message(
+                interaction,
                 f"Dati inseriti:\n"
                 f"🏷️ Tag: {tag}\n"
                 f"📋 Tipologia: {view.type}\n"
                 f"🆔 ID: {values}",
-                ephemeral=True
+                logger=self.log,
+                log_command='COMMAND - CONFIG - EXCEPTION-ADD'
             )
             
             self.config.add_exception(tag, values)
-            await interaction.followup.send('✅ Eccezione aggiunta con successo!', ephemeral=True)
+            await safe_send_message(interaction, '✅ Eccezione aggiunta con successo!', logger=self.log, log_command='COMMAND - CONFIG - EXCEPTION-ADD')
             await self.log.command(f'Eccezione aggiunta: tag={tag}, values={values}', 'config', 'EXCEPTION-ADD')
 
-        except Exception as e:
-            error_message = f'Errore durante l\'aggiunta dell\'eccezione.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - EXCEPTION-ADD')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - EXCEPTION-ADD')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - EXCEPTION-ADD')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - EXCEPTION-ADD')
+            
+        except Exception as e:
+            error_message = f'Errore durante l\'aggiunta dell\'eccezione: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - EXCEPTION-ADD')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - EXCEPTION-ADD')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - EXCEPTION-ADD', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - EXCEPTION-ADD', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - EXCEPTION-ADD')
     
     # ============================= Twitch Configuration =============================
     @app_commands.command(name="twitch-titles", description="Configura i titoli Twitch per stream on/off")
@@ -300,21 +469,39 @@ class CmdConfig(commands.GroupCog, name="config"):
         try:
             twitch_titles = await self._setup_twitch_titles_config(interaction)
             if twitch_titles["on"] != "Non selezionato":
-                await interaction.followup.send(
+                await safe_send_message(
+                    interaction,
                     f"✅ Titoli Twitch configurati:\n"
                     f"🟢 ON: {twitch_titles['on']}\n"
                     f"🔴 OFF: {twitch_titles['off']}",
-                    ephemeral=True
+                    logger=self.log,
+                    log_command='COMMAND - CONFIG - TWITCH-TITLES'
                 )
                 await self.log.command(f'Titoli Twitch configurati: ON="{twitch_titles["on"]}", OFF="{twitch_titles["off"]}"', 'config', 'TWITCH-TITLES')
             else:
-                await interaction.followup.send("Configurazione titoli non completata.", ephemeral=True)
+                await safe_send_message(interaction, "Configurazione titoli non completata.", logger=self.log, log_command='COMMAND - CONFIG - TWITCH-TITLES')
                 
-        except Exception as e:
-            error_message = f'Errore durante la configurazione dei titoli Twitch.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - TWITCH-TITLES')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - TWITCH-TITLES')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - TWITCH-TITLES')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - TWITCH-TITLES')
+            
+        except Exception as e:
+            error_message = f'Errore durante la configurazione dei titoli Twitch: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - TWITCH-TITLES')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - TWITCH-TITLES')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - TWITCH-TITLES', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - TWITCH-TITLES', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - TWITCH-TITLES')
     
     @app_commands.command(name="twitch-streamer", description="Configura il nome dello streamer Twitch")
     async def twitch_streamer(self, interaction: discord.Interaction) -> None:
@@ -325,19 +512,37 @@ class CmdConfig(commands.GroupCog, name="config"):
         try:
             streamer_name = await self._setup_twitch_streamer_config(interaction)
             if streamer_name != "Non selezionato":
-                await interaction.followup.send(
+                await safe_send_message(
+                    interaction,
                     f"✅ Streamer Twitch configurato: **{streamer_name}**",
-                    ephemeral=True
+                    logger=self.log,
+                    log_command='COMMAND - CONFIG - TWITCH-STREAMER'
                 )
                 await self.log.command(f'Streamer Twitch configurato: {streamer_name}', 'config', 'TWITCH-STREAMER')
             else:
-                await interaction.followup.send("Nome streamer non inserito.", ephemeral=True)
+                await safe_send_message(interaction, "Nome streamer non inserito.", logger=self.log, log_command='COMMAND - CONFIG - TWITCH-STREAMER')
                 
-        except Exception as e:
-            error_message = f'Errore durante la configurazione dello streamer Twitch.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - TWITCH-STREAMER')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - TWITCH-STREAMER')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - TWITCH-STREAMER')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - TWITCH-STREAMER')
+            
+        except Exception as e:
+            error_message = f'Errore durante la configurazione dello streamer Twitch: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - TWITCH-STREAMER')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - TWITCH-STREAMER')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - TWITCH-STREAMER', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - TWITCH-STREAMER', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - TWITCH-STREAMER')
     
     @app_commands.command(name="twitch-add-tag", description="Aggiunge un nuovo tag per le live e immagini")
     async def add_tag(self, interaction: discord.Interaction) -> None:
@@ -351,13 +556,16 @@ class CmdConfig(commands.GroupCog, name="config"):
             await modal.wait()
             
             if not getattr(modal, 'selection_complete', False):
-                await interaction.followup.send("Selezione non confermata o tempo scaduto.")
+                await safe_send_message(interaction, "Selezione non confermata o tempo scaduto.", logger=self.log, log_command='COMMAND - CONFIG - ADD-TAG')
                 return
             
-            await interaction.followup.send(
+            await safe_send_message(
+                interaction,
                 f'🏷️ Tag: {modal.tag}\n'
                 f'🌌 URL immagine: {modal.url}',
-                ephemeral=True
+                ephemeral=True,
+                logger=self.log,
+                log_command='COMMAND - CONFIG - ADD-TAG'
             )
             
             data: dict = {
@@ -366,13 +574,30 @@ class CmdConfig(commands.GroupCog, name="config"):
             }
             
             self.twitch_app.add_image(data)
-            await interaction.followup.send('✅ Tag aggiunto con successo!', ephemeral=True)
+            await safe_send_message(interaction, '✅ Tag aggiunto con successo!', logger=self.log, log_command='COMMAND - CONFIG - ADD-TAG')
             await self.log.command(f'Nuovo tag aggiunto: {data["tag"]} -> {data["url"]}', 'config', 'ADD-TAG')
             
-        except Exception as e:
-            error_message = f'Errore durante l\'aggiunta del tag.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - ADD-TAG')
-            await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - ADD-TAG', message=error_message))
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - ADD-TAG')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - ADD-TAG')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - ADD-TAG')
+            
+        except Exception as e:
+            error_message = f'Errore durante l\'aggiunta del tag: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - ADD-TAG')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - ADD-TAG')
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - ADD-TAG', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - ADD-TAG')
     
     @app_commands.command(name="twitch-reset-info", description="Reset delle informazioni dell'ultima stream")
     async def reset_info(self, interaction: discord.Interaction) -> None:
@@ -382,13 +607,30 @@ class CmdConfig(commands.GroupCog, name="config"):
         
         try:
             self.twitch_app.set_default_stream_info()
-            await interaction.response.send_message('✅ Informazioni della stream resettate!', ephemeral=True)
+            await safe_send_message(interaction, '✅ Informazioni della stream resettate!', logger=self.log, log_command='COMMAND - CONFIG - RESET-INFO')
             await self.log.command('Reset informazioni ultima stream completato', 'config', 'RESET-INFO')
 
-        except Exception as e:
-            error_message = f'Errore durante il reset delle informazioni stream.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - RESET-INFO')
-            await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - RESET-INFO', message=error_message))
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - RESET-INFO')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - RESET-INFO')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - RESET-INFO')
+            
+        except Exception as e:
+            error_message = f'Errore durante il reset delle informazioni stream: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - RESET-INFO')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - RESET-INFO')
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - RESET-INFO', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - RESET-INFO')
     
     # ============================= Setup Wizard =============================
     @app_commands.command(name="setup-iniziale", description="Esegui la configurazione iniziale completa del bot")
@@ -420,11 +662,27 @@ class CmdConfig(commands.GroupCog, name="config"):
             
             await self.log.command('Configurazione iniziale completata.', 'config', 'SETUP-INIZIALE')
             
-        except Exception as e:
-            error_message = f'Errore durante la configurazione iniziale.\n{e}'
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - CONFIG - SETUP-INIZIALE')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - SETUP-INIZIALE')
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - SETUP-INIZIALE')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - SETUP-INIZIALE')
+            
+        except Exception as e:
+            error_message = f'Errore durante la configurazione iniziale: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - SETUP-INIZIALE')
+            await safe_send_message(interaction, f"❌ {error_message}", logger=self.log, log_command='COMMAND - CONFIG - SETUP-INIZIALE')
+            
+            # Try to send error to communication channel if available
             if communication_channel:
-                await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - SETUP-INIZIALE', message=error_message))
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - SETUP-INIZIALE', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - SETUP-INIZIALE')
     
     # ============================= Private Setup Methods =============================
     async def _setup_standard_config(self, interaction: discord.Interaction) -> dict:
@@ -493,31 +751,59 @@ class CmdConfig(commands.GroupCog, name="config"):
     
     async def _setup_message_logging_config(self, interaction: discord.Interaction) -> tuple:
         """Setup message logging configuration"""
-        view_logging = MessageLoggingView(author=interaction.user)
-        await interaction.followup.send(
-            "Step 4/6: Configura la registrazione dei messaggi.",
-            view=view_logging,
-            ephemeral=True
-        )
-        await view_logging.wait()
-        
-        logging_enabled = "Non selezionato"
-        logging_channels = []
-        
-        if view_logging.selected_enabled is not None:
-            if view_logging.selected_enabled:
-                self.config.enable_message_logging()
-                logging_enabled = "Abilitata"
-            else:
-                self.config.disable_message_logging()
-                logging_enabled = "Disabilitata"
+        try:
+            view_logging = MessageLoggingView(author=interaction.user)
             
-            for channel_id in view_logging.selected_channels:
-                self.config.add_message_logging_channel(channel_id)
-                channel = interaction.guild.get_channel(channel_id)
-                logging_channels.append(channel.mention if channel else f"ID: {channel_id}")
-        
-        return logging_enabled, logging_channels
+            # Use response.send_message instead of followup.send to avoid webhook issues
+            await interaction.response.send_message(
+                "Step 4/6: Configura la registrazione dei messaggi.",
+                view=view_logging,
+                ephemeral=True
+            )
+            await view_logging.wait()
+            
+            logging_enabled = "Non selezionato"
+            logging_channels = []
+            
+            if view_logging.selected_enabled is not None:
+                if view_logging.selected_enabled:
+                    self.config.enable_message_logging()
+                    logging_enabled = "Abilitata"
+                else:
+                    self.config.disable_message_logging()
+                    logging_enabled = "Disabilitata"
+                
+                for channel_id in view_logging.selected_channels:
+                    try:
+                        self.config.add_message_logging_channel(channel_id)
+                        channel = interaction.guild.get_channel(channel_id)
+                        if channel:
+                            logging_channels.append(channel.mention)
+                        else:
+                            logging_channels.append(f"ID: {channel_id} (canale non trovato)")
+                    except Exception as e:
+                        # Log error but continue with other channels
+                        await self.log.error(f'Errore nell\'aggiunta del canale {channel_id}: {e}', 'CONFIG-MESSAGE-LOGGING')
+                        logging_channels.append(f"ID: {channel_id} (errore)")
+            
+            return logging_enabled, logging_channels
+            
+        except discord.NotFound as e:
+            if "webhook" in str(e).lower():
+                # If webhook is invalid, try to send a new response
+                try:
+                    await interaction.followup.send("⚠️ Errore webhook. Riprovando...", ephemeral=True)
+                except:
+                    # If even followup fails, try to send a new response
+                    try:
+                        await interaction.response.send_message("⚠️ Errore webhook. Riprovando...", ephemeral=True)
+                    except:
+                        pass
+            raise e
+        except Exception as e:
+            # Log the specific error
+            await self.log.error(f'Errore nella configurazione del message logging: {e}', 'CONFIG-MESSAGE-LOGGING')
+            raise e
     
     async def _setup_twitch_titles_config(self, interaction: discord.Interaction) -> dict:
         """Setup Twitch titles configuration"""

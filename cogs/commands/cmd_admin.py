@@ -9,6 +9,7 @@ import asyncio
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
+from utils.printing import safe_send_message
 
 class CmdAdmin(commands.GroupCog, name="admin"):
     def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
@@ -17,6 +18,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         self.log = log
         self.config = config
     
+    # ============================= Helper Methods =============================
     async def delete_messages(self, channel: discord.TextChannel) -> int:
         # Get the list of messages in channel
         messages: list[discord.Message] = []
@@ -65,10 +67,28 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             deleted: int = await self.delete_messages(channel)
             await interaction.channel.send(f'Sono stati cancellati **{deleted} messaggi**', delete_after=30)
             await self.log.command(f'Cancellati {deleted} messaggi dal seguente canale: {channel} ({channel.id})', 'admin', 'CLEAR')
-        except Exception as e:
-            error_message: str = f'Errore durante l\'eliminazione dei messaggi nel seguente canale: {channel} ({channel.id}).\n{e}'
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - CLEAR', message=error_message))
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except Exception as e:
+            error_message: str = f'Errore durante l\'eliminazione dei messaggi nel seguente canale: {channel} ({channel.id}): {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - CLEAR', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - CLEAR')
 
     @app_commands.command(name="clear-channel", description="Cancella tutti i messaggi nel canale indicato")
     async def clear_channel(self, interaction: discord.Interaction, channel: discord.TextChannel) -> None:
@@ -84,10 +104,28 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             await interaction.delete_original_response()
             await interaction.channel.send(f'Sono stati cancellati **{deleted} messaggi**', delete_after=30)
             await self.log.command(f'Cancellati {deleted} messaggi dal seguente canale: {channel} ({channel.id})', 'admin', 'CLEAR-CHANNEL')
-        except Exception as e:
-            error_message: str = f'Errore durante l\'eliminazione dei messaggi nel seguente canale: {channel} ({channel.id}).\n{e}'
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR-CHANNEL')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - CLEAR-CHANNEL', message=error_message))
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR-CHANNEL')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except Exception as e:
+            error_message: str = f'Errore durante l\'eliminazione dei messaggi nel seguente canale: {channel} ({channel.id}): {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR-CHANNEL')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - CLEAR-CHANNEL', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - CLEAR-CHANNEL')
 
     # ============================= Database Management =============================
     @app_commands.command(name="update-welcome-db", description="Aggiorna la tabella welcome del database")
@@ -114,12 +152,30 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     self.log.db.insert_welcome(timestamp, str(member.id), str(member))
                     added += 1
 
-            await interaction.followup.send(f'Sono stati aggiunti **{added} utenti** alla tabella delle benvenute.', ephemeral=True)
+            await safe_send_message(interaction, f'Sono stati aggiunti **{added} utenti** alla tabella delle benvenute.')
             await self.log.command(f'Aggiunti {added} utenti alla tabella welcome.', 'admin', 'UPDATE-WELCOME-DB')
-        except Exception as e:
-            error_message: str = f'Errore durante l\'aggiornamento del database delle benvenute.\n{e}'
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - ADMIN - UPDATE-WELCOME-DB')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - UPDATE-WELCOME-DB', message=error_message))
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - UPDATE-WELCOME-DB')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except Exception as e:
+            error_message: str = f'Errore durante l\'aggiornamento del database delle benvenute: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - UPDATE-WELCOME-DB')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - UPDATE-WELCOME-DB', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - UPDATE-WELCOME-DB')
 
     @app_commands.command(name="database-cleanup", description="Esegue manualmente la pulizia del database rimuovendo i record vecchi")
     async def database_cleanup(self, interaction: discord.Interaction) -> None:
@@ -136,13 +192,30 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             # Execute the database cleanup task manually
             await database_cleanup_cog.database_cleanup()
             
-            await interaction.followup.send('Pulizia del database eseguita con successo.', ephemeral=True)
+            await safe_send_message(interaction, 'Pulizia del database eseguita con successo.')
             await self.log.command('Pulizia del database eseguita manualmente con successo', 'admin', 'DATABASE-CLEANUP')
-        except Exception as e:
-            error_message: str = f'Errore durante l\'esecuzione manuale della pulizia del database.\n{e}'
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - ADMIN - DATABASE-CLEANUP')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - DATABASE-CLEANUP', message=error_message))
-            await interaction.followup.send('Errore durante la pulizia del database.', ephemeral=True)
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - DATABASE-CLEANUP')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except Exception as e:
+            error_message: str = f'Errore durante l\'esecuzione manuale della pulizia del database: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - DATABASE-CLEANUP')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - DATABASE-CLEANUP', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - DATABASE-CLEANUP')
 
     # ============================= Task Management =============================
     @app_commands.command(name="force-welcome", description="Forza l'esecuzione manuale della task di benvenuto")
@@ -160,13 +233,30 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             # Execute the welcome task manually
             await welcome_cog.execute_welcome_task()
             
-            await interaction.followup.send('Task di benvenuto eseguita con successo.', ephemeral=True)
+            await safe_send_message(interaction, 'Task di benvenuto eseguita con successo.')
             await self.log.command('Task di benvenuto eseguita manualmente con successo', 'admin', 'FORCE-WELCOME')
-        except Exception as e:
-            error_message: str = f'Errore durante l\'esecuzione forzata della task di benvenuto.\n{e}'
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - ADMIN - FORCE-WELCOME')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - FORCE-WELCOME', message=error_message))
-            await interaction.followup.send('Errore durante l\'esecuzione della task di benvenuto.', ephemeral=True)
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - FORCE-WELCOME')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except Exception as e:
+            error_message: str = f'Errore durante l\'esecuzione forzata della task di benvenuto: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - FORCE-WELCOME')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - FORCE-WELCOME', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - FORCE-WELCOME')
 
     @app_commands.command(name="send-weekly-report", description="Invia manualmente il report settimanale degli eventi Discord")
     async def send_weekly_report(self, interaction: discord.Interaction) -> None:
@@ -183,10 +273,27 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             # Execute the weekly report task manually
             await weekly_report_cog.weekly_report()
             
-            await interaction.followup.send('Report settimanale inviato con successo.', ephemeral=True)
+            await safe_send_message(interaction, 'Report settimanale inviato con successo.')
             await self.log.command('Report settimanale inviato manualmente con successo', 'admin', 'SEND-WEEKLY-REPORT')
-        except Exception as e:
-            error_message: str = f'Errore durante l\'invio manuale del report settimanale.\n{e}'
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
             await self.log.error(error_message, 'COMMAND - ADMIN - SEND-WEEKLY-REPORT')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - SEND-WEEKLY-REPORT', message=error_message))
-            await interaction.followup.send('Errore durante l\'invio del report settimanale.', ephemeral=True)
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - SEND-WEEKLY-REPORT')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except Exception as e:
+            error_message: str = f'Errore durante l\'invio manuale del report settimanale: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - SEND-WEEKLY-REPORT')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - SEND-WEEKLY-REPORT', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - SEND-WEEKLY-REPORT')
