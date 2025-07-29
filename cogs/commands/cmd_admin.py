@@ -22,7 +22,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
     async def delete_messages(self, channel) -> int:
         # Get the list of messages in channel
         messages: list[discord.Message] = []
-        async for msg in channel.history(limit=100, oldest_first=False):
+        async for msg in channel.history(limit=None, oldest_first=False):
             messages.append(msg)
         
         # Divide old messages from recent
@@ -55,7 +55,7 @@ class CmdAdmin(commands.GroupCog, name="admin"):
     async def delete_user_messages(self, channel, user: discord.Member) -> int:
         # Get the list of messages in channel
         messages: list[discord.Message] = []
-        async for msg in channel.history(limit=100, oldest_first=False):
+        async for msg in channel.history(limit=None, oldest_first=False):
             messages.append(msg)
         
         # Filter messages by user
@@ -246,6 +246,80 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - CLEAR-CHANNEL-USER', message=error_message))
                 except Exception as comm_error:
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - CLEAR-CHANNEL-USER')
+
+    @app_commands.command(name="clear-server-user", description="Cancella tutti i messaggi di un utente in tutto il server")
+    async def clear_server_user(self, interaction: discord.Interaction, user: discord.Member) -> None:
+        """Cancella tutti i messaggi di un utente specifico in tutti i canali del server"""
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel)
+        
+        await self.log.command(f'Pulizia messaggi dell\'utente {user} ({user.id}) in tutto il server', 'admin', 'CLEAR-SERVER-USER')
+        await interaction.response.send_message(f'Avvio la pulizia di tutti i messaggi di {user.mention} in tutto il server. Questa operazione potrebbe richiedere del tempo.', ephemeral=True)
+        
+        try:
+            total_deleted = 0
+            channels_processed = 0
+            
+            # Get all text channels, forum channels, stage channels, and voice channels
+            all_channels = [ch for ch in guild.channels if isinstance(ch, (discord.TextChannel, discord.ForumChannel, discord.StageChannel, discord.VoiceChannel))]
+            
+            for channel in all_channels:
+                try:
+                    # Check if bot has permissions to manage messages in this channel
+                    if not channel.permissions_for(guild.me).manage_messages:
+                        continue
+                    
+                    # Check if bot has permissions to read message history
+                    if not channel.permissions_for(guild.me).read_message_history:
+                        continue
+                    
+                    deleted = await self.delete_user_messages(channel, user)
+                    if deleted > 0:
+                        total_deleted += deleted
+                        channels_processed += 1
+                        
+                except discord.Forbidden:
+                    # Skip channels where bot doesn't have permissions
+                    continue
+                except Exception as e:
+                    # Log error but continue with other channels
+                    await self.log.error(f'Errore durante la pulizia del canale {channel.name} ({channel.id}): {e}', 'COMMAND - ADMIN - CLEAR-SERVER-USER')
+                    continue
+            
+            # Send final report
+            await interaction.delete_original_response()
+            await interaction.channel.send(
+                f'✅ **Pulizia completata!**\n'
+                f'**Utente:** {user.mention}\n'
+                f'**Messaggi cancellati:** {total_deleted}\n'
+                f'**Canali processati:** {channels_processed}\n'
+                f'**Canali totali:** {len(all_channels)}',
+                delete_after=60
+            )
+            
+            await self.log.command(f'Cancellati {total_deleted} messaggi dell\'utente {user} ({user.id}) da {channels_processed} canali su {len(all_channels)} totali', 'admin', 'CLEAR-SERVER-USER')
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR-SERVER-USER')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR-SERVER-USER')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+        except Exception as e:
+            error_message: str = f'Errore durante l\'eliminazione dei messaggi dell\'utente {user} ({user.id}) in tutto il server: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - CLEAR-SERVER-USER')
+            await safe_send_message(interaction, f"❌ {error_message}")
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - CLEAR-SERVER-USER', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - CLEAR-SERVER-USER')
 
     # ============================= Database Management =============================
     @app_commands.command(name="update-welcome-db", description="Aggiorna la tabella welcome del database")
