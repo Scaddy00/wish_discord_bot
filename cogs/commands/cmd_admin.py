@@ -20,73 +20,101 @@ class CmdAdmin(commands.GroupCog, name="admin"):
     
     # ============================= Helper Methods =============================
     async def delete_messages(self, channel) -> int:
-        # Get the list of messages in channel
-        messages: list[discord.Message] = []
-        async for msg in channel.history(limit=None, oldest_first=False):
-            messages.append(msg)
+        """Delete all messages in a channel using iterative approach"""
+        total_deleted = 0
         
-        # Divide old messages from recent
-        recent: list[discord.Message] = []
-        old: list[discord.Message] = []
-        for msg in messages:
-            # Check if message was sent more than 14th days ago
-            age: timedelta = datetime.now(timezone.utc) - msg.created_at
-            if age < timedelta(days=14):
-                recent.append(msg)
-            else:
-                old.append(msg)
+        while True:
+            # Get a batch of messages (up to 100)
+            messages = []
+            async for msg in channel.history(limit=100, oldest_first=False):
+                messages.append(msg)
+            
+            # If no messages found, we're done
+            if not messages:
+                break
+            
+            # Divide messages by age
+            recent = []
+            old = []
+            for msg in messages:
+                age = datetime.now(timezone.utc) - msg.created_at
+                if age < timedelta(days=14):
+                    recent.append(msg)
+                else:
+                    old.append(msg)
+            
+            # Delete recent messages in batch
+            if recent:
+                try:
+                    deleted = await channel.purge(check=lambda m: m.id in [x.id for x in recent])
+                    total_deleted += len(deleted)
+                except discord.HTTPException:
+                    pass
+            
+            # Delete old messages one by one
+            for msg in old:
+                try:
+                    await msg.delete()
+                    total_deleted += 1
+                    await asyncio.sleep(1)  # Rate limiting
+                except discord.HTTPException:
+                    pass
+            
+            # If we got less than 100 messages, we've reached the end
+            if len(messages) < 100:
+                break
         
-        # Delete recent messages
-        recent_deleted = await channel.purge(check=lambda m: m.id in [x.id for x in recent])
-        
-        # Delete old messages
-        old_deleted: int = 0
-        for msg in old:
-            try:
-                await msg.delete()
-                old_deleted += 1
-                await asyncio.sleep(1)
-            except discord.HTTPException:
-                pass
-        
-        # Return the number of messages deleted
-        return len(recent_deleted) + old_deleted
+        return total_deleted
 
     async def delete_user_messages(self, channel, user: discord.Member) -> int:
-        # Get the list of messages in channel
-        messages: list[discord.Message] = []
-        async for msg in channel.history(limit=None, oldest_first=False):
-            messages.append(msg)
+        """Delete all messages from a specific user in a channel using iterative approach"""
+        total_deleted = 0
         
-        # Filter messages by user
-        user_messages = [msg for msg in messages if msg.author.id == user.id]
+        while True:
+            # Get a batch of messages (up to 100)
+            messages = []
+            async for msg in channel.history(limit=100, oldest_first=False):
+                messages.append(msg)
+            
+            # If no messages found, we're done
+            if not messages:
+                break
+            
+            # Filter messages by user
+            user_messages = [msg for msg in messages if msg.author.id == user.id]
+            
+            # Divide messages by age
+            recent = []
+            old = []
+            for msg in user_messages:
+                age = datetime.now(timezone.utc) - msg.created_at
+                if age < timedelta(days=14):
+                    recent.append(msg)
+                else:
+                    old.append(msg)
+            
+            # Delete recent messages in batch
+            if recent:
+                try:
+                    deleted = await channel.purge(check=lambda m: m.id in [x.id for x in recent])
+                    total_deleted += len(deleted)
+                except discord.HTTPException:
+                    pass
+            
+            # Delete old messages one by one
+            for msg in old:
+                try:
+                    await msg.delete()
+                    total_deleted += 1
+                    await asyncio.sleep(1)  # Rate limiting
+                except discord.HTTPException:
+                    pass
+            
+            # If we got less than 100 messages, we've reached the end
+            if len(messages) < 100:
+                break
         
-        # Divide old messages from recent
-        recent: list[discord.Message] = []
-        old: list[discord.Message] = []
-        for msg in user_messages:
-            # Check if message was sent more than 14th days ago
-            age: timedelta = datetime.now(timezone.utc) - msg.created_at
-            if age < timedelta(days=14):
-                recent.append(msg)
-            else:
-                old.append(msg)
-        
-        # Delete recent messages
-        recent_deleted = await channel.purge(check=lambda m: m.id in [x.id for x in recent])
-        
-        # Delete old messages
-        old_deleted: int = 0
-        for msg in old:
-            try:
-                await msg.delete()
-                old_deleted += 1
-                await asyncio.sleep(1)
-            except discord.HTTPException:
-                pass
-        
-        # Return the number of messages deleted
-        return len(recent_deleted) + old_deleted
+        return total_deleted
         
     # ============================= Channel Management =============================
     @app_commands.command(name="clear", description="Cancella tutti i messaggi in questo canale")
