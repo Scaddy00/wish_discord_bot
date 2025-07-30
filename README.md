@@ -160,14 +160,14 @@ python main.py
 - `/twitch change-streamer` — Change the streamer name
 - `/twitch reset-info` — Reset last stream information
 
-### Information Commands
-- `/info dreamer` — Send embed with custom Dreamer request information
+### Embed Commands
+- `/embed dreamer-unico` — Send embed with Dreamer unique information
+- `/embed dreamer-sub` — Send embed with Dreamer subscription levels information
+- `/embed rule-new` — Create new rule messages with reactions
+- `/embed rule-reload` — Reload existing rule embed with updated content
 
 ### Utility Commands
 - `/utility emoji-to-unicode` — Get Unicode value of an emoji
-
-### Rule Commands
-- `/rule new` — Create new rule messages with reactions
 
 *And many more! Use `/help` or check the code for the full list.*
 

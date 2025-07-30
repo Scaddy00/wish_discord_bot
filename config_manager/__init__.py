@@ -10,16 +10,17 @@ from logger import Logger
 default_config = {
     'admin': {
         'roles': {
-            'server_booster': '',
-            'in_verification': '',
-            'verified': '',
-            'not_verified': ''
+            'server_booster': 0,
+            'in_verification': 0,
+            'verified': 0,
+            'not_verified': 0
         },
         'channels': {
-            'communication': '',
-            'report': '',
-            'rule': '',
-            'live': ''
+            'communication': 0,
+            'report': 0,
+            'rule': 0,
+            'live': 0,
+            'bye-bye': 0
         }
     },
     'roles': {},

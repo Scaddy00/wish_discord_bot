@@ -8,7 +8,7 @@ class BoosterRoleSelect(discord.ui.View):
     def __init__(self, author: discord.User):
         super().__init__(timeout=60)
         self.author = author
-        self.selected_role_id = None
+        self.selected_role_id: int = None
         self.add_item(self.BoosterRoleDropdown(self))
 
     class BoosterRoleDropdown(discord.ui.RoleSelect):
@@ -20,6 +20,6 @@ class BoosterRoleSelect(discord.ui.View):
                 await interaction.response.send_message("Questa selezione non ti appartiene.", ephemeral=True)
                 return
             selected_role = self.values[0]
-            self.parent_view.selected_role_id = str(selected_role.id)
+            self.parent_view.selected_role_id = selected_role.id
             await interaction.response.send_message(f"Ruolo booster selezionato: {selected_role.mention}", ephemeral=True)
             self.parent_view.stop() 

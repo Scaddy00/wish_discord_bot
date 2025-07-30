@@ -9,6 +9,7 @@ from logger import Logger
 from utils.roles import add_role, remove_role
 from config_manager import ConfigManager
 from cogs.tasks.welcome import create_welcome_message
+from utils.printing import create_embed
 
 class MemberEvents(commands.Cog):
     def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager):
@@ -64,11 +65,26 @@ class MemberEvents(commands.Cog):
         guild: discord.Guild = self.bot.get_guild(payload.guild_id)
         # Load bot communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
+        # Load bye-bye channel
+        bye_bye_channel = guild.get_channel(self.config.load_admin('channels', 'bye-bye'))
         # Get the user
         user: discord.User = payload.user
         
         try:
-            await communication_channel.send(f'COMUNICAZIONE -> L\'utente {user.mention} ha lasciato il server')
+            embed = create_embed(
+                title = '👋🏻 ByeBye!',
+                description = f'L\'utente {user.mention} ha lasciato il server',
+                color = self.bot.color,
+                fields = [
+                    {
+                        'name': 'Dati dell\'utente',
+                        'value': f'Nome: {user.name}\nID: {user.id}',
+                        'inline': False
+                    }
+                ],
+                thumbnail = user.avatar.url if user.avatar else ''
+            )
+            await bye_bye_channel.send(embed = embed)
             # INFO LOG
             await self.log.event(f'Utente uscito dal server, {user.name} ({user.id})', 'remove')
         except Exception as e:
