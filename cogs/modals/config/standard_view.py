@@ -8,22 +8,27 @@ from cogs.modals.confirm_button import ConfirmButton
 
 # ============================= Setup View =============================
 class SetupView(View):
-    def __init__(self, author: discord.User, tags: list[str], timeout = 180):
+    def __init__(self, author: discord.User, tags: list[str], timeout = 300):  # Aumentato timeout a 5 minuti
         super().__init__(timeout=timeout)
         self.author = author
         self.tags = tags
         self.values: dict = {}
         self.current_page = 0
         self.items_per_page = 4  # Massimo 4 elementi per pagina (5° riga per bottoni)
-        self.total_pages = (len(tags) + self.items_per_page - 1) // self.items_per_page
+        self.total_pages = max(1, (len(tags) + self.items_per_page - 1) // self.items_per_page)  # Minimo 1 pagina
         
         self.select_channels: list[ChannelSelect] = []
+        self.confirmed = False
         self.setup_current_page()
     
     def setup_current_page(self):
         """Configura gli elementi per la pagina corrente"""
         self.clear_items()
         self.select_channels.clear()
+        
+        # Se non ci sono tag, mostra un messaggio
+        if not self.tags:
+            return
         
         # Calcola gli elementi da mostrare nella pagina corrente
         start_idx = self.current_page * self.items_per_page
@@ -33,7 +38,7 @@ class SetupView(View):
         # Crea i ChannelSelect per la pagina corrente
         for i, tag in enumerate(current_tags):
             channel_select = ChannelSelect(
-                placeholder=f"Seleziona il canale per la sezione {tag}",
+                placeholder=f"Seleziona il canale per {tag}",
                 custom_id=f"select_channel_{tag}",
                 channel_types=[discord.ChannelType.text, discord.ChannelType.news],
                 row=i
@@ -91,16 +96,39 @@ class SetupView(View):
             self.add_item(page_indicator)
     
     async def select_channel_callback(self, interaction: discord.Interaction) -> None:
+        """Callback per la selezione dei canali"""
         if interaction.user.id != self.author.id:
             await interaction.response.send_message("Questa selezione non ti appartiene.", ephemeral=True)
             return
         
-        tag = interaction.data['custom_id'].split('_', 2)[-1]
-        selected_channel_id = int(interaction.data['values'][0])
-        self.values[tag] = selected_channel_id
-        await interaction.response.defer(ephemeral=True)
+        try:
+            # Estrai il tag dal custom_id
+            custom_id = interaction.data.get('custom_id', '')
+            if not custom_id.startswith('select_channel_'):
+                await interaction.response.send_message("Errore: ID non valido.", ephemeral=True)
+                return
+            
+            tag = custom_id.replace('select_channel_', '')
+            
+            # Estrai l'ID del canale selezionato
+            values = interaction.data.get('values', [])
+            if not values:
+                await interaction.response.send_message("Nessun canale selezionato.", ephemeral=True)
+                return
+            
+            selected_channel_id = int(values[0])
+            self.values[tag] = selected_channel_id
+            
+            # Defer silenzioso per evitare timeout senza mostrare messaggi
+            await interaction.response.defer(ephemeral=True)
+            
+        except (ValueError, KeyError, IndexError) as e:
+            await interaction.response.send_message(f"Errore durante la selezione: {str(e)}", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"Errore imprevisto: {str(e)}", ephemeral=True)
     
     async def prev_page_callback(self, interaction: discord.Interaction):
+        """Callback per il bottone Indietro"""
         if interaction.user.id != self.author.id:
             await interaction.response.send_message("Solo l'autore può navigare.", ephemeral=True)
             return
@@ -113,6 +141,7 @@ class SetupView(View):
             await interaction.response.send_message("Sei già alla prima pagina.", ephemeral=True)
     
     async def next_page_callback(self, interaction: discord.Interaction):
+        """Callback per il bottone Avanti"""
         if interaction.user.id != self.author.id:
             await interaction.response.send_message("Solo l'autore può navigare.", ephemeral=True)
             return
@@ -123,4 +152,9 @@ class SetupView(View):
             await interaction.response.edit_message(view=self)
         else:
             await interaction.response.send_message("Sei già all'ultima pagina.", ephemeral=True)
+    
+    async def on_timeout(self):
+        """Gestisce il timeout della view"""
+        # La view si ferma automaticamente al timeout
+        pass
         

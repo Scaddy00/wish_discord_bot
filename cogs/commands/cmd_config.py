@@ -41,9 +41,16 @@ class CmdConfig(commands.GroupCog, name="config"):
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
         try:
-            await self._setup_standard_config(interaction)
-            await safe_send_message(interaction, '✅ Canali configurati con successo!', logger=self.log, log_command='COMMAND - CONFIG - STANDARD')
-            await self.log.command('Configurazione canali principali completata.', 'config', 'STANDARD')
+            # Defer la risposta immediatamente per evitare timeout
+            await interaction.response.defer(ephemeral=True)
+            
+            selected_channels = await self._setup_standard_config(interaction)
+            
+            if selected_channels:
+                await safe_send_message(interaction, '✅ Canali configurati con successo!', logger=self.log, log_command='COMMAND - CONFIG - STANDARD')
+                await self.log.command('Configurazione canali principali completata.', 'config', 'STANDARD')
+            else:
+                await safe_send_message(interaction, '⚠️ Configurazione non completata o annullata.', logger=self.log, log_command='COMMAND - CONFIG - STANDARD')
             
         except discord.NotFound as e:
             error_message = f'Risorsa non trovata: {e}'
@@ -687,26 +694,61 @@ class CmdConfig(commands.GroupCog, name="config"):
     # ============================= Private Setup Methods =============================
     async def _setup_standard_config(self, interaction: discord.Interaction) -> dict:
         """Setup standard configuration (channels)"""
-        admin_channels: dict = self.config.load_admin('channels')
-        view_standard = StandardView(
-            author=interaction.user,
-            tags=admin_channels.keys()
-        )
-        await interaction.followup.send(
-            "Step 1/6: Seleziona i canali principali.",
-            view=view_standard,
-            ephemeral=True
-        )
-        await view_standard.wait()
-        
-        selected_channels = {}
-        for tag, channel_id in view_standard.values.items():
-            self.config.add_admin('channels', tag, channel_id)
-            if tag == 'communication':
-                self.config._load_communication_channel()
-            selected_channels[tag] = channel_id
-        
-        return selected_channels
+        try:
+            admin_channels: dict = self.config.load_admin('channels')
+            
+            # Controlla se ci sono canali da configurare
+            if not admin_channels:
+                await interaction.followup.send(
+                    "❌ Nessun canale da configurare trovato. Verifica la configurazione admin.",
+                    ephemeral=True
+                )
+                return {}
+            
+            view_standard = StandardView(
+                author=interaction.user,
+                tags=list(admin_channels.keys())
+            )
+            
+            await interaction.followup.send(
+                "Step 1/6: Seleziona i canali principali.\n\n"
+                "💡 **Istruzioni:**\n"
+                "• Seleziona un canale per ogni sezione\n"
+                "• Usa i bottoni di navigazione se ci sono più pagine\n"
+                "• Clicca 'Conferma' quando hai finito",
+                view=view_standard,
+                ephemeral=True
+            )
+            
+            # Aspetta che la view sia completata o timeout
+            await view_standard.wait()
+            
+            selected_channels = {}
+            if hasattr(view_standard, 'confirmed') and view_standard.confirmed:
+                for tag, channel_id in view_standard.values.items():
+                    self.config.add_admin('channels', tag, channel_id)
+                    if tag == 'communication':
+                        self.config._load_communication_channel()
+                    selected_channels[tag] = channel_id
+                
+                await interaction.followup.send(
+                    f"✅ Configurazione completata! Configurati {len(selected_channels)} canali.",
+                    ephemeral=True
+                )
+            else:
+                await interaction.followup.send(
+                    "⏰ Timeout o configurazione annullata.",
+                    ephemeral=True
+                )
+            
+            return selected_channels
+            
+        except Exception as e:
+            await interaction.followup.send(
+                f"❌ Errore durante la configurazione: {str(e)}",
+                ephemeral=True
+            )
+            return {}
     
     async def _setup_verification_config(self, interaction: discord.Interaction) -> dict:
         """Setup verification configuration"""
