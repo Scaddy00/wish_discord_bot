@@ -169,6 +169,9 @@ python main.py
 ### Utility Commands
 - `/utility emoji-to-unicode` — Get Unicode value of an emoji
 
+### Information Commands
+- `/info user` - Display detailed user information
+
 *And many more! Use `/help` or check the code for the full list.*
 
 ---
@@ -224,6 +227,8 @@ wish_discord_bot/
 - **Modular Architecture**: Easy to extend with new cogs and features
 - **Configuration Management**: JSON-based configuration with environment variables
 - **Error Handling**: Robust error handling with logging and notifications
+- **User Information System**: Enhanced user data display with detailed Discord User object information
+- **Real-time Interaction Handling**: Proper Discord interaction management with timeout handling
 
 ---
 

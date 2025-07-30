@@ -1,8 +1,8 @@
+
 # ----------------------------- Imported Libraries -----------------------------
 import discord
 from discord.ext import commands
 from discord import app_commands
-from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from utils.printing import create_embed_from_dict, load_single_embed_text, load_embed_text, safe_send_message
