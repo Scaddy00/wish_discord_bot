@@ -9,7 +9,7 @@ import asyncio
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
-from utils.printing import safe_send_message
+from utils.printing import safe_send_message, create_embed
 
 class CmdAdmin(commands.GroupCog, name="admin"):
     def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
@@ -17,7 +17,69 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         self.bot = bot
         self.log = log
         self.config = config
+        
+        # Dictionary containing all commands and their descriptions
+        self.commands_info = {
+            "clear": "Cancella tutti i messaggi in questo canale",
+            "clear-user": "Cancella tutti i messaggi di un utente specifico in questo canale",
+            "clear-channel": "Cancella tutti i messaggi nel canale indicato",
+            "clear-channel-user": "Cancella tutti i messaggi di un utente specifico nel canale indicato",
+            "clear-server-user": "Cancella tutti i messaggi di un utente in tutto il server",
+            "update-welcome-db": "Aggiorna la tabella welcome del database",
+            "database-cleanup": "Esegue manualmente la pulizia del database rimuovendo i record vecchi",
+            "force-welcome": "Forza l'esecuzione manuale della task di benvenuto",
+            "send-weekly-report": "Invia manualmente il report settimanale degli eventi Discord"
+        }
     
+    # ============================= Help Command =============================
+    @app_commands.command(name="help", description="Mostra l'elenco dei comandi admin disponibili")
+    async def help(self, interaction: discord.Interaction) -> None:
+        """Mostra un embed con tutti i comandi admin e le loro descrizioni"""
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        
+        try:
+            # Create embed with commands info
+            embed = create_embed(
+                title="🛠️ Comandi Admin",
+                description="Elenco di tutti i comandi admin disponibili",
+                color=self.bot.color,
+                fields=[]
+            )
+            
+            # Add each command to the embed
+            for command_name, description in self.commands_info.items():
+                embed.add_field(
+                    name=f"`/admin {command_name}`",
+                    value=description,
+                    inline=False
+                )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await self.log.command('Visualizzato help comandi admin', 'admin', 'HELP')
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+        except Exception as e:
+            error_message: str = f'Errore durante la visualizzazione dell\'help: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - HELP', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - HELP')
+
     # ============================= Helper Methods =============================
     async def delete_messages(self, channel) -> int:
         """Delete all messages in a channel using iterative approach"""

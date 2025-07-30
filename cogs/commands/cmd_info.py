@@ -14,6 +14,60 @@ class CmdInfo(commands.GroupCog, name="info"):
         self.bot = bot
         self.log = log
         self.config = config
+        
+        # Dictionary containing all commands and their descriptions
+        self.commands_info = {
+            "user": "Invia un embed con le info di un utente"
+        }
+    
+    # ============================= Help Command =============================
+    @app_commands.command(name="help", description="Mostra l'elenco dei comandi info disponibili")
+    async def help(self, interaction: discord.Interaction) -> None:
+        """Mostra un embed con tutti i comandi info e le loro descrizioni"""
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        
+        try:
+            # Create embed with commands info
+            embed = create_embed(
+                title="ℹ️ Comandi Info",
+                description="Elenco di tutti i comandi per le informazioni",
+                color=self.bot.color,
+                fields=[]
+            )
+            
+            # Add each command to the embed
+            for command_name, description in self.commands_info.items():
+                embed.add_field(
+                    name=f"`/info {command_name}`",
+                    value=description,
+                    inline=False
+                )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await self.log.command('Visualizzato help comandi info', 'info', 'HELP')
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
+            await self.log.error(error_message, 'COMMAND - INFO - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - INFO - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+        except Exception as e:
+            error_message: str = f'Errore durante la visualizzazione dell\'help: {e}'
+            await self.log.error(error_message, 'COMMAND - INFO - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - INFO - HELP', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - INFO - HELP')
 
     @app_commands.command(name="user", description="Invia un embed con le info di un utente")
     async def user(self, interaction: discord.Interaction, user_id: str) -> None:

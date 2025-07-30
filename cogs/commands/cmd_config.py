@@ -32,6 +32,73 @@ class CmdConfig(commands.GroupCog, name="config"):
         self.config = config
         self.twitch_app = twitch_app
         self.verification = verification
+        
+        # Dictionary containing all commands and their descriptions
+        self.commands_info = {
+            "standard": "Configura i canali principali del bot",
+            "retention": "Configura il periodo di conservazione dei log",
+            "message-logging": "Configura la registrazione dei messaggi",
+            "set-not-verified-role": "Configura il ruolo 'not_verified'",
+            "set-booster-role": "Configura il ruolo booster del server",
+            "verification-setup": "Configura il sistema di verifica",
+            "admin-check": "Visualizza i dati di configurazione admin",
+            "admin-add": "Aggiunge un ruolo o canale alla configurazione admin",
+            "exception-add": "Aggiunge eccezioni per ruoli o canali",
+            "twitch-titles": "Configura i titoli Twitch per stream on/off",
+            "twitch-streamer": "Configura il nome dello streamer Twitch",
+            "twitch-add-tag": "Aggiunge un nuovo tag per le live e immagini",
+            "twitch-reset-info": "Reset delle informazioni dell'ultima stream",
+            "setup-iniziale": "Esegui la configurazione iniziale completa del bot"
+        }
+    
+    # ============================= Help Command =============================
+    @app_commands.command(name="help", description="Mostra l'elenco dei comandi config disponibili")
+    async def help(self, interaction: discord.Interaction) -> None:
+        """Mostra un embed con tutti i comandi config e le loro descrizioni"""
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        
+        try:
+            # Create embed with commands info
+            embed = create_embed_from_dict({
+                'title': '⚙️ Comandi Config',
+                'description': 'Elenco di tutti i comandi di configurazione disponibili',
+                'color': self.bot.color,
+                'fields': []
+            })
+            
+            # Add each command to the embed
+            for command_name, description in self.commands_info.items():
+                embed.add_field(
+                    name=f"`/config {command_name}`",
+                    value=description,
+                    inline=False
+                )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await self.log.command('Visualizzato help comandi config', 'config', 'HELP')
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+        except Exception as e:
+            error_message: str = f'Errore durante la visualizzazione dell\'help: {e}'
+            await self.log.error(error_message, 'COMMAND - CONFIG - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - CONFIG - HELP', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - HELP')
     
     # ============================= Core Configuration =============================
     @app_commands.command(name="standard", description="Configura i canali principali del bot")

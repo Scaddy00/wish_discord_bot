@@ -7,7 +7,7 @@ from os import getenv
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
-from utils.printing import safe_send_message
+from utils.printing import safe_send_message, create_embed
 
 class CmdUtility(commands.GroupCog, name="utility"):
     def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
@@ -15,6 +15,60 @@ class CmdUtility(commands.GroupCog, name="utility"):
         self.bot = bot
         self.log = log
         self.config = config
+        
+        # Dictionary containing all commands and their descriptions
+        self.commands_info = {
+            "emoji-to-unicode": "Ottiene il valore unicode di un emoji"
+        }
+    
+    # ============================= Help Command =============================
+    @app_commands.command(name="help", description="Mostra l'elenco dei comandi utility disponibili")
+    async def help(self, interaction: discord.Interaction) -> None:
+        """Mostra un embed con tutti i comandi utility e le loro descrizioni"""
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        
+        try:
+            # Create embed with commands info
+            embed = create_embed(
+                title="🔧 Comandi Utility",
+                description="Elenco di tutti i comandi utility disponibili",
+                color=self.bot.color,
+                fields=[]
+            )
+            
+            # Add each command to the embed
+            for command_name, description in self.commands_info.items():
+                embed.add_field(
+                    name=f"`/utility {command_name}`",
+                    value=description,
+                    inline=False
+                )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await self.log.command('Visualizzato help comandi utility', 'utility', 'HELP')
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
+            await self.log.error(error_message, 'COMMAND - UTILITY - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - UTILITY - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+        except Exception as e:
+            error_message: str = f'Errore durante la visualizzazione dell\'help: {e}'
+            await self.log.error(error_message, 'COMMAND - UTILITY - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - UTILITY - HELP', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - UTILITY - HELP')
     
     # ============================= Emoji Tools =============================
     @app_commands.command(name="emoji-to-unicode", description="Ottiene il valore unicode di un emoji")

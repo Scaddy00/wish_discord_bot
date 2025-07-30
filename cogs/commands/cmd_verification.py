@@ -9,7 +9,7 @@ from logger import Logger
 from cogs.verification import VerificationManager
 from cogs.verification.verification_setup_view import SetupView
 from config_manager import ConfigManager
-from utils.printing import safe_send_message
+from utils.printing import safe_send_message, create_embed
 
 class CmdVerification(commands.GroupCog, name="verification"):
     def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, verification: VerificationManager):
@@ -18,6 +18,60 @@ class CmdVerification(commands.GroupCog, name="verification"):
         self.log = log
         self.config = config
         self.verification = verification
+        
+        # Dictionary containing all commands and their descriptions
+        self.commands_info = {
+            "setup": "Inserisce i dati necessari per il sistema di verifica"
+        }
+    
+    # ============================= Help Command =============================
+    @app_commands.command(name="help", description="Mostra l'elenco dei comandi verification disponibili")
+    async def help(self, interaction: discord.Interaction) -> None:
+        """Mostra un embed con tutti i comandi verification e le loro descrizioni"""
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
+        
+        try:
+            # Create embed with commands info
+            embed = create_embed(
+                title="✅ Comandi Verification",
+                description="Elenco di tutti i comandi per la gestione della verifica",
+                color=self.bot.color,
+                fields=[]
+            )
+            
+            # Add each command to the embed
+            for command_name, description in self.commands_info.items():
+                embed.add_field(
+                    name=f"`/verification {command_name}`",
+                    value=description,
+                    inline=False
+                )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await self.log.command('Visualizzato help comandi verification', 'verification', 'HELP')
+            
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
+            await self.log.error(error_message, 'COMMAND - VERIFICATION - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+        except discord.Forbidden as e:
+            error_message = f'Permessi insufficienti: {e}'
+            await self.log.error(error_message, 'COMMAND - VERIFICATION - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+        except Exception as e:
+            error_message: str = f'Errore durante la visualizzazione dell\'help: {e}'
+            await self.log.error(error_message, 'COMMAND - VERIFICATION - HELP')
+            await interaction.response.send_message(f"❌ {error_message}", ephemeral=True)
+            
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - VERIFICATION - HELP', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - VERIFICATION - HELP')
         
     # ============================= Verification Setup =============================
     @app_commands.command(name="setup", description="Inserisce i dati necessari per il sistema di verifica")
