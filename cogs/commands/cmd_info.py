@@ -93,20 +93,26 @@ class CmdInfo(commands.GroupCog, name="info"):
             embed = create_embed(
                 title = f"Info utente {user.name}",
                 description = f"Informazioni dettagliate sull'utente {user.mention}",
-                color = self.bot.color,
+                color = f"#{user.accent_color.value:06x}" if user.accent_color else self.bot.color,
                 fields = [
                     {
                         'name': '📋 Dati principali',
                         'value': f'**Nome:** {user.name}\n**ID:** {user.id}\n**Tipo:** {user_type}\n**Menzione:** {user.mention}',
-                        'inline': True
+                        'inline': False
                     },
                     {
                         'name': '📅 Informazioni account',
                         'value': f'**Creato il:** {created_date}\n**Avatar:** {avatar_info}\n**Colore accent:** {accent_color}',
-                        'inline': True
+                        'inline': False
+                    },
+                    {
+                        'name': '🏳️ Flags',
+                        'value': self._get_user_flags_info(user),
+                        'inline': False
                     }
                 ],
-                thumbnail = user.avatar.url if user.avatar else user.default_avatar.url
+                thumbnail = user.avatar.url if user.avatar else user.default_avatar.url,
+                image = user.banner.url if user.banner else None
             )
             
             await interaction.response.send_message(embed=embed)
@@ -116,3 +122,32 @@ class CmdInfo(commands.GroupCog, name="info"):
         except discord.HTTPException as e:
             await interaction.response.send_message(f"❌ Errore durante la richiesta: {e}", ephemeral=True)
             await self.log.error(f"Errore durante la richiesta: {e}", "COMMAND - INFO - USER")
+    
+    def _get_user_flags_info(self, user: discord.User) -> str:
+        """Restituisce le flag dell'utente con emoji e nomi in italiano"""
+        flags_mapping = {
+            'staff': ('👨‍💼', 'Staff Discord'),
+            'partner': ('��', 'Partner Discord'),
+            'bug_hunter': ('🐛', 'Bug Hunter'),
+            'bug_hunter_gold': ('��', 'Bug Hunter Gold'),
+            'early_supporter': ('🎗️', 'Early Supporter'),
+            'team_user': ('👥', 'Team User'),
+            'system': ('⚙️', 'Sistema'),
+            'hypesquad': ('🏠', 'HypeSquad'),
+            'hypesquad_bravery': ('💙', 'HypeSquad Bravery'),
+            'hypesquad_brilliance': ('��', 'HypeSquad Brilliance'),
+            'hypesquad_balance': ('💜', 'HypeSquad Balance'),
+            'verified_bot': ('✅', 'Bot Verificato'),
+            'verified_bot_developer': ('🤖', 'Sviluppatore Bot'),
+            'discord_certified_moderator': ('🛡️', 'Moderatore Certificato'),
+            'bot_http_interactions': ('🔗', 'Bot HTTP'),
+            'active_developer': ('💻', 'Active Developer')
+        }
+        
+        flags_info = []
+        for flag in user.public_flags.all():
+            if flag.name in flags_mapping:
+                emoji, name = flags_mapping[flag.name]
+                flags_info.append(f"{emoji} {name}")
+        
+        return "\n".join(flags_info) if flags_info else "❌ Nessun flag speciale"
