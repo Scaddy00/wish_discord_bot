@@ -127,15 +127,15 @@ class CmdInfo(commands.GroupCog, name="info"):
         """Restituisce le flag dell'utente con emoji e nomi in italiano"""
         flags_mapping = {
             'staff': ('👨‍💼', 'Staff Discord'),
-            'partner': ('��', 'Partner Discord'),
+            'partner': ('🤝', 'Partner Discord'),
             'bug_hunter': ('🐛', 'Bug Hunter'),
-            'bug_hunter_gold': ('��', 'Bug Hunter Gold'),
+            'bug_hunter_gold': ('🏆', 'Bug Hunter Gold'),
             'early_supporter': ('🎗️', 'Early Supporter'),
             'team_user': ('👥', 'Team User'),
             'system': ('⚙️', 'Sistema'),
             'hypesquad': ('🏠', 'HypeSquad'),
             'hypesquad_bravery': ('💙', 'HypeSquad Bravery'),
-            'hypesquad_brilliance': ('��', 'HypeSquad Brilliance'),
+            'hypesquad_brilliance': ('💛', 'HypeSquad Brilliance'),
             'hypesquad_balance': ('💜', 'HypeSquad Balance'),
             'verified_bot': ('✅', 'Bot Verificato'),
             'verified_bot_developer': ('🤖', 'Sviluppatore Bot'),
