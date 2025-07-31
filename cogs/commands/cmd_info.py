@@ -86,6 +86,7 @@ class CmdInfo(commands.GroupCog, name="info"):
             
             # Informazioni sull'avatar
             avatar_info = "✅ Avatar personalizzato" if user.avatar else "❌ Avatar di default"
+            banner_info = "✅ Banner personalizzato" if user.banner else "❌ Nessun banner"
             
             # Colore accent (se disponibile)
             accent_color = f"#{user.accent_color.value:06x}" if user.accent_color else "Non impostato"
@@ -102,7 +103,7 @@ class CmdInfo(commands.GroupCog, name="info"):
                     },
                     {
                         'name': '📅 Informazioni account',
-                        'value': f'**Creato il:** {created_date}\n**Avatar:** {avatar_info}\n**Colore accent:** {accent_color}',
+                        'value': f'**Creato il:** {created_date}\n**Avatar:** {avatar_info}\n**Banner:** {banner_info}\n**Colore accent:** {accent_color}',
                         'inline': False
                     },
                     {
