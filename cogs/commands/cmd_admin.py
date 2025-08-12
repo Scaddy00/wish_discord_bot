@@ -9,7 +9,7 @@ import asyncio
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
-from utils.printing import safe_send_message, create_embed
+from utils.printing import safe_send_message, create_embed, load_single_embed_text, create_embed_from_dict
 
 class CmdAdmin(commands.GroupCog, name="admin"):
     def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
@@ -28,7 +28,8 @@ class CmdAdmin(commands.GroupCog, name="admin"):
             "update-welcome-db": "Aggiorna la tabella welcome del database",
             "database-cleanup": "Esegue manualmente la pulizia del database rimuovendo i record vecchi",
             "force-welcome": "Forza l'esecuzione manuale della task di benvenuto",
-            "send-weekly-report": "Invia manualmente il report settimanale degli eventi Discord"
+            "send-weekly-report": "Invia manualmente il report settimanale degli eventi Discord",
+            "dm-welcome": "Invia un DM di benvenuto (scegli tra singolo utente o tutti i 'not_verified')"
         }
     
     # ============================= Help Command =============================
@@ -581,3 +582,167 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - SEND-WEEKLY-REPORT', message=error_message))
                 except Exception as comm_error:
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - SEND-WEEKLY-REPORT')
+    
+    # ============================= Send Messages =============================
+    @app_commands.command(name="dm-welcome", description="Invia un DM di benvenuto: scegli tra singolo utente o tutti i 'not_verified'")
+    async def dm_welcome(self, interaction: discord.Interaction) -> None:
+        """Mostra una view per scegliere la modalità (utente singolo o bulk) e invia i DM"""
+        guild: discord.Guild = interaction.guild
+        communication_channel = guild.get_channel(self.config.communication_channel)
+        await self.log.command('Avvio selezione modalità per invio DM di benvenuto', 'admin', 'DM-WELCOME')
+        await interaction.response.defer(ephemeral=True)
+
+        # Import here to avoid circular imports at module load
+        from cogs.modals.dm_welcome_mode_view import DmWelcomeModeView
+        from cogs.modals.user_view import UserView
+
+        # Ask for mode
+        mode_view = DmWelcomeModeView(author=interaction.user)
+        await interaction.followup.send("Scegli la modalità di invio DM di benvenuto:", view=mode_view, ephemeral=True)
+        await mode_view.wait()
+
+        if not mode_view.confirmed or not mode_view.selected_mode:
+            await safe_send_message(interaction, "Selezione modalità non confermata.")
+            return
+
+        # Handle single user mode
+        if mode_view.selected_mode == "user":
+            user_view = UserView(author=interaction.user, min_values=1, max_values=1)
+            await interaction.followup.send("Seleziona l'utente a cui inviare il DM di benvenuto:", view=user_view, ephemeral=True)
+            await user_view.wait()
+
+            if not user_view.confirmed or user_view.selected_user_id is None:
+                await safe_send_message(interaction, "Selezione utente non confermata o nessun utente selezionato.")
+                return
+
+            user = guild.get_member(user_view.selected_user_id) or await self.bot.fetch_user(user_view.selected_user_id)
+            if user is None:
+                await safe_send_message(interaction, "❌ Utente non trovato.")
+                return
+
+            try:
+                message_content: dict = await load_single_embed_text(guild, 'welcome-user', self.config)
+                message: discord.Embed = create_embed_from_dict(message_content)
+                await user.send(embed=message)
+                mention = user.mention if isinstance(user, discord.Member) else f"<@{user.id}>"
+                name = getattr(user, 'name', str(user))
+                await safe_send_message(interaction, f'DM di benvenuto inviato correttamente a {mention}.')
+                await self.log.command(f'DM di benvenuto inviato a {name} ({user.id})', 'admin', 'DM-WELCOME')
+
+            except discord.Forbidden:
+                uname = getattr(user, 'name', str(user))
+                error_message: str = ("Errore durante l'invio del DM di benvenuto. "
+                                       f"\nUtente: {uname} ({user.id}) \nL'utente ha disabilitato i messaggi privati.")
+                await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME')
+                await safe_send_message(interaction, f"❌ {error_message}")
+
+            except discord.NotFound as e:
+                error_message = f'Risorsa non trovata: {e}'
+                await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME')
+                await safe_send_message(interaction, f"❌ {error_message}")
+
+            except Exception as e:
+                uname = getattr(user, 'name', str(user)) if 'user' in locals() and user else 'Sconosciuto'
+                uid = getattr(user, 'id', 'N/D') if 'user' in locals() and user else 'N/D'
+                error_message: str = ("Errore durante l'invio manuale del DM di benvenuto al membro selezionato: "
+                                       f"{uname} ({uid}): {e}")
+                await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME')
+                await safe_send_message(interaction, f"❌ {error_message}")
+
+                if communication_channel:
+                    try:
+                        await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - DM-WELCOME', message=error_message))
+                    except Exception as comm_error:
+                        await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - DM-WELCOME')
+
+            return
+
+        # Handle bulk mode
+        if mode_view.selected_mode == "bulk":
+            await self.log.command('Invio manuale del DM di benvenuto a tutti i membri che hanno il ruolo "not_verified"', 'admin', 'DM-WELCOME-BULK')
+            try:
+                not_verified_role_id = self.config.load_admin('roles', 'not_verified')
+                if not_verified_role_id and not_verified_role_id != '':
+                    not_verified_role = guild.get_role(int(not_verified_role_id))
+                    if not_verified_role:
+                        members = [member for member in guild.members if not_verified_role in member.roles]
+                        for member in members:
+                            try:
+                                message_content: dict = await load_single_embed_text(guild, 'welcome-user', self.config)
+                                message: discord.Embed = create_embed_from_dict(message_content)
+                                await member.send(embed=message)
+                                await self.log.command(f'DM di benvenuto inviato a {member.name} ({member.id})', 'admin', 'DM-WELCOME-BULK')
+                            except discord.Forbidden:
+                                error_message: str = ("Errore durante l'invio del DM di benvenuto. "
+                                                      f"\nUtente: {member.name} ({member.id}) \nL'utente ha disabilitato i messaggi privati.")
+                                await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME-BULK')
+                            except Exception as e:
+                                error_message: str = ("Errore durante l'invio del DM di benvenuto. "
+                                                      f"\nUtente: {member.name} ({member.id}) \n{e}")
+                                await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME-BULK')
+
+                await safe_send_message(interaction, 'DM di benvenuto inviati con successo.')
+                await self.log.command('DM di benvenuto inviati manualmente con successo', 'admin', 'DM-WELCOME-BULK')
+
+            except discord.NotFound as e:
+                error_message = f'Risorsa non trovata: {e}'
+                await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME-BULK')
+                await safe_send_message(interaction, f"❌ {error_message}")
+
+            except discord.Forbidden as e:
+                error_message = f'Permessi insufficienti: {e}'
+                await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME-BULK')
+                await safe_send_message(interaction, f"❌ {error_message}")
+
+            except Exception as e:
+                error_message: str = ("Errore durante l'invio manuale del DM di benvenuto a tutti i membri che hanno il ruolo \"not_verified\": "
+                                       f"{e}")
+                await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME-BULK')
+                await safe_send_message(interaction, f"❌ {error_message}")
+
+                if communication_channel:
+                    try:
+                        await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - DM-WELCOME-BULK', message=error_message))
+                    except Exception as comm_error:
+                        await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - DM-WELCOME-BULK')
+            return
+
+        try:
+            # Get welcome message content
+            message_content: dict = await load_single_embed_text(guild, 'welcome-user', self.config)
+            # Create embed
+            message: discord.Embed = create_embed_from_dict(message_content)
+            # Send DM to the specified user
+            await user.send(embed=message)
+            # Success response and log
+            mention = user.mention if isinstance(user, discord.Member) else f"<@{user.id}>"
+            name = getattr(user, 'name', str(user))
+            await safe_send_message(interaction, f'DM di benvenuto inviato correttamente a {mention}.')
+            await self.log.command(f'DM di benvenuto inviato a {name} ({user.id})', 'admin', 'DM-WELCOME')
+
+        except discord.Forbidden:
+            uname = getattr(user, 'name', str(user))
+            error_message: str = ("Errore durante l'invio del DM di benvenuto. "
+                                   f"\nUtente: {uname} ({user.id}) \nL'utente ha disabilitato i messaggi privati.")
+            await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME')
+            await safe_send_message(interaction, f"❌ {error_message}")
+
+        except discord.NotFound as e:
+            error_message = f'Risorsa non trovata: {e}'
+            await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME')
+            await safe_send_message(interaction, f"❌ {error_message}")
+
+        except Exception as e:
+            uname = getattr(user, 'name', str(user)) if 'user' in locals() and user else 'Sconosciuto'
+            uid = getattr(user, 'id', 'N/D') if 'user' in locals() and user else 'N/D'
+            error_message: str = ("Errore durante l'invio manuale del DM di benvenuto al membro selezionato: "
+                                   f"{uname} ({uid}): {e}")
+            await self.log.error(error_message, 'COMMAND - ADMIN - DM-WELCOME')
+            await safe_send_message(interaction, f"❌ {error_message}")
+
+            # Try to send error to communication channel if available
+            if communication_channel:
+                try:
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ADMIN - DM-WELCOME', message=error_message))
+                except Exception as comm_error:
+                    await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - DM-WELCOME')

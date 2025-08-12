@@ -4,12 +4,14 @@ import discord
 from discord.ext import commands
 import asyncio
 from datetime import datetime
+
+from discord.gateway import DiscordClientWebSocketResponse
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from utils.roles import add_role, remove_role
 from config_manager import ConfigManager
 from cogs.tasks.welcome import create_welcome_message
-from utils.printing import create_embed
+from utils.printing import create_embed, load_single_embed_text, create_embed_from_dict
 
 class MemberEvents(commands.Cog):
     def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager):
@@ -26,7 +28,7 @@ class MemberEvents(commands.Cog):
         # Load bot communication channel
         communication_channel = guild.get_channel(self.config.communication_channel)
 
-        # Assign 'not_verified' role if configured
+        # STEP 1: ASSIGN NOT VERIFIED ROLE
         not_verified_role_id = self.config.load_admin('roles', 'not_verified')
         if not_verified_role_id and not_verified_role_id != '':
             try:
@@ -34,11 +36,13 @@ class MemberEvents(commands.Cog):
                 # INFO LOG
                 await self.log.verification(f'User {member.name} ({member.id}) non è verificato', 'unverified', str(member.id))
             except Exception as e:
+                # EXCEPTION
                 error_message: str = f"Errore durante l'assegnazione del ruolo 'not_verified'.\nUtente: {member.name} ({member.id})\n{e}"
                 await self.log.error(error_message, 'EVENT - MEMBER NOT VERIFIED ROLE')
                 if communication_channel:
                     await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER NOT VERIFIED ROLE', message = error_message))
-
+        
+        # STEP 2: SEND WELCOME MESSAGE IN GUILD
         try:
             # Get welcome channel
             welcome_channel: discord.TextChannel = guild.system_channel
@@ -51,6 +55,35 @@ class MemberEvents(commands.Cog):
             self.log.db.insert_welcome(datetime.now().isoformat(), str(member.id), member.name)
             # INFO LOG
             await self.log.event(f'Nuovo utente aggiunto, {member.name} ({member.id})', 'guild_join')
+        except Exception as e:
+            # EXCEPTION
+            error_message: str = f"Errore durante l'invio del messaggio di benvenuto. \nUtente: {member.name} ({member.id}) \n{e}"
+            await self.log.error(error_message, 'EVENT - MEMBER WELCOME')
+            if communication_channel:
+                await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER WELCOME', message = error_message))
+        
+        # STEP 3: SEND WELCOME MESSAGE TO USER
+        try:
+            # Get welcome message
+            message_content: dict = await load_single_embed_text(guild, 'welcome-user', self.config)
+            # Create the embed message
+            message: discord.Embed = create_embed_from_dict(message_content)
+            # Send the message to the user
+            await member.send(embed=message)
+            # INFO LOG
+            await self.log.event(f'Messaggio di benvenuto inviato a {member.name} ({member.id})', 'guild_join')
+        except discord.Forbidden:
+            # EXCEPTION
+            error_message: str = f"Errore durante l'invio del messaggio di benvenuto. \nUtente: {member.name} ({member.id}) \nL'utente ha disabilitato i messaggi privati."
+            await self.log.error(error_message, 'EVENT - MEMBER WELCOME')
+            if communication_channel:
+                await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER WELCOME', message = error_message))
+        except discord.HTTPException as e:
+            # EXCEPTION
+            error_message: str = f"Errore durante l'invio del messaggio di benvenuto. \nUtente: {member.name} ({member.id}) \n{e}"
+            await self.log.error(error_message, 'EVENT - MEMBER WELCOME')
+            if communication_channel:
+                await communication_channel.send(self.log.error_message(command = 'EVENT - MEMBER WELCOME', message = error_message))
         except Exception as e:
             # EXCEPTION
             error_message: str = f"Errore durante l'invio del messaggio di benvenuto. \nUtente: {member.name} ({member.id}) \n{e}"

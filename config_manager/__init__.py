@@ -199,7 +199,7 @@ class ConfigManager:
         
         return config['admin'][section].get(tag, None)
 
-    def add_admin(self, section: str, tag: str, data: str) -> None:
+    def add_admin(self, section: str, tag: str, data: str | int) -> None:
         """
         Add or replace an entire admin section with new data.
         

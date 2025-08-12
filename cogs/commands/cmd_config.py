@@ -249,7 +249,7 @@ class CmdConfig(commands.GroupCog, name="config"):
             await view.wait()
             
             if view.selected_role_id:
-                self.config.add_admin('roles', 'not_verified', view.selected_role_id)
+                self.config.add_admin('roles', 'not_verified', int(view.selected_role_id))
                 await safe_send_message(interaction, f"✅ Ruolo 'not_verified' configurato: <@&{view.selected_role_id}>", logger=self.log, log_command='COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
                 await self.log.command(f"Ruolo 'not_verified' configurato: {view.selected_role_id}", 'config', 'SET-NOT-VERIFIED-ROLE')
             else:
