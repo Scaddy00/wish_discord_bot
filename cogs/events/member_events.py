@@ -1,11 +1,13 @@
 
 # ----------------------------- Imported Libraries -----------------------------
-import discord
-from discord.ext import commands
+# Standard library imports
 import asyncio
 from datetime import datetime
 
-from discord.gateway import DiscordClientWebSocketResponse
+# Third-party library imports
+import discord
+from discord.ext import commands
+
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from utils.roles import add_role, remove_role
@@ -14,10 +16,14 @@ from cogs.tasks.welcome import create_welcome_message
 from utils.printing import create_embed, load_single_embed_text, create_embed_from_dict
 
 class MemberEvents(commands.Cog):
-    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager):
-        self.bot = bot
-        self.log = log
-        self.config = config
+    """
+    Cog that manages member join/leave/update events and sends welcome messages.
+    """
+
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager) -> None:
+        self.bot: commands.Bot = bot
+        self.log: Logger = log
+        self.config: ConfigManager = config
     
     # ============================= ON_MEMBER_JOIN (Welcome) =============================
     @commands.Cog.listener()

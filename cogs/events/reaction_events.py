@@ -1,8 +1,9 @@
 
 # ----------------------------- Imported Libraries -----------------------------
+# Third-party library imports
 import discord
 from discord.ext import commands
-from os import getenv
+
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
@@ -10,11 +11,15 @@ from cogs.verification import VerificationManager
 from utils.roles import add_role_event, remove_role_event, add_role, remove_role
 
 class ReactionEvents(commands.Cog):
-    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager, verification: VerificationManager):
-        self.bot = bot
-        self.log = log
-        self.config = config
-        self.verification = verification
+    """
+    Cog that handles reaction add/remove events for verification and roles.
+    """
+
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager, verification: VerificationManager) -> None:
+        self.bot: commands.Bot = bot
+        self.log: Logger = log
+        self.config: ConfigManager = config
+        self.verification: VerificationManager = verification
     
     # ============================= ON_RAW_REACTION_ADD (Add Role) =============================
     @commands.Cog.listener()

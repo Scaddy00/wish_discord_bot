@@ -1,22 +1,29 @@
 
 # ----------------------------- Imported Libraries -----------------------------
-import discord
-from discord.ext import commands
-from discord import app_commands
-from os import getenv
-from datetime import datetime, timedelta, timezone
+# Standard library imports
 import asyncio
+from datetime import datetime, timedelta, timezone
+from os import getenv
+
+# Third-party library imports
+import discord
+from discord import app_commands
+from discord.ext import commands
+
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
 from utils.printing import safe_send_message, create_embed, load_single_embed_text, create_embed_from_dict
 
 class CmdAdmin(commands.GroupCog, name="admin"):
-    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
+    """Admin commands for maintenance, logging, and utilities."""
+    description: str = "Comandi amministrativi per gestione server e pulizia log."
+
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager) -> None:
         super().__init__()
-        self.bot = bot
-        self.log = log
-        self.config = config
+        self.bot: commands.Bot = bot
+        self.log: Logger = log
+        self.config: ConfigManager = config
         
         # Dictionary containing all commands and their descriptions
         self.commands_info = {
@@ -35,7 +42,9 @@ class CmdAdmin(commands.GroupCog, name="admin"):
     # ============================= Help Command =============================
     @app_commands.command(name="help", description="Mostra l'elenco dei comandi admin disponibili")
     async def help(self, interaction: discord.Interaction) -> None:
-        """Mostra un embed con tutti i comandi admin e le loro descrizioni"""
+        """
+        Show an embed with all admin commands and their descriptions.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
@@ -82,8 +91,12 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - HELP')
 
     # ============================= Helper Methods =============================
-    async def delete_messages(self, channel) -> int:
-        """Delete all messages in a channel using iterative approach"""
+    async def delete_messages(self, channel: discord.abc.GuildChannel) -> int:
+        """
+        Delete all messages in a channel using an iterative approach.
+        
+        Returns the total number of deleted messages.
+        """
         total_deleted = 0
         
         while True:
@@ -129,8 +142,12 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         
         return total_deleted
 
-    async def delete_user_messages(self, channel, user: discord.Member) -> int:
-        """Delete all messages from a specific user in a channel using iterative approach"""
+    async def delete_user_messages(self, channel: discord.abc.GuildChannel, user: discord.Member) -> int:
+        """
+        Delete all messages from a specific user in a channel using an iterative approach.
+        
+        Returns the total number of deleted messages.
+        """
         total_deleted = 0
         
         while True:
@@ -182,7 +199,9 @@ class CmdAdmin(commands.GroupCog, name="admin"):
     # ============================= Channel Management =============================
     @app_commands.command(name="clear", description="Cancella tutti i messaggi in questo canale")
     async def clear(self, interaction: discord.Interaction) -> None:
-        """Cancella tutti i messaggi nel canale corrente"""
+        """
+        Delete all messages in the current channel.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         channel = interaction.channel
@@ -219,7 +238,9 @@ class CmdAdmin(commands.GroupCog, name="admin"):
 
     @app_commands.command(name="clear-user", description="Cancella tutti i messaggi di un utente specifico in questo canale")
     async def clear_user(self, interaction: discord.Interaction, user: discord.Member) -> None:
-        """Cancella tutti i messaggi di un utente specifico nel canale corrente"""
+        """
+        Delete all messages from a specific user in the current channel.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         channel = interaction.channel
@@ -256,7 +277,9 @@ class CmdAdmin(commands.GroupCog, name="admin"):
 
     @app_commands.command(name="clear-channel", description="Cancella tutti i messaggi nel canale indicato")
     async def clear_channel(self, interaction: discord.Interaction, channel: discord.abc.GuildChannel) -> None:
-        """Cancella tutti i messaggi nel canale specificato"""
+        """
+        Delete all messages in the specified channel.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         
@@ -298,7 +321,9 @@ class CmdAdmin(commands.GroupCog, name="admin"):
 
     @app_commands.command(name="clear-channel-user", description="Cancella tutti i messaggi di un utente specifico nel canale indicato")
     async def clear_channel_user(self, interaction: discord.Interaction, channel: discord.abc.GuildChannel, user: discord.Member) -> None:
-        """Cancella tutti i messaggi di un utente specifico nel canale specificato"""
+        """
+        Delete all messages from a specific user in the specified channel.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         
@@ -340,7 +365,9 @@ class CmdAdmin(commands.GroupCog, name="admin"):
 
     @app_commands.command(name="clear-server-user", description="Cancella tutti i messaggi di un utente in tutto il server")
     async def clear_server_user(self, interaction: discord.Interaction, user: discord.Member) -> None:
-        """Cancella tutti i messaggi di un utente specifico in tutti i canali del server"""
+        """
+        Delete all messages from a specific user across the entire server.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         

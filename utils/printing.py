@@ -1,14 +1,17 @@
 
 # ----------------------------- Standard library -----------------------------
+# Standard library imports
 from datetime import datetime, timezone
-from os import getenv
-from discord import Embed
+from os import getenv, path
+
+# Third-party library imports
 import discord
-from os import path
+from discord import Embed
+
 # ----------------------------- Custom Libraries -----------------------------
 from .file_io import read_file
 
-italian_month: list = ["", "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
+italian_month: list[str] = ["", "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
 
 # ============================= Safe Send Message =============================
 async def safe_send_message(interaction: discord.Interaction, message: str = None, ephemeral: bool = True, embed: discord.Embed = None, logger = None, log_command: str = "SAFE-SEND") -> None:

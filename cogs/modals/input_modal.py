@@ -1,5 +1,6 @@
 
 # ----------------------------- Imported Libraries -----------------------------
+# Third-party library imports
 import discord
 from discord.ui import Modal, TextInput
 
@@ -10,7 +11,7 @@ class InputModal(Modal):
     Creates a Discord modal with multiple text input fields based on the provided labels.
     """
     
-    def __init__(self, title: str, labels: list[str]):
+    def __init__(self, title: str, labels: list[str]) -> None:
         """
         Initialize the InputModal.
         
@@ -32,7 +33,7 @@ class InputModal(Modal):
             self.text_input.append(text_input)
             self.add_item(text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction: discord.Interaction) -> None:
         """
         Handle modal submission.
         

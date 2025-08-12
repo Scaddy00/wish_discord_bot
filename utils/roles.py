@@ -1,7 +1,8 @@
 
 # ----------------------------- Imported Libraries -----------------------------
+# Third-party library imports
 import discord
-from os import getenv
+
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager

@@ -10,6 +10,11 @@ from config_manager import ConfigManager
 from cogs.verification import VerificationManager
 
 class CmdInfoEmbed(commands.GroupCog, name="embed"):
+    """
+    Embed commands to create and manage informational embeds and rules messages.
+    """
+    description: str = "Comandi per creare e gestire embed informativi e regole."
+
     def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, verification: VerificationManager):
         super().__init__()
         self.bot = bot

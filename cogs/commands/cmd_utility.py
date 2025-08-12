@@ -1,20 +1,26 @@
 
 # ----------------------------- Imported Libraries -----------------------------
+# Third-party library imports
 import discord
 from discord.ext import commands
 from discord import app_commands
-from os import getenv
+
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
 from utils.printing import safe_send_message, create_embed
 
 class CmdUtility(commands.GroupCog, name="utility"):
-    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager):
+    """
+    Utility commands for emoji tools and other helpers.
+    """
+    description: str = "Strumenti di utilità (emoji e altro)."
+
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager) -> None:
         super().__init__()
-        self.bot = bot
-        self.log = log
-        self.config = config
+        self.bot: commands.Bot = bot
+        self.log: Logger = log
+        self.config: ConfigManager = config
         
         # Dictionary containing all commands and their descriptions
         self.commands_info = {
@@ -24,7 +30,9 @@ class CmdUtility(commands.GroupCog, name="utility"):
     # ============================= Help Command =============================
     @app_commands.command(name="help", description="Mostra l'elenco dei comandi utility disponibili")
     async def help(self, interaction: discord.Interaction) -> None:
-        """Mostra un embed con tutti i comandi utility e le loro descrizioni"""
+        """
+        Show an embed with all utility commands and their descriptions.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
@@ -73,7 +81,9 @@ class CmdUtility(commands.GroupCog, name="utility"):
     # ============================= Emoji Tools =============================
     @app_commands.command(name="emoji-to-unicode", description="Ottiene il valore unicode di un emoji")
     async def emoji_unicode(self, interaction: discord.Interaction, emoji_input: str) -> None:
-        """Converte un emoji nel suo valore unicode o mostra informazioni per emoji personalizzate"""
+        """
+        Convert an emoji to its unicode codepoints or show info for custom emojis.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         

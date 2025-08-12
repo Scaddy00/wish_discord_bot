@@ -17,7 +17,7 @@ def write_file(path: str, text: dict) -> None:
             json.dump(text, file, indent = 4)
     except Exception as e:
         # EXCEPTION
-        # TODO Add exception in log
+        # TODO Add exception to log
         return 
 
 def read_file(path: str) -> dict:
@@ -39,5 +39,5 @@ def read_file(path: str) -> dict:
             return json.load(file)
     except Exception as e:
         # EXCEPTION
-        # TODO Add exception in log
+        # TODO Add exception to log
         return {}

@@ -1,8 +1,12 @@
 
 # ----------------------------- Imported Libraries -----------------------------
+# Standard library imports
+from os import getenv
+
+# Third-party library imports
 import discord
 from discord.ext import commands
-from os import getenv
+
 # ----------------------------- Custom Libraries -----------------------------
 from cogs.commands import add_commands
 from cogs.events import add_events
@@ -17,7 +21,7 @@ class WishBot(commands.Bot):
     verification system, and Twitch integration.
     """
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """
         Initialize the WishBot with all necessary components.
         
@@ -28,15 +32,16 @@ class WishBot(commands.Bot):
         from config_manager import ConfigManager
         from cogs.verification import VerificationManager
         from cogs.twitch import TwitchApp
-        
-        self.color = '0xA6BBF0'
-        
-        self.log = Logger()
-        self.config = ConfigManager()
-        self.verification = VerificationManager(self, self.log, self.config)
-        self.twitch_app = TwitchApp(self, self.log, self.config)
 
-    async def setup_hook(self):
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Instance Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        self.color: str = '0xA6BBF0'
+
+        self.log: Logger = Logger()
+        self.config: ConfigManager = ConfigManager()
+        self.verification: VerificationManager = VerificationManager(self, self.log, self.config)
+        self.twitch_app: TwitchApp = TwitchApp(self, self.log, self.config)
+
+    async def setup_hook(self) -> None:
         """
         Setup hook called when the bot is starting up.
         
@@ -58,7 +63,7 @@ class WishBot(commands.Bot):
             print(f"[DEBUG] Comandi sincronizzati con la dev guild: {len(synced)}")
             
             tree = self.tree._get_all_commands()
-            commands_names: list = [command.name for command in tree]
+            commands_names: list[str] = [command.name for command in tree]
             print(f"[DEBUG] Nomi dei comandi: {commands_names}")
         else:
             synced = await self.tree.sync()

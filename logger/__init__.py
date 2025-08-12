@@ -1,6 +1,8 @@
 
 # ----------------------------- Standard libraries -----------------------------
+# Standard library imports
 from os import getenv, path, mkdir
+
 # ----------------------------- Custom libraries -----------------------------
 from utils.file_io import write_file, read_file
 from utils.printing import format_datetime_now

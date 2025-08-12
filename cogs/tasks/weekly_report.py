@@ -1,8 +1,12 @@
+import datetime
+
+# Third-party library imports
 import discord
 from discord.ext import tasks, commands
-import datetime
-from logger import Logger
 import pytz
+
+# Custom libraries
+from logger import Logger
 from utils.printing import create_embed
 
 ROME_TZ = pytz.timezone('Europe/Rome')
@@ -15,18 +19,18 @@ class WeeklyReport(commands.Cog):
     with statistics about member joins, leaves, boosts, and message activity.
     """
     
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot) -> None:
         """
         Initialize the WeeklyReport cog.
         
         Args:
-            bot: Discord bot instance
+            bot (commands.Bot): Discord bot instance
         """
         self.bot = bot
         self.logger = Logger()
         self.weekly_report.start()
 
-    def convert_italian_timestamp_to_datetime(self, italian_timestamp: str) -> datetime.datetime:
+    def convert_italian_timestamp_to_datetime(self, italian_timestamp: str) -> datetime.datetime | None:
         """
         Convert Italian timestamp format (dd/mm/yyyy hh:mm:ss) to datetime object.
         
@@ -60,10 +64,10 @@ class WeeklyReport(commands.Cog):
         Collects data from the past week (Monday 9:00 to Monday 8:59:59) and
         creates an embed with statistics about member activity and message counts.
         """
-        # Calcola il periodo: da lunedì scorso 9:00 a oggi lunedì 8:59:59
+        # Compute the period: from last Monday 9:00 to this Monday 8:59:59
         now_rome = datetime.datetime.now(ROME_TZ)
         today = now_rome.date()
-        # Trova il lunedì corrente
+        # Find current Monday
         this_monday = today - datetime.timedelta(days=today.weekday())
         last_monday = this_monday - datetime.timedelta(days=7)
         start_dt = datetime.datetime.combine(last_monday, datetime.time(9, 0, 0), tzinfo=ROME_TZ)
@@ -86,7 +90,7 @@ class WeeklyReport(commands.Cog):
             channel_name = msg[2] or 'Sconosciuto'
             msg_per_channel[channel_name] = msg_per_channel.get(channel_name, 0) + 1
 
-        # Formatta le date per il report
+        # Format dates for the report
         start_str = start_dt.strftime('%d/%m/%Y %H:%M')
         end_str = end_dt.strftime('%d/%m/%Y %H:%M')
 
@@ -129,13 +133,13 @@ class WeeklyReport(commands.Cog):
             await channel.send(embed=embed)
 
     @weekly_report.before_loop
-    async def before_weekly_report(self):
+    async def before_weekly_report(self) -> None:
         """
         Calculate time until next Monday 9:00 AM (Rome timezone) and wait.
         
         Ensures the weekly report runs at the correct time each week.
         """
-        # Calcola quanto manca al prossimo lunedì alle 9:00 ora italiana
+        # Calculate time until next Monday at 9:00 Rome time
         now_rome = datetime.datetime.now(ROME_TZ)
         today = now_rome.date()
         this_monday = today - datetime.timedelta(days=today.weekday())
@@ -143,7 +147,7 @@ class WeeklyReport(commands.Cog):
         next_run = datetime.datetime.combine(next_monday, datetime.time(9, 0, 0), tzinfo=ROME_TZ)
         seconds_until_next = (next_run - now_rome).total_seconds()
         if seconds_until_next < 0:
-            seconds_until_next += 7 * 24 * 3600  # fallback di sicurezza
+            seconds_until_next += 7 * 24 * 3600  # safety fallback
         await discord.utils.sleep_until(next_run)
 
 async def setup(bot):

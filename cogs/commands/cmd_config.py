@@ -1,8 +1,9 @@
 # ----------------------------- Imported Libraries -----------------------------
+# Third-party library imports
 import discord
 from discord.ext import commands
 from discord import app_commands
-from os import getenv
+
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
@@ -25,13 +26,18 @@ from cogs.twitch.views_modals.change_title_view import SetupView as TitleView
 from cogs.modals.input_modal import InputModal
 
 class CmdConfig(commands.GroupCog, name="config"):
-    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, twitch_app: TwitchApp, verification: VerificationManager):
+    """
+    Configuration commands for setting up channels, roles, retention, logging, and Twitch.
+    """
+    description: str = "Configura canali, ruoli, retention, logging e Twitch."
+
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager, twitch_app: TwitchApp, verification: VerificationManager) -> None:
         super().__init__()
-        self.bot = bot
-        self.log = log
-        self.config = config
-        self.twitch_app = twitch_app
-        self.verification = verification
+        self.bot: commands.Bot = bot
+        self.log: Logger = log
+        self.config: ConfigManager = config
+        self.twitch_app: TwitchApp = twitch_app
+        self.verification: VerificationManager = verification
         
         # Dictionary containing all commands and their descriptions
         self.commands_info = {
@@ -54,7 +60,9 @@ class CmdConfig(commands.GroupCog, name="config"):
     # ============================= Help Command =============================
     @app_commands.command(name="help", description="Mostra l'elenco dei comandi config disponibili")
     async def help(self, interaction: discord.Interaction) -> None:
-        """Mostra un embed con tutti i comandi config e le loro descrizioni"""
+        """
+        Show an embed with all configuration commands and their descriptions.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         

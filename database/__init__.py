@@ -1,5 +1,6 @@
 
 # ----------------------------- Standard libraries -----------------------------
+# Standard library imports
 import sqlite3
 from sqlite3 import Connection, Cursor
 from os import getenv, path, mkdir
@@ -13,17 +14,17 @@ class DB():
     for events, commands, messages, errors, and verification records.
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the database manager.
         
         Sets up the database path, creates necessary tables if they don't exist,
         and initializes connection variables.
         """
-        self.tables: dict = ['events', 'commands', 'messages', 'errors', 'verification', 'welcome']
+        self.tables: list[str] = ['events', 'commands', 'messages', 'errors', 'verification', 'welcome']
         self.db_path: str = ''
-        self.conn: Connection = None
-        self.cursor: Cursor = None
+        self.conn: Connection | None = None
+        self.cursor: Cursor | None = None
         self.configure_db()
     
     # >>==============<< Create Table >>==============<< 

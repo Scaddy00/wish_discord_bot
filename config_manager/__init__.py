@@ -44,13 +44,13 @@ class ConfigManager:
     Handles CRUD operations on roles, rules, exceptions and other configurations.
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ConfigManager and create the configuration file if it doesn't exist."""
-        self._config_path = self._get_config_path()
+        self._config_path: str = self._get_config_path()
         self._initialize_config()
         
-        self.communication_channel = self._load_communication_channel()
-        self.report_channel = self._load_report_channel()
+        self.communication_channel: int | None = self._load_communication_channel()
+        self.report_channel: int | None = self._load_report_channel()
     
     def _get_config_path(self) -> str:
         """Returns the complete path of the configuration file."""

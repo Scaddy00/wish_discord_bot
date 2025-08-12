@@ -1,9 +1,10 @@
 
 # ----------------------------- Imported Libraries -----------------------------
+# Third-party library imports
 import discord
 from discord.ext import commands
 from discord import app_commands
-from os import getenv
+
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from cogs.verification import VerificationManager
@@ -12,12 +13,17 @@ from config_manager import ConfigManager
 from utils.printing import safe_send_message, create_embed
 
 class CmdVerification(commands.GroupCog, name="verification"):
-    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, verification: VerificationManager):
+    """
+    Verification commands to configure and manage the verification system.
+    """
+    description: str = "Configura e gestisci il sistema di verifica."
+
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager, verification: VerificationManager) -> None:
         super().__init__()
-        self.bot = bot
-        self.log = log
-        self.config = config
-        self.verification = verification
+        self.bot: commands.Bot = bot
+        self.log: Logger = log
+        self.config: ConfigManager = config
+        self.verification: VerificationManager = verification
         
         # Dictionary containing all commands and their descriptions
         self.commands_info = {
@@ -27,7 +33,9 @@ class CmdVerification(commands.GroupCog, name="verification"):
     # ============================= Help Command =============================
     @app_commands.command(name="help", description="Mostra l'elenco dei comandi verification disponibili")
     async def help(self, interaction: discord.Interaction) -> None:
-        """Mostra un embed con tutti i comandi verification e le loro descrizioni"""
+        """
+        Show an embed with all verification commands and their descriptions.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
@@ -76,7 +84,9 @@ class CmdVerification(commands.GroupCog, name="verification"):
     # ============================= Verification Setup =============================
     @app_commands.command(name="setup", description="Inserisce i dati necessari per il sistema di verifica")
     async def setup(self, interaction: discord.Interaction) -> None:
-        """Configura il sistema di verifica con timeout e ruoli"""
+        """
+        Configura il sistema di verifica con timeout e ruoli.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel)
         

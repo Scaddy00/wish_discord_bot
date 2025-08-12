@@ -1,19 +1,26 @@
 
 # ----------------------------- Imported Libraries -----------------------------
+# Third-party library imports
 import discord
 from discord.ext import commands
 from discord import app_commands
 from datetime import datetime
+
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
 from utils.printing import create_embed
 
 class CmdInfo(commands.GroupCog, name="info"):
-    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager):
-        self.bot = bot
-        self.log = log
-        self.config = config
+    """
+    Info commands to retrieve and display user information.
+    """
+    description: str = "Comandi informativi per mostrare dati utenti."
+
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager) -> None:
+        self.bot: commands.Bot = bot
+        self.log: Logger = log
+        self.config: ConfigManager = config
         
         # Dictionary containing all commands and their descriptions
         self.commands_info = {
@@ -23,7 +30,9 @@ class CmdInfo(commands.GroupCog, name="info"):
     # ============================= Help Command =============================
     @app_commands.command(name="help", description="Mostra l'elenco dei comandi info disponibili")
     async def help(self, interaction: discord.Interaction) -> None:
-        """Mostra un embed con tutti i comandi info e le loro descrizioni"""
+        """
+        Show an embed with all info commands and their descriptions.
+        """
         guild: discord.Guild = interaction.guild
         communication_channel = guild.get_channel(self.config.communication_channel) if self.config.communication_channel else None
         
@@ -125,7 +134,9 @@ class CmdInfo(commands.GroupCog, name="info"):
             await self.log.error(f"Errore durante la richiesta: {e}", "COMMAND - INFO - USER")
     
     def _get_user_flags_info(self, user: discord.User) -> str:
-        """Restituisce le flag dell'utente con emoji e nomi in italiano"""
+        """
+        Return user flags with emoji and Italian labels for display.
+        """
         flags_mapping = {
             'staff': ('👨‍💼', 'Staff Discord'),
             'partner': ('🤝', 'Partner Discord'),

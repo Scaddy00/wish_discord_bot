@@ -1,25 +1,35 @@
 
 # ----------------------------- Imported Libraries -----------------------------
+# Third-party library imports
 import discord
 from discord.ext import commands
-from os import getenv
+
 # ----------------------------- Custom Libraries -----------------------------
 from logger import Logger
 from config_manager import ConfigManager
 
 class MessageEvents(commands.Cog):
-    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager):
+    """
+    Cog that listens to message events and logs messages.
+    
+    Applies filtering based on the message logging configuration.
+    """
+
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager) -> None:
         super().__init__()
-        self.bot = bot
-        self.log = log
-        self.config = config
+        self.bot: commands.Bot = bot
+        self.log: Logger = log
+        self.config: ConfigManager = config
     
     # ============================= ON_MESSAGE =============================
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        # Get guild
+        """
+        Handle every message and log it if configured.
+        
+        Skips bot messages and respects configured logging channels.
+        """
         guild: discord.Guild = message.guild
-        # Load bot communication channel only if guild is not None
         communication_channel = None
         if guild is not None:
             communication_channel = guild.get_channel(self.config.communication_channel)
