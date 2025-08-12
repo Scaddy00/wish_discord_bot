@@ -15,12 +15,12 @@ class CmdInfoEmbed(commands.GroupCog, name="embed"):
     """
     description: str = "Comandi per creare e gestire embed informativi e regole."
 
-    def __init__(self, bot: commands.bot, log: Logger, config: ConfigManager, verification: VerificationManager):
+    def __init__(self, bot: commands.Bot, log: Logger, config: ConfigManager, verification: VerificationManager) -> None:
         super().__init__()
-        self.bot = bot
-        self.log = log
-        self.config = config
-        self.verification = verification
+        self.bot: commands.Bot = bot
+        self.log: Logger = log
+        self.config: ConfigManager = config
+        self.verification: VerificationManager = verification
         
         # Dictionary containing all commands and their descriptions
         self.commands_info = {

@@ -110,6 +110,8 @@ class CmdConfig(commands.GroupCog, name="config"):
     
     # ============================= Core Configuration =============================
     @app_commands.command(name="standard", description="Configura i canali principali del bot")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 10)
     async def standard(self, interaction: discord.Interaction) -> None:
         """Configura i canali principali del bot (communication, report, rule, live)"""
         guild: discord.Guild = interaction.guild
@@ -150,6 +152,8 @@ class CmdConfig(commands.GroupCog, name="config"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - STANDARD')
     
     @app_commands.command(name="retention", description="Configura il periodo di conservazione dei log")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 10)
     async def retention(self, interaction: discord.Interaction) -> None:
         """Configura il periodo di conservazione dei log (1, 2, 3, 6 mesi)"""
         guild: discord.Guild = interaction.guild
@@ -186,6 +190,8 @@ class CmdConfig(commands.GroupCog, name="config"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - RETENTION')
     
     @app_commands.command(name="message-logging", description="Configura la registrazione dei messaggi")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 10)
     async def message_logging(self, interaction: discord.Interaction) -> None:
         """Configura la registrazione dei messaggi e i canali di logging"""
         guild: discord.Guild = interaction.guild
@@ -242,6 +248,8 @@ class CmdConfig(commands.GroupCog, name="config"):
     
     # ============================= Role Management =============================
     @app_commands.command(name="set-not-verified-role", description="Configura il ruolo 'not_verified'")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.checks.cooldown(1, 10)
     async def set_not_verified_role(self, interaction: discord.Interaction) -> None:
         """Configura il ruolo per utenti non verificati"""
         guild: discord.Guild = interaction.guild
@@ -286,6 +294,8 @@ class CmdConfig(commands.GroupCog, name="config"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - SET-NOT-VERIFIED-ROLE')
     
     @app_commands.command(name="set-booster-role", description="Configura il ruolo booster del server")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.checks.cooldown(1, 10)
     async def set_booster_role(self, interaction: discord.Interaction) -> None:
         """Configura il ruolo per i server booster"""
         guild: discord.Guild = interaction.guild
@@ -330,6 +340,8 @@ class CmdConfig(commands.GroupCog, name="config"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - SET-BOOSTER-ROLE')
     
     @app_commands.command(name="verification-setup", description="Configura il sistema di verifica")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 10)
     async def verification_setup(self, interaction: discord.Interaction) -> None:
         """Configura il sistema di verifica con timeout e ruoli"""
         guild: discord.Guild = interaction.guild
@@ -376,6 +388,8 @@ class CmdConfig(commands.GroupCog, name="config"):
     
     # ============================= Admin Management =============================
     @app_commands.command(name="admin-check", description="Visualizza i dati di configurazione admin")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 5)
     async def admin_check(self, interaction: discord.Interaction) -> None:
         """Visualizza tutti i dati inseriti nella configurazione admin"""
         guild: discord.Guild = interaction.guild
@@ -435,6 +449,8 @@ class CmdConfig(commands.GroupCog, name="config"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - ADMIN-CHECK')
     
     @app_commands.command(name="admin-add", description="Aggiunge un ruolo o canale alla configurazione admin")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 10)
     async def admin_add(self, interaction: discord.Interaction) -> None:
         """Aggiunge un ruolo o canale alla configurazione admin"""
         guild: discord.Guild = interaction.guild
@@ -492,6 +508,8 @@ class CmdConfig(commands.GroupCog, name="config"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - ADMIN-ADD')
     
     @app_commands.command(name="exception-add", description="Aggiunge eccezioni per ruoli o canali")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 10)
     async def exception_add(self, interaction: discord.Interaction) -> None:
         """Aggiunge una lista di ruoli o canali alle eccezioni"""
         guild: discord.Guild = interaction.guild
@@ -543,6 +561,8 @@ class CmdConfig(commands.GroupCog, name="config"):
     
     # ============================= Twitch Configuration =============================
     @app_commands.command(name="twitch-titles", description="Configura i titoli Twitch per stream on/off")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 10)
     async def twitch_titles(self, interaction: discord.Interaction) -> None:
         """Configura i titoli Twitch per quando lo stream è attivo o inattivo"""
         guild: discord.Guild = interaction.guild
@@ -586,6 +606,8 @@ class CmdConfig(commands.GroupCog, name="config"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - TWITCH-TITLES')
     
     @app_commands.command(name="twitch-streamer", description="Configura il nome dello streamer Twitch")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 10)
     async def twitch_streamer(self, interaction: discord.Interaction) -> None:
         """Configura il nome dello streamer Twitch"""
         guild: discord.Guild = interaction.guild
@@ -627,6 +649,8 @@ class CmdConfig(commands.GroupCog, name="config"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - TWITCH-STREAMER')
     
     @app_commands.command(name="twitch-add-tag", description="Aggiunge un nuovo tag per le live e immagini")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 10)
     async def add_tag(self, interaction: discord.Interaction) -> None:
         """Aggiunge un nuovo tag per le live e la scelta delle immagini"""
         guild: discord.Guild = interaction.guild
@@ -682,6 +706,8 @@ class CmdConfig(commands.GroupCog, name="config"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - CONFIG - ADD-TAG')
     
     @app_commands.command(name="twitch-reset-info", description="Reset delle informazioni dell'ultima stream")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 10)
     async def reset_info(self, interaction: discord.Interaction) -> None:
         """Reset delle informazioni riguardanti l'ultima stream"""
         guild: discord.Guild = interaction.guild
@@ -716,6 +742,8 @@ class CmdConfig(commands.GroupCog, name="config"):
     
     # ============================= Setup Wizard =============================
     @app_commands.command(name="setup-iniziale", description="Esegui la configurazione iniziale completa del bot")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.checks.cooldown(1, 30)
     async def setup_iniziale(self, interaction: discord.Interaction) -> None:
         """Esegue la configurazione iniziale completa del bot"""
         guild: discord.Guild = interaction.guild

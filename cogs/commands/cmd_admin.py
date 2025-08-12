@@ -198,6 +198,8 @@ class CmdAdmin(commands.GroupCog, name="admin"):
         
     # ============================= Channel Management =============================
     @app_commands.command(name="clear", description="Cancella tutti i messaggi in questo canale")
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.checks.cooldown(1, 10)
     async def clear(self, interaction: discord.Interaction) -> None:
         """
         Delete all messages in the current channel.
@@ -237,6 +239,8 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - CLEAR')
 
     @app_commands.command(name="clear-user", description="Cancella tutti i messaggi di un utente specifico in questo canale")
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.checks.cooldown(1, 10)
     async def clear_user(self, interaction: discord.Interaction, user: discord.Member) -> None:
         """
         Delete all messages from a specific user in the current channel.
@@ -276,6 +280,8 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - CLEAR-USER')
 
     @app_commands.command(name="clear-channel", description="Cancella tutti i messaggi nel canale indicato")
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.checks.cooldown(1, 10)
     async def clear_channel(self, interaction: discord.Interaction, channel: discord.abc.GuildChannel) -> None:
         """
         Delete all messages in the specified channel.
@@ -320,6 +326,8 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - CLEAR-CHANNEL')
 
     @app_commands.command(name="clear-channel-user", description="Cancella tutti i messaggi di un utente specifico nel canale indicato")
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.checks.cooldown(1, 10)
     async def clear_channel_user(self, interaction: discord.Interaction, channel: discord.abc.GuildChannel, user: discord.Member) -> None:
         """
         Delete all messages from a specific user in the specified channel.
@@ -364,6 +372,8 @@ class CmdAdmin(commands.GroupCog, name="admin"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ADMIN - CLEAR-CHANNEL-USER')
 
     @app_commands.command(name="clear-server-user", description="Cancella tutti i messaggi di un utente in tutto il server")
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.checks.cooldown(1, 30)
     async def clear_server_user(self, interaction: discord.Interaction, user: discord.Member) -> None:
         """
         Delete all messages from a specific user across the entire server.

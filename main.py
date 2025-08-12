@@ -15,8 +15,24 @@ from bot import WishBot
 load_dotenv()
 
 # ============================= BOT SETUP =============================
-intents = discord.Intents.all()
-intents.messages = True
+intents = discord.Intents(
+    guilds=True,
+    members=True,           # Necessario per eventi membro/ruoli/benvenuto
+    messages=True,          # Necessario per message logging
+    message_content=True,   # Necessario per on_message e logging contenuti
+    reactions=True,         # Necessario per reaction roles/verification
+    presences=False,
+    bans=False,
+    emojis_and_stickers=False,
+    integrations=False,
+    webhooks=False,
+    invites=False,
+    voice_states=False,
+    typing=False,
+    guild_scheduled_events=False,
+    auto_moderation_configuration=False,
+    auto_moderation_execution=False
+)
 bot = WishBot(command_prefix=str(getenv('COMMAND_PREFIX')), intents=intents)
 
 # ============================= MAIN AND START =============================

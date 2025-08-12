@@ -158,7 +158,8 @@ class ConfigManager:
             new_data: New data to save
             section: List of sections to navigate
         """
-        communication_channel = guild.get_channel(self.config.communication_channel)
+        # Use configured communication channel from this manager
+        communication_channel = guild.get_channel(self.communication_channel) if self.communication_channel else None
         config = self._load_config()
         
         try:
@@ -174,7 +175,8 @@ class ConfigManager:
         except Exception as e:
             error_message = f'Errore durante l\'update dei dati nel file config.json.\n{e}'
             await log.error(error_message, 'CONFIG - UPDATE DATA')
-            await communication_channel.send(log.error_message(command='CONFIG - UPDATE DATA', message=error_message))
+            if communication_channel is not None:
+                await communication_channel.send(log.error_message(command='CONFIG - UPDATE DATA', message=error_message))
     
     # ============================= Admin Management =============================
 

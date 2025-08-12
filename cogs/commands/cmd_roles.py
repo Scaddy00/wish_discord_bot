@@ -91,6 +91,8 @@ class CmdRoles(commands.GroupCog, name="role"):
     
     # ============================= Role Message Management =============================
     @app_commands.command(name="new", description="Crea un nuovo messaggio per l'assegnazione automatica dei ruoli")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.checks.cooldown(1, 10)
     async def new(self, interaction: discord.Interaction) -> None:
         """Crea un nuovo messaggio con reazioni per l'assegnazione automatica dei ruoli"""
         guild: discord.Guild = interaction.guild
@@ -121,7 +123,7 @@ class CmdRoles(commands.GroupCog, name="role"):
                 try:
                     discord.PartialEmoji.from_str(splitted[0])
                 except Exception:
-                    await communication_channel.send(f"L'emoji `{splitted[0]}` non è valida. Riprova.", ephemeral=True)
+                    await communication_channel.send(f"L'emoji `{splitted[0]}` non è valida. Riprova.")
                     continue
                 
                 # Append the emoji and the role id to the list
@@ -148,7 +150,7 @@ class CmdRoles(commands.GroupCog, name="role"):
                         # EXCEPTION
                         error_message: str = f'Errore nell\'aggiungere la reazione {key}: {e}'
                         await self.log.error(error_message, 'COMMAND - ROLE - NEW')
-                        await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message), ephemeral=True)
+                        await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message))
                 
                 # INFO Log that the reaction were added
                 await self.log.command('Reazione aggiunte al messaggio con successo', 'role', 'NEW')
@@ -161,7 +163,7 @@ class CmdRoles(commands.GroupCog, name="role"):
                     await self.log.command('Dati salvati con successo nel file config.json', 'role', 'new')
                     
                     # Send a message that tell the user that's complete
-                    await communication_channel.send('Lavorazione completata! Il messaggio è stato creato', ephemeral=True)
+                    await communication_channel.send('Lavorazione completata! Il messaggio è stato creato')
                     
                     # INFO Log that the process is complete
                     await self.log.command('Lavorazione completata', 'role', 'new')
@@ -170,16 +172,16 @@ class CmdRoles(commands.GroupCog, name="role"):
                     # EXCEPTION
                     error_message: str = f'Errore durante la creazione di un nuovo messaggio: {e}'
                     await self.log.error(error_message, 'COMMAND - ROLE - NEW')
-                    await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message), ephemeral=True)
+                    await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message))
                 
             except Exception as e:
                 # EXCEPTION
                 error_message: str = f'Errore durante l\'invio del nuovo messaggio: {e}'
                 await self.log.error(error_message, 'COMMAND - ROLE - NEW')
-                await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message), ephemeral=True)
+                await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message))
             
         except TimeoutError:
-            await communication_channel.send('Tempo scaduto. Lavorazione interrotta!', ephemeral=True)
+            await communication_channel.send('Tempo scaduto. Lavorazione interrotta!')
             # EXCEPTION
             error_message: str = 'Tempo scaduto durante la creazione di un nuovo messaggio.'
             await self.log.error(error_message, 'COMMAND - ROLE - NEW')
@@ -187,10 +189,12 @@ class CmdRoles(commands.GroupCog, name="role"):
             # EXCEPTION
             error_message: str = f'Errore durante la creazione di un nuovo messaggio: {e}'
             await self.log.error(error_message, 'COMMAND - ROLE - NEW')
-            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message), ephemeral=True)
+            await communication_channel.send(self.log.error_message(command='COMMAND - ROLE - NEW', message=error_message))
         
     # ============================= Role Assignment =============================
     @app_commands.command(name="assign", description="Assegna un ruolo ad un utente")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.checks.cooldown(1, 5)
     async def assign(self, interaction: discord.Interaction, role: discord.Role, user: discord.Member) -> None:
         """Assegna un ruolo specifico ad un utente"""
         guild: discord.Guild = interaction.guild
@@ -230,6 +234,8 @@ class CmdRoles(commands.GroupCog, name="role"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ROLE - ASSIGN')
 
     @app_commands.command(name="assign-all", description="Assegna un ruolo a tutti gli utenti")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.checks.cooldown(1, 30)
     async def assign_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
         """Assegna un ruolo a tutti gli utenti del server (escludendo quelli con ruoli di eccezione)"""
         guild: discord.Guild = interaction.guild
@@ -284,6 +290,8 @@ class CmdRoles(commands.GroupCog, name="role"):
 
     # ============================= Role Removal =============================
     @app_commands.command(name="remove", description="Rimuove un ruolo ad un utente")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.checks.cooldown(1, 5)
     async def remove(self, interaction: discord.Interaction, role: discord.Role, user: discord.Member) -> None:
         """Rimuove un ruolo specifico da un utente"""
         guild: discord.Guild = interaction.guild
@@ -323,6 +331,8 @@ class CmdRoles(commands.GroupCog, name="role"):
                     await self.log.error(f'Impossibile inviare errore al canale di comunicazione: {comm_error}', 'COMMAND - ROLE - REMOVE')
 
     @app_commands.command(name="remove-all", description="Rimuove un ruolo da tutti gli utenti")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.checks.cooldown(1, 30)
     async def remove_all(self, interaction: discord.Interaction, role: discord.Role) -> None:
         """Rimuove un ruolo da tutti gli utenti del server (escludendo quelli con ruoli di eccezione)"""
         guild: discord.Guild = interaction.guild

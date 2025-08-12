@@ -41,9 +41,8 @@ async def safe_send_message(interaction: discord.Interaction, message: str = Non
         except Exception as e:
             # If even that fails, just log the error
             if logger:
-                await logger.error(f'Impossibile inviare messaggio all\'utente: {e}', log_command)
-            else:
-                print(f'SAFE-SEND ERROR: Impossibile inviare messaggio all\'utente: {e}')
+                await logger.error(f"Impossibile inviare messaggio all'utente: {e}", log_command)
+            # If no logger provided, silently ignore to avoid prints in production
 
 # ============================= Format Datetime Now =============================
 def format_datetime_now() -> str:
